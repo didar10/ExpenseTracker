@@ -1,29 +1,39 @@
 //
-//  AddExpenseView.swift
+//  AddTransactionView.swift
 //  ExpenseTracker
 //
 //  Created by Didar on 20.12.2025.
 //
 
-import Foundation
 import SwiftUI
 import SwiftData
 
-struct AddExpenseView: View {
+struct AddTransactionView: View {
 
     @Environment(\.modelContext) private var modelContext
     @Environment(\.dismiss) private var dismiss
 
-    @StateObject private var viewModel = AddExpenseViewModel()
+    @StateObject private var viewModel: AddTransactionViewModel
 
     @Query(sort: \Category.name)
     private var categories: [Category]
+    
+    init(transaction: Transaction? = nil) {
+        _viewModel = StateObject(
+            wrappedValue: AddTransactionViewModel(transaction: transaction)
+        )
+    }
 
     var body: some View {
         VStack(spacing: 24) {
 
+            typePicker
             amountInput
-            categoriesGrid
+
+            if viewModel.type == .expense {
+                categoriesGrid
+            }
+
             details
 
             Spacer()
@@ -31,22 +41,33 @@ struct AddExpenseView: View {
             saveButton
         }
         .padding()
-        .navigationTitle("Новый расход")
+        .navigationTitle(viewModel.isEditing ? "Редактировать" : "Новая транзакция")
     }
 }
 
+// MARK: - UI
+private extension AddTransactionView {
 
-private extension AddExpenseView {
+    var typePicker: some View {
+        Picker("Тип", selection: $viewModel.type) {
+            Text("Расход").tag(TransactionType.expense)
+            Text("Доход").tag(TransactionType.income)
+        }
+        .pickerStyle(.segmented)
+    }
 
     var amountInput: some View {
         TextField("0", text: $viewModel.amount)
             .font(.system(size: 40, weight: .bold))
-            .keyboardType(.numberPad)
+            .keyboardType(.decimalPad)
             .multilineTextAlignment(.center)
     }
 
     var categoriesGrid: some View {
-        LazyVGrid(columns: Array(repeating: .init(.flexible()), count: 4)) {
+        LazyVGrid(
+            columns: Array(repeating: .init(.flexible()), count: 4),
+            spacing: 12
+        ) {
             ForEach(categories) { category in
                 CategoryItemView(
                     category: category,
@@ -73,7 +94,7 @@ private extension AddExpenseView {
             viewModel.save(using: modelContext)
             dismiss()
         } label: {
-            Text("Добавить")
+            Text(viewModel.isEditing ? "Сохранить" : "Добавить")
                 .frame(maxWidth: .infinity)
                 .padding()
                 .background(viewModel.isSaveEnabled ? Color.green : Color.gray)

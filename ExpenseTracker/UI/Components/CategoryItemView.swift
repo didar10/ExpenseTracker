@@ -13,16 +13,30 @@ struct CategoryItemView: View {
     let isSelected: Bool
 
     var body: some View {
-        VStack(spacing: 8) {
-            Image(systemName: category.icon)
-                .font(.title2)
-                .frame(width: 48, height: 48)
-                .background(Color.green.opacity(isSelected ? 0.4 : 0.2))
-                .clipShape(Circle())
+        VStack(spacing: 6) {
+            ZStack {
+                Circle()
+                    .fill(Color(hex: category.colorHex))
+                    .frame(width: 44, height: 44)
+
+                Image(systemName: category.icon)
+                    .foregroundColor(.white)
+                    .font(.system(size: 18, weight: .semibold))
+            }
 
             Text(category.name)
-                .font(.caption)
+                .font(.app(.caption))
+                .lineLimit(1)
         }
+        .padding(6)
+        .background(
+            RoundedRectangle(cornerRadius: 12)
+                .stroke(
+                    isSelected ? Color.green : Color.clear,
+                    lineWidth: 2
+                )
+        )
+        .scaleEffect(isSelected ? 1.05 : 1.0)
+        .animation(.easeInOut(duration: 0.15), value: isSelected)
     }
 }
-

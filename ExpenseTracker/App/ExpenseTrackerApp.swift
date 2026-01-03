@@ -10,13 +10,24 @@ import SwiftData
 
 @main
 struct ExpenseTrackerApp: App {
+    
+    init() {
+        for family in UIFont.familyNames.sorted() {
+            print("📁 \(family)")
+            for name in UIFont.fontNames(forFamilyName: family) {
+                print("   └─ \(name)")
+            }
+        }
+        
+        NavigationBarAppearance.setup()
+    }
 
     var body: some Scene {
         WindowGroup {
             AppRootView()
         }
         .modelContainer(for: [
-            Expense.self,
+            Transaction.self,
             Category.self
         ])
     }

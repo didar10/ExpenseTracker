@@ -1,5 +1,5 @@
 //
-//  Expense.swift
+//  Transaction.swift
 //  ExpenseTracker
 //
 //  Created by Didar on 20.12.2025.
@@ -9,29 +9,27 @@ import Foundation
 import SwiftData
 
 @Model
-final class Expense {
-
-    @Attribute(.unique)
-    var id: UUID
+final class Transaction {
 
     var amount: Decimal
     var date: Date
     var note: String?
+    var type: TransactionType
 
     @Relationship
     var category: Category?
 
     init(
         amount: Decimal,
-        date: Date = .now,
+        date: Date,
         note: String? = nil,
-        category: Category?
+        type: TransactionType,
+        category: Category? = nil
     ) {
-        self.id = UUID()
         self.amount = amount
         self.date = date
         self.note = note
+        self.type = type
         self.category = category
     }
 }
-
