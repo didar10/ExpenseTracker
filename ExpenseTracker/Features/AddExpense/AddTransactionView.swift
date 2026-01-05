@@ -101,49 +101,98 @@ private extension AddTransactionView {
 private extension AddTransactionView {
 
     var categoriesScroll: some View {
-        ScrollView(.horizontal, showsIndicators: false) {
-            LazyHStack(spacing: 14) {
-                ForEach(categories) { category in
-                    categoryItem(category)
+        GeometryReader { geo in
+            let sidePadding = (geo.size.width - Constants.categoryItemWidth) / 2
+
+            ScrollViewReader { proxy in
+                ScrollView(.horizontal, showsIndicators: false) {
+                    HStack(spacing: 12) {
+                        ForEach(categories) { category in
+                            categoryItem(category)
+                                .id(category.id)
+                                .onTapGesture {
+                                    UIImpactFeedbackGenerator(style: .light).impactOccurred()
+
+                                    withAnimation(.spring(response: 0.35, dampingFraction: 0.75)) {
+                                        highlightedCategory = category
+                                        viewModel.selectedCategory = category
+                                        proxy.scrollTo(category.id, anchor: .center)
+                                    }
+                                }
+                        }
+                    }
+                    .padding(.horizontal, sidePadding) // 🔥 ключевая строка
+                }
+                .onAppear {
+                    if let selected = viewModel.selectedCategory {
+                        DispatchQueue.main.async {
+                            proxy.scrollTo(selected.id, anchor: .center)
+                            highlightedCategory = selected
+                        }
+                    }
                 }
             }
-            .padding(.horizontal, 4)
         }
         .frame(height: 96)
     }
 
+
+    
     func categoryItem(_ category: Category) -> some View {
-        let isHighlighted = highlightedCategory?.id == category.id
         let isSelected = viewModel.selectedCategory?.id == category.id
 
-        return VStack(spacing: 8) {
-            Image(systemName: category.icon)
-                .font(.system(size: 20, weight: .medium))
-                .foregroundColor(isSelected ? .white : .primary)
-                .frame(width: 48, height: 48)
-                .background(
+        return ZStack {
+            VStack(spacing: 6) {
+
+                ZStack {
                     Circle()
-                        .fill(isSelected ? .green : Color(.secondarySystemBackground))
-                )
+                        .fill(isSelected ? Color.green : Color(.secondarySystemBackground))
+                        .frame(
+                            width: isSelected ? Constants.selectedSize : Constants.baseSize,
+                            height: isSelected ? Constants.selectedSize : Constants.baseSize
+                        )
 
-            Text(category.name)
-                .font(.app(.caption))
-                .lineLimit(1)
+                    Image(systemName: category.icon)
+                        .font(.system(size: 18, weight: .medium))
+                        .foregroundColor(isSelected ? .white : .primary)
+                }
+            }
         }
-        .padding(8)
-        .scaleEffect(isHighlighted ? 1.18 : 1.0)
-        .animation(
-            .spring(response: 0.35, dampingFraction: 0.65),
-            value: isHighlighted
-        )
-        .onTapGesture {
-            UIImpactFeedbackGenerator(style: .light).impactOccurred()
+        .frame(width: Constants.selectedSize, height: Constants.itemHeight) // 🔥 фиксированный контейнер
+        .overlay(alignment: .bottom) {
+            if isSelected {
+                Text(category.name)
+                    .font(.app(.caption))
+                    .lineLimit(1)
+                    .fixedSize(horizontal: true, vertical: false)
+                    .offset(y: 2)
+                    .transition(.opacity.combined(with: .move(edge: .bottom)))
+            }
+        }
+    }
 
-            highlightedCategory = category
-            viewModel.selectedCategory = category
+
+
+}
+
+private extension AddTransactionView {
+
+    func updateCenteredCategory(midX: CGFloat, category: Category) {
+        let screenMidX = UIScreen.main.bounds.midX
+        let threshold: CGFloat = 24
+
+        if abs(midX - screenMidX) < threshold {
+            if highlightedCategory?.id != category.id {
+                withAnimation(.spring(response: 0.35, dampingFraction: 0.7)) {
+                    highlightedCategory = category
+                    viewModel.selectedCategory = category
+                }
+            }
         }
     }
 }
+
+
 
 private extension AddTransactionView {
 
@@ -155,4 +204,11 @@ private extension AddTransactionView {
                 .textFieldStyle(.roundedBorder)
         }
     }
+}
+
+private enum Constants {
+    static let categoryItemWidth: CGFloat = 60
+    static let baseSize: CGFloat = 44
+    static let selectedSize: CGFloat = 54
+    static let itemHeight: CGFloat = 78
 }
