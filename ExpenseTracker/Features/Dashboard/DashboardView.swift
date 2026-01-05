@@ -12,11 +12,8 @@ struct DashboardView: View {
 
     @Query(sort: \Transaction.date, order: .reverse)
     private var transactions: [Transaction]
-
-    @State private var isAddPresented = false
     
     @State private var selectedTransaction: Transaction?
-    @State private var isEditPresented = false
 
     var body: some View {
         NavigationStack {
@@ -29,8 +26,9 @@ struct DashboardView: View {
                             ForEach(section.transactions) { transaction in
                                 TransactionRowView(transaction: transaction)
                                     .onTapGesture {
-                                        selectedTransaction = transaction
-                                        isEditPresented = true
+                                        withAnimation {
+                                            selectedTransaction = transaction
+                                        }
                                     }
                             }
                         } header: {
@@ -41,16 +39,9 @@ struct DashboardView: View {
                 .listStyle(.plain)
                 .navigationTitle("Главная")
             }
-            .sheet(isPresented: $isAddPresented) {
+            .sheet(item: $selectedTransaction) { transaction in
                 NavigationStack {
-                    AddTransactionView()
-                }
-            }
-            .sheet(isPresented: $isEditPresented) {
-                if let transaction = selectedTransaction {
-                    NavigationStack {
-                        AddTransactionView(transaction: transaction)
-                    }
+                    AddTransactionView(transaction: transaction)
                 }
             }
         }

@@ -5,12 +5,13 @@
 //  Created by Didar on 20.12.2025.
 //
 
-import SwiftUI
+import Foundation
 import SwiftData
 
 @MainActor
 final class AddTransactionViewModel: ObservableObject {
 
+    // MARK: - Input
     @Published var amount: String = ""
     @Published var selectedCategory: Category?
     @Published var note: String = ""
@@ -19,6 +20,7 @@ final class AddTransactionViewModel: ObservableObject {
 
     private(set) var editingTransaction: Transaction?
 
+    // MARK: - Init
     init(transaction: Transaction? = nil) {
         self.editingTransaction = transaction
 
@@ -31,37 +33,73 @@ final class AddTransactionViewModel: ObservableObject {
         type = transaction.type
     }
 
+    // MARK: - State
     var isEditing: Bool {
         editingTransaction != nil
     }
 
     var isSaveEnabled: Bool {
-        Decimal(string: amount) != nil && selectedCategory != nil
+        Decimal(string: amount) != nil &&
+        (type == .income || selectedCategory != nil)
     }
 
+    var amountDisplay: String {
+        amount.isEmpty ? "0" : amount
+    }
+
+    private var amountDecimal: Decimal? {
+        Decimal(string: amount.replacingOccurrences(of: ",", with: "."))
+    }
+
+    // MARK: - Save
     func save(using context: ModelContext) {
-        guard
-            let value = Decimal(string: amount),
-            let category = selectedCategory
-        else { return }
+        guard let value = amountDecimal else { return }
 
         if let transaction = editingTransaction {
-            // ✏️ EDIT
             transaction.amount = value
-            transaction.category = category
+            transaction.category = type == .expense ? selectedCategory : nil
             transaction.note = note.isEmpty ? nil : note
             transaction.date = date
             transaction.type = type
         } else {
-            // ➕ CREATE
             let newTransaction = Transaction(
                 amount: value,
                 date: date,
                 note: note.isEmpty ? nil : note,
                 type: type,
-                category: category
+                category: type == .expense ? selectedCategory : nil
             )
             context.insert(newTransaction)
         }
+    }
+
+    // MARK: - Keypad logic
+    func handleKeyTap(_ key: NumericKeypadView.Key) {
+        switch key {
+        case .number(let value):
+            appendNumber(value)
+        case .decimal:
+            appendDecimal()
+        case .delete:
+            deleteLast()
+        }
+    }
+
+    private func appendNumber(_ value: String) {
+        if amount == "0" {
+            amount = value
+        } else {
+            amount.append(value)
+        }
+    }
+
+    private func appendDecimal() {
+        guard !amount.contains(".") else { return }
+        amount = amount.isEmpty ? "0." : amount + "."
+    }
+
+    private func deleteLast() {
+        guard !amount.isEmpty else { return }
+        amount.removeLast()
     }
 }

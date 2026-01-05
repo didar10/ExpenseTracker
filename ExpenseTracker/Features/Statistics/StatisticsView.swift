@@ -14,9 +14,13 @@ struct StatisticsView: View {
     @Query(sort: \Transaction.date, order: .reverse)
     private var transactions: [Transaction]
 
+    @State private var selectedMonth: Date = .now
+
     var body: some View {
         ScrollView {
             VStack(spacing: 24) {
+
+                monthPicker
 
                 totalExpensesView
 
@@ -35,6 +39,52 @@ struct StatisticsView: View {
 
 private extension StatisticsView {
 
+    var monthPicker: some View {
+        HStack {
+            Button {
+                changeMonth(by: -1)
+            } label: {
+                Image(systemName: "chevron.left")
+            }
+
+            Spacer()
+
+            Text(selectedMonthTitle)
+                .font(.app(.section))
+
+            Spacer()
+
+            Button {
+                changeMonth(by: 1)
+            } label: {
+                Image(systemName: "chevron.right")
+            }
+        }
+        .padding(.horizontal)
+    }
+
+    var selectedMonthTitle: String {
+        selectedMonth.formatted(
+            Date.FormatStyle()
+                .month(.wide)
+                .year()
+        )
+        .capitalized
+    }
+
+    func changeMonth(by value: Int) {
+        if let newDate = Calendar.current.date(
+            byAdding: .month,
+            value: value,
+            to: selectedMonth
+        ) {
+            selectedMonth = newDate
+        }
+    }
+}
+
+private extension StatisticsView {
+
     var totalExpensesView: some View {
         VStack(spacing: 4) {
             Text("Всего расходов")
@@ -43,7 +93,6 @@ private extension StatisticsView {
 
             Text(totalExpenses.formatted(.currency(code: "KZT")))
                 .font(.app(.largeTitle))
-                .bold()
                 .foregroundColor(.red)
         }
     }
@@ -61,8 +110,15 @@ private extension StatisticsView {
         let amount: Decimal
     }
 
+    var selectedMonthInterval: DateInterval {
+        Calendar.current.dateInterval(of: .month, for: selectedMonth)!
+    }
+
     var expenses: [Transaction] {
-        transactions.filter { $0.type == .expense }
+        transactions.filter {
+            $0.type == .expense &&
+            selectedMonthInterval.contains($0.date)
+        }
     }
 
     var expensesByCategory: [CategoryStat] {
@@ -144,10 +200,9 @@ private extension StatisticsView {
                 .font(.largeTitle)
                 .foregroundColor(.secondary)
 
-            Text("Нет данных для статистики")
+            Text("Нет данных за выбранный месяц")
                 .foregroundColor(.secondary)
         }
         .padding(.top, 40)
     }
 }
-

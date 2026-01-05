@@ -17,7 +17,10 @@ struct AddTransactionView: View {
 
     @Query(sort: \Category.name)
     private var categories: [Category]
-    
+
+    // 🔹 Только для UI (анимация / hover)
+    @State private var highlightedCategory: Category?
+
     init(transaction: Transaction? = nil) {
         _viewModel = StateObject(
             wrappedValue: AddTransactionViewModel(transaction: transaction)
@@ -25,27 +28,54 @@ struct AddTransactionView: View {
     }
 
     var body: some View {
-        VStack(spacing: 24) {
+        VStack(spacing: 16) {
 
+            header
             typePicker
-            amountInput
+            amountView
 
             if viewModel.type == .expense {
-                categoriesGrid
+                categoriesScroll
             }
 
             details
 
-            Spacer()
+            Spacer(minLength: 8)
 
-            saveButton
+            NumericKeypadView(
+                isEnterEnabled: viewModel.isSaveEnabled,
+                onKeyTap: viewModel.handleKeyTap,
+                onEnterTap: {
+                    viewModel.save(using: modelContext)
+                    dismiss()
+                }
+            )
         }
-        .padding()
-        .navigationTitle(viewModel.isEditing ? "Редактировать" : "Новая транзакция")
+        .padding(.horizontal)
+        .padding(.top, 12)
     }
 }
 
-// MARK: - UI
+private extension AddTransactionView {
+
+    var header: some View {
+        HStack {
+            Spacer()
+
+            Button {
+                dismiss()
+            } label: {
+                Image(systemName: "xmark")
+                    .font(.system(size: 16, weight: .semibold))
+                    .foregroundColor(.secondary)
+                    .frame(width: 36, height: 36)
+                    .background(Color(.secondarySystemBackground))
+                    .clipShape(Circle())
+            }
+        }
+    }
+}
+
 private extension AddTransactionView {
 
     var typePicker: some View {
@@ -55,30 +85,67 @@ private extension AddTransactionView {
         }
         .pickerStyle(.segmented)
     }
+}
 
-    var amountInput: some View {
-        TextField("0", text: $viewModel.amount)
-            .font(.system(size: 40, weight: .bold))
-            .keyboardType(.decimalPad)
+private extension AddTransactionView {
+
+    var amountView: some View {
+        Text(viewModel.amount.isEmpty ? "0" : viewModel.amount)
+            .font(.system(size: 42, weight: .bold))
+            .frame(maxWidth: .infinity)
             .multilineTextAlignment(.center)
+            .padding(.vertical, 8)
     }
+}
 
-    var categoriesGrid: some View {
-        LazyVGrid(
-            columns: Array(repeating: .init(.flexible()), count: 4),
-            spacing: 12
-        ) {
-            ForEach(categories) { category in
-                CategoryItemView(
-                    category: category,
-                    isSelected: viewModel.selectedCategory == category
-                )
-                .onTapGesture {
-                    viewModel.selectedCategory = category
+private extension AddTransactionView {
+
+    var categoriesScroll: some View {
+        ScrollView(.horizontal, showsIndicators: false) {
+            LazyHStack(spacing: 14) {
+                ForEach(categories) { category in
+                    categoryItem(category)
                 }
             }
+            .padding(.horizontal, 4)
+        }
+        .frame(height: 96)
+    }
+
+    func categoryItem(_ category: Category) -> some View {
+        let isHighlighted = highlightedCategory?.id == category.id
+        let isSelected = viewModel.selectedCategory?.id == category.id
+
+        return VStack(spacing: 8) {
+            Image(systemName: category.icon)
+                .font(.system(size: 20, weight: .medium))
+                .foregroundColor(isSelected ? .white : .primary)
+                .frame(width: 48, height: 48)
+                .background(
+                    Circle()
+                        .fill(isSelected ? .green : Color(.secondarySystemBackground))
+                )
+
+            Text(category.name)
+                .font(.app(.caption))
+                .lineLimit(1)
+        }
+        .padding(8)
+        .scaleEffect(isHighlighted ? 1.18 : 1.0)
+        .animation(
+            .spring(response: 0.35, dampingFraction: 0.65),
+            value: isHighlighted
+        )
+        .onTapGesture {
+            UIImpactFeedbackGenerator(style: .light).impactOccurred()
+
+            highlightedCategory = category
+            viewModel.selectedCategory = category
         }
     }
+}
+
+private extension AddTransactionView {
 
     var details: some View {
         VStack(spacing: 12) {
@@ -87,20 +154,5 @@ private extension AddTransactionView {
             TextField("Комментарий", text: $viewModel.note)
                 .textFieldStyle(.roundedBorder)
         }
-    }
-
-    var saveButton: some View {
-        Button {
-            viewModel.save(using: modelContext)
-            dismiss()
-        } label: {
-            Text(viewModel.isEditing ? "Сохранить" : "Добавить")
-                .frame(maxWidth: .infinity)
-                .padding()
-                .background(viewModel.isSaveEnabled ? Color.green : Color.gray)
-                .foregroundColor(.white)
-                .cornerRadius(12)
-        }
-        .disabled(!viewModel.isSaveEnabled)
     }
 }

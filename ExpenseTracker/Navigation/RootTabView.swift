@@ -68,10 +68,8 @@ struct RootTabView: View {
                 isAddPresented = true
             }
         }
-        .sheet(isPresented: $isAddPresented) {
-            NavigationStack {
-                AddTransactionView()
-            }
+        .fullScreenCover(isPresented: $isAddPresented) {
+            AddTransactionView()
         }
     }
 }
