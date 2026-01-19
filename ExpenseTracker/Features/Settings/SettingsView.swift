@@ -8,45 +8,161 @@
 import SwiftUI
 
 struct SettingsView: View {
-
     var body: some View {
         NavigationStack {
-            List {
-
-                // MARK: - Основные настройки
-                NavigationLink {
-                    CategoriesListView()
-                } label: {
-                    Label("Категории", systemImage: "square.grid.2x2")
-                }
-
-                NavigationLink {
-                    PlansView()
-                } label: {
-                    Label("Валюта по умолчанию", systemImage: "dollarsign.circle")
-                }
-
-                // MARK: - Информация
-                NavigationLink {
-                    PlansView()
-                } label: {
-                    Label("Политика конфиденциальности", systemImage: "hand.raised.fill")
-                }
-
-                NavigationLink {
-                    PlansView()
-                } label: {
-                    Label("Помощь и поддержка", systemImage: "questionmark.circle")
-                }
-
-                NavigationLink {
-                    PlansView()
-                } label: {
-                    Label("Условия использования", systemImage: "doc.text")
+            VStack(spacing: 0) {
+                // Custom Header
+                Text("Настройки")
+                    .font(.system(size: 20, weight: .semibold))
+                    .frame(maxWidth: .infinity, alignment: .center)
+                    .padding(.vertical, 16)
+                    .background(Color(.systemGroupedBackground))
+                
+                ScrollView {
+                    VStack(spacing: 20) {
+                        // MARK: - Основные настройки
+                        VStack(spacing: 12) {
+                            Text("Основные")
+                                .font(.system(size: 14, weight: .semibold))
+                                .foregroundStyle(.secondary)
+                                .frame(maxWidth: .infinity, alignment: .leading)
+                                .padding(.horizontal, 4)
+                            
+                            VStack(spacing: 0) {
+                                SettingsRowView(
+                                    icon: "square.grid.2x2",
+                                    iconColor: .blue,
+                                    title: "Категории",
+                                    destination: CategoriesListView()
+                                )
+                                
+                                Divider()
+                                    .padding(.leading, 60)
+                                
+                                SettingsRowView(
+                                    icon: "dollarsign.circle",
+                                    iconColor: .green,
+                                    title: "Валюта по умолчанию",
+                                    destination: PlansView()
+                                )
+                            }
+                            .background {
+                                RoundedRectangle(cornerRadius: 16)
+                                    .fill(Color(.systemBackground))
+                            }
+                        }
+                        
+                        // MARK: - Информация
+                        VStack(spacing: 12) {
+                            Text("Информация")
+                                .font(.system(size: 14, weight: .semibold))
+                                .foregroundStyle(.secondary)
+                                .frame(maxWidth: .infinity, alignment: .leading)
+                                .padding(.horizontal, 4)
+                            
+                            VStack(spacing: 0) {
+                                SettingsRowView(
+                                    icon: "hand.raised.fill",
+                                    iconColor: .purple,
+                                    title: "Политика конфиденциальности",
+                                    destination: PlansView()
+                                )
+                                
+                                Divider()
+                                    .padding(.leading, 60)
+                                
+                                SettingsRowView(
+                                    icon: "questionmark.circle",
+                                    iconColor: .orange,
+                                    title: "Помощь и поддержка",
+                                    destination: PlansView()
+                                )
+                                
+                                Divider()
+                                    .padding(.leading, 60)
+                                
+                                SettingsRowView(
+                                    icon: "doc.text",
+                                    iconColor: .red,
+                                    title: "Условия использования",
+                                    destination: PlansView()
+                                )
+                            }
+                            .background {
+                                RoundedRectangle(cornerRadius: 16)
+                                    .fill(Color(.systemBackground))
+                            }
+                        }
+                        
+                        // MARK: - App Info
+                        VStack(spacing: 8) {
+                            Text("ExpenseTracker")
+                                .font(.system(size: 14, weight: .semibold))
+                                .foregroundStyle(.secondary)
+                            
+                            Text("Версия 1.0.0")
+                                .font(.system(size: 12))
+                                .foregroundStyle(.tertiary)
+                        }
+                        .padding(.top, 20)
+                    }
+                    .padding()
+                    .padding(.bottom, 100)
                 }
             }
-            .navigationTitle("Настройки")
+            .background(Color(.systemGroupedBackground))
+            .navigationBarHidden(true)
         }
+    }
+}
+
+// MARK: - Settings Row View
+struct SettingsRowView<Destination: View>: View {
+    let icon: String
+    let iconColor: Color
+    let title: String
+    let destination: Destination
+    
+    var body: some View {
+        NavigationLink {
+            destination
+        } label: {
+            HStack(spacing: 16) {
+                // Icon
+                ZStack {
+                    RoundedRectangle(cornerRadius: 8)
+                        .fill(iconColor.opacity(0.15))
+                        .frame(width: 36, height: 36)
+                    
+                    Image(systemName: icon)
+                        .font(.system(size: 16, weight: .semibold))
+                        .foregroundStyle(iconColor)
+                }
+                
+                // Title
+                Text(title)
+                    .font(.system(size: 16))
+                    .foregroundStyle(.primary)
+                
+                Spacer()
+                
+                // Chevron
+                Image(systemName: "chevron.right")
+                    .font(.system(size: 14, weight: .semibold))
+                    .foregroundStyle(.tertiary)
+            }
+            .padding(.horizontal, 16)
+            .padding(.vertical, 12)
+            .contentShape(Rectangle())
+        }
+        .buttonStyle(SettingsButtonStyle())
+    }
+}
+
+struct SettingsButtonStyle: ButtonStyle {
+    func makeBody(configuration: Configuration) -> some View {
+        configuration.label
+            .background(configuration.isPressed ? Color(.systemGray5) : Color.clear)
     }
 }
 

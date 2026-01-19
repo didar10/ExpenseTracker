@@ -1,63 +1,78 @@
 //
-//  DashboardView.swift
+//  ScrollAwareDashboardExample.swift
 //  ExpenseTracker
 //
-//  Created by Didar on 20.12.2025.
+//  Created by Didar on 18.01.2026.
 //
+//  This is an EXAMPLE showing how to use scroll-aware headers
+//  You can replace DashboardView with this implementation if you want
+//  the header to shrink as you scroll
 
 import SwiftUI
 import SwiftData
 
-struct DashboardView: View {
+struct ScrollAwareDashboardExample: View {
 
     @Query(sort: \Transaction.date, order: .reverse)
     private var transactions: [Transaction]
     
     @State private var selectedTransaction: Transaction?
+    @State private var showAddTransaction = false
     @State private var scrollOffset: CGFloat = 0
-    @Environment(\.tabBarVisibility) private var isTabBarVisible
 
     var body: some View {
         NavigationStack {
-            VStack(spacing: 0) {
-                // Fixed header
-                customHeader
-                
+            ZStack(alignment: .bottomTrailing) {
                 ScrollView {
                     VStack(spacing: 20) {
-                        balanceCard
+                        // Sticky scroll-aware header
+                        ScrollAwareNavigationHeader(
+                            title: "Главная",
+                            subtitle: "Управление финансами",
+                            scrollOffset: scrollOffset,
+                            trailingButton: HeaderButton(
+                                icon: "person.crop.circle.fill",
+                                action: {
+                                    // Settings action
+                                }
+                            )
+                        )
+                        .zIndex(1) // Keep on top
                         
-                        transactionsList
+                        // Content starts here
+                        VStack(spacing: 20) {
+                            balanceCard
+                            transactionsList
+                        }
+                        .trackScrollOffset(in: "scroll", offset: $scrollOffset)
                     }
                     .padding(.bottom, 100)
-                    .trackScrollOffset(
-                        in: "dashboardScroll",
-                        offset: $scrollOffset,
-                        tabBarVisible: isTabBarVisible
-                    )
                 }
-                .coordinateSpace(name: "dashboardScroll")
+                .coordinateSpace(name: "scroll")
+                .background(Color(.systemGroupedBackground))
+                
+                addButton
             }
-            .background(Color(.systemGroupedBackground))
             .navigationBarHidden(true)
-            .fullScreenCover(item: $selectedTransaction) { transaction in
-                AddTransactionView(transaction: transaction)
+            .sheet(item: $selectedTransaction) { transaction in
+                NavigationStack {
+                    AddTransactionView(transaction: transaction)
+                }
+                .presentationDetents([.large])
+                .presentationDragIndicator(.visible)
+            }
+            .sheet(isPresented: $showAddTransaction) {
+                NavigationStack {
+                    AddTransactionView()
+                }
+                .presentationDetents([.large])
+                .presentationDragIndicator(.visible)
             }
         }
     }
-}
-
-// MARK: - Header
-private extension DashboardView {
     
-    var customHeader: some View {
-        Text("Главная")
-            .font(.system(size: 20, weight: .semibold))
-            .frame(maxWidth: .infinity, alignment: .center)
-            .padding(.vertical, 16)
-            .background(Color(.systemGroupedBackground))
-    }
-
+    // MARK: - Views (same as DashboardView)
+    
     var balanceCard: some View {
         VStack(spacing: 16) {
             HStack {
@@ -123,7 +138,6 @@ private extension DashboardView {
                 .shadow(color: .black.opacity(0.08), radius: 12, y: 4)
         }
         .padding(.horizontal)
-        .padding(.top, 8)
     }
 
     var balance: Decimal {
@@ -141,29 +155,6 @@ private extension DashboardView {
     var totalExpenses: Decimal {
         transactions.filter { $0.type == .expense }.reduce(0) { $0 + $1.amount }
     }
-}
-
-// MARK: - Grouping
-private extension DashboardView {
-
-    struct TransactionSection {
-        let date: Date
-        let transactions: [Transaction]
-    }
-
-    var groupedTransactions: [TransactionSection] {
-        let grouped = Dictionary(grouping: transactions) { transaction in
-            Calendar.current.startOfDay(for: transaction.date)
-        }
-
-        return grouped
-            .map { TransactionSection(date: $0.key, transactions: $0.value) }
-            .sorted { $0.date > $1.date }
-    }
-}
-
-// MARK: - UI helpers
-private extension DashboardView {
     
     var transactionsList: some View {
         VStack(spacing: 0) {
@@ -218,6 +209,30 @@ private extension DashboardView {
         .padding(40)
         .frame(maxWidth: .infinity)
     }
+    
+    var addButton: some View {
+        Button {
+            UIImpactFeedbackGenerator(style: .medium).impactOccurred()
+            showAddTransaction = true
+        } label: {
+            Image(systemName: "plus")
+                .font(.system(size: 24, weight: .semibold))
+                .foregroundStyle(.white)
+                .frame(width: 64, height: 64)
+                .background {
+                    Circle()
+                        .fill(
+                            LinearGradient(
+                                colors: [.green, .green.opacity(0.8)],
+                                startPoint: .topLeading,
+                                endPoint: .bottomTrailing
+                            )
+                        )
+                        .shadow(color: .green.opacity(0.4), radius: 12, y: 6)
+                }
+        }
+        .padding(24)
+    }
 
     func sectionHeader(for date: Date) -> some View {
         Text(dateTitle(for: date))
@@ -242,5 +257,20 @@ private extension DashboardView {
                     .year()
             )
         }
+    }
+    
+    struct TransactionSection {
+        let date: Date
+        let transactions: [Transaction]
+    }
+
+    var groupedTransactions: [TransactionSection] {
+        let grouped = Dictionary(grouping: transactions) { transaction in
+            Calendar.current.startOfDay(for: transaction.date)
+        }
+
+        return grouped
+            .map { TransactionSection(date: $0.key, transactions: $0.value) }
+            .sorted { $0.date > $1.date }
     }
 }
