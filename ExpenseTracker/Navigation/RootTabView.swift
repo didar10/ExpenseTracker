@@ -61,7 +61,7 @@ struct RootTabView: View {
             .frame(maxWidth: .infinity, maxHeight: .infinity)
             
             // Tab bar and add button
-            HStack(alignment: .bottom, spacing: 12) {
+            HStack(alignment: .center, spacing: 12) {
                 // Modern floating tab bar
                 ModernTabBar(
                     selectedTab: $selectedTab,
@@ -91,7 +91,7 @@ struct ModernTabBar: View {
     private let tabs: [TabItem] = [.dashboard, .statistics, .plans, .settings]
     
     var body: some View {
-        HStack(spacing: 0) {
+        HStack(spacing: 8) {
             ForEach(tabs, id: \.self) { tab in
                 TabBarButton(
                     tab: tab,
@@ -105,17 +105,16 @@ struct ModernTabBar: View {
                 )
             }
         }
-        .padding(.horizontal, 8)
-        .padding(.vertical, 12)
-        .background {
+        .padding(.horizontal, 12)
+        .padding(.vertical, 10)
+        .background(
             RoundedRectangle(cornerRadius: 28, style: .continuous)
-                .fill(.ultraThinMaterial)
-                .shadow(color: .black.opacity(0.1), radius: 20, y: 10)
-                .overlay {
-                    RoundedRectangle(cornerRadius: 28, style: .continuous)
-                        .strokeBorder(.white.opacity(0.2), lineWidth: 0.5)
-                }
-        }
+                .fill(Color(uiColor: .systemBackground))
+        )
+        .overlay(
+            RoundedRectangle(cornerRadius: 28, style: .continuous)
+                .strokeBorder(Color.gray.opacity(0.3), lineWidth: 1)
+        )
         .offset(y: isVisible ? 0 : 120)
         .animation(.spring(response: 0.4, dampingFraction: 0.8), value: isVisible)
     }
@@ -133,25 +132,18 @@ struct AddButton: View {
         } label: {
             ZStack {
                 Circle()
-                    .fill(
-                        LinearGradient(
-                            colors: [
-                                Color(hex: "#2CB9B0"),
-                                Color(hex: "#2CB9B0").opacity(0.8)
-                            ],
-                            startPoint: .topLeading,
-                            endPoint: .bottomTrailing
-                        )
-                    )
+                    .fill(Color(uiColor: .systemBackground))
                     .frame(width: 56, height: 56)
-                    .shadow(color: Color(hex: "#2CB9B0").opacity(0.4), radius: 12, y: 4)
+                    .overlay(
+                        Circle()
+                            .strokeBorder(Color.gray.opacity(0.3), lineWidth: 1)
+                    )
                 
                 Image(systemName: "plus")
                     .font(.system(size: 24, weight: .semibold))
-                    .foregroundStyle(.white)
+                    .foregroundStyle(.black)
             }
         }
-        .padding(.bottom, 12)
         .offset(y: isVisible ? 0 : 120)
         .animation(.spring(response: 0.4, dampingFraction: 0.8), value: isVisible)
     }
@@ -165,27 +157,17 @@ struct TabBarButton: View {
     
     var body: some View {
         Button(action: action) {
-            VStack(spacing: 4) {
-                Image(systemName: tab.icon)
-                    .font(.system(size: isSelected ? 24 : 22, weight: .semibold))
-                    .symbolEffect(.bounce, value: isSelected)
-                    .foregroundStyle(
-                        isSelected
-                        ? Color(hex: "#2CB9B0")
-                        : .secondary
-                    )
-                    .frame(height: 24)
-                
-                Text(tab.title)
-                    .font(.system(size: 11, weight: isSelected ? .semibold : .medium))
-                    .foregroundStyle(
-                        isSelected
-                        ? Color(hex: "#2CB9B0")
-                        : .secondary
-                    )
-            }
-            .frame(maxWidth: .infinity)
-            .contentShape(Rectangle())
+            Image(systemName: tab.icon)
+                .font(.system(size: isSelected ? 24 : 22, weight: .semibold))
+                .symbolEffect(.bounce, value: isSelected)
+                .foregroundStyle(isSelected ? .primary : .secondary)
+                .frame(maxWidth: .infinity)
+                .frame(height: 44)
+                .background(
+                    RoundedRectangle(cornerRadius: 16, style: .continuous)
+                        .fill(isSelected ? Color.black.opacity(0.08) : Color.clear)
+                )
+                .contentShape(Rectangle())
         }
         .buttonStyle(TabBarButtonStyle())
     }

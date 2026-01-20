@@ -30,11 +30,11 @@ struct DashboardView: View {
                         transactionsList
                     }
                     .padding(.bottom, 100)
-                    .trackScrollOffset(
-                        in: "dashboardScroll",
-                        offset: $scrollOffset,
-                        tabBarVisible: isTabBarVisible
-                    )
+//                    .trackScrollOffset(
+//                        in: "dashboardScroll",
+//                        offset: $scrollOffset,
+//                        tabBarVisible: isTabBarVisible
+//                    )
                 }
                 .coordinateSpace(name: "dashboardScroll")
             }
@@ -59,71 +59,41 @@ private extension DashboardView {
     }
 
     var balanceCard: some View {
-        VStack(spacing: 16) {
-            HStack {
-                VStack(alignment: .leading, spacing: 8) {
-                    Text("Текущий баланс")
-                        .font(.system(size: 15, weight: .medium))
-                        .foregroundStyle(.secondary)
-
-                    Text(balance.formatted(.currency(code: "KZT")))
-                        .font(.system(size: 36, weight: .bold, design: .rounded))
-                        .foregroundStyle(balance >= 0 ? .green : .red)
-                        .contentTransition(.numericText())
-                }
-                
-                Spacer()
-                
-                Image(systemName: balance >= 0 ? "arrow.up.right.circle.fill" : "arrow.down.right.circle.fill")
-                    .font(.system(size: 48))
-                    .foregroundStyle(balance >= 0 ? .green : .red)
-                    .symbolRenderingMode(.hierarchical)
-            }
+        VStack(spacing: 12) {
+            Text("Баланс")
+                .font(.system(size: 13, weight: .medium))
+                .foregroundStyle(.secondary)
             
-            Divider()
+            Text(balance.formatted(.currency(code: "KZT")))
+                .font(.system(size: 40, weight: .bold, design: .rounded))
+                .foregroundStyle(.primary)
+                .contentTransition(.numericText())
             
-            HStack(spacing: 20) {
-                VStack(alignment: .leading, spacing: 4) {
-                    HStack(spacing: 4) {
-                        Image(systemName: "arrow.down.circle.fill")
-                            .font(.system(size: 14))
-                            .foregroundStyle(.green)
-                        Text("Доходы")
-                            .font(.system(size: 13, weight: .medium))
-                            .foregroundStyle(.secondary)
-                    }
+            HStack(spacing: 24) {
+                HStack(spacing: 6) {
+                    Image(systemName: "arrow.down.circle.fill")
+                        .font(.system(size: 16))
+                        .foregroundStyle(.green)
                     
                     Text(totalIncome.formatted(.currency(code: "KZT")))
-                        .font(.system(size: 18, weight: .semibold, design: .rounded))
-                        .foregroundStyle(.green)
+                        .font(.system(size: 15, weight: .semibold, design: .rounded))
+                        .foregroundStyle(.primary)
                 }
                 
-                Spacer()
-                
-                VStack(alignment: .trailing, spacing: 4) {
-                    HStack(spacing: 4) {
-                        Text("Расходы")
-                            .font(.system(size: 13, weight: .medium))
-                            .foregroundStyle(.secondary)
-                        Image(systemName: "arrow.up.circle.fill")
-                            .font(.system(size: 14))
-                            .foregroundStyle(.red)
-                    }
+                HStack(spacing: 6) {
+                    Image(systemName: "arrow.up.circle.fill")
+                        .font(.system(size: 16))
+                        .foregroundStyle(.red)
                     
                     Text(totalExpenses.formatted(.currency(code: "KZT")))
-                        .font(.system(size: 18, weight: .semibold, design: .rounded))
-                        .foregroundStyle(.red)
+                        .font(.system(size: 15, weight: .semibold, design: .rounded))
+                        .foregroundStyle(.primary)
                 }
             }
+            .padding(.top, 4)
         }
-        .padding(20)
-        .background {
-            RoundedRectangle(cornerRadius: 24)
-                .fill(Color(.systemBackground))
-                .shadow(color: .black.opacity(0.08), radius: 12, y: 4)
-        }
+        .padding(.vertical, 24)
         .padding(.horizontal)
-        .padding(.top, 8)
     }
 
     var balance: Decimal {
@@ -171,7 +141,7 @@ private extension DashboardView {
                 emptyState
             } else {
                 ForEach(groupedTransactions, id: \.date) { section in
-                    VStack(alignment: .leading, spacing: 12) {
+                    VStack(alignment: .leading, spacing: 16) {
                         sectionHeader(for: section.date)
                         
                         VStack(spacing: 8) {
@@ -185,12 +155,22 @@ private extension DashboardView {
                                     }
                             }
                         }
-                        .padding(.horizontal)
-                        .padding(.vertical, 12)
-                        .background {
-                            RoundedRectangle(cornerRadius: 16)
-                                .fill(Color(.systemBackground))
-                        }
+                        .padding(.horizontal, 16)
+                        .padding(.vertical, 16)
+                        .background(
+                            RoundedRectangle(cornerRadius: 20, style: .continuous)
+                                .fill(Color(uiColor: .systemBackground))
+                                .shadow(
+                                    color: .black.opacity(0.65),
+                                    radius: 0,
+                                    x: 4,
+                                    y: 6
+                                )
+                        )
+                        .overlay(
+                            RoundedRectangle(cornerRadius: 20, style: .continuous)
+                                .strokeBorder(Color.black.opacity(0.15), lineWidth: 1.5)
+                        )
                     }
                     .padding(.horizontal)
                     .padding(.bottom, 12)

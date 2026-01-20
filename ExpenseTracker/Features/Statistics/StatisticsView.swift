@@ -21,13 +21,11 @@ struct StatisticsView: View {
     var body: some View {
         NavigationStack {
             VStack(spacing: 0) {
-                // Fixed header
-                customHeader
+                // Fixed header - month picker
+                monthPicker
                 
                 ScrollView {
                     VStack(spacing: 16) {
-                        monthPicker
-
                         totalExpensesView
 
                         if !expensesByCategory.isEmpty {
@@ -65,7 +63,7 @@ private extension StatisticsView {
             } label: {
                 Image(systemName: "chevron.left.circle.fill")
                     .font(.system(size: 28))
-                    .foregroundStyle(.green)
+                    .foregroundStyle(.primary)
                     .symbolRenderingMode(.hierarchical)
             }
 
@@ -83,19 +81,15 @@ private extension StatisticsView {
             } label: {
                 Image(systemName: "chevron.right.circle.fill")
                     .font(.system(size: 28))
-                    .foregroundStyle(.green)
+                    .foregroundStyle(.primary)
                     .symbolRenderingMode(.hierarchical)
             }
             .disabled(isCurrentMonth)
             .opacity(isCurrentMonth ? 0.3 : 1.0)
         }
         .padding(.horizontal, 16)
-        .padding(.vertical, 12)
-        .background {
-            RoundedRectangle(cornerRadius: 16)
-                .fill(Color(.systemBackground))
-                .shadow(color: .black.opacity(0.05), radius: 8, y: 2)
-        }
+        .padding(.vertical, 16)
+        .background(Color(.systemGroupedBackground))
     }
     
     var isCurrentMonth: Bool {
@@ -127,31 +121,18 @@ private extension StatisticsView {
 private extension StatisticsView {
 
     var totalExpensesView: some View {
-        VStack(spacing: 10) {
-            HStack {
-                Image(systemName: "arrow.up.circle.fill")
-                    .font(.system(size: 20))
-                    .foregroundStyle(.red)
-                
-                Text("Всего расходов")
-                    .font(.system(size: 14, weight: .medium))
-                    .foregroundStyle(.secondary)
-                
-                Spacer()
-            }
+        VStack(spacing: 8) {
+            Text("Всего расходов")
+                .font(.system(size: 13, weight: .medium))
+                .foregroundStyle(.secondary)
 
             Text(totalExpenses.formatted(.currency(code: "KZT")))
-                .font(.system(size: 32, weight: .bold, design: .rounded))
-                .foregroundStyle(.red)
-                .frame(maxWidth: .infinity, alignment: .leading)
+                .font(.system(size: 36, weight: .bold, design: .rounded))
+                .foregroundStyle(.primary)
                 .contentTransition(.numericText())
         }
-        .padding(16)
-        .background {
-            RoundedRectangle(cornerRadius: 16)
-                .fill(Color(.systemBackground))
-                .shadow(color: .black.opacity(0.05), radius: 8, y: 2)
-        }
+        .frame(maxWidth: .infinity)
+        .padding(.vertical, 16)
     }
 
     var totalExpenses: Decimal {
@@ -258,11 +239,20 @@ private extension StatisticsView {
             }
         }
         .padding(16)
-        .background {
-            RoundedRectangle(cornerRadius: 20)
-                .fill(Color(.systemBackground))
-                .shadow(color: .black.opacity(0.05), radius: 8, y: 2)
-        }
+        .background(
+            RoundedRectangle(cornerRadius: 20, style: .continuous)
+                .fill(Color(uiColor: .systemBackground))
+                .shadow(
+                    color: .black.opacity(0.65),
+                    radius: 0,
+                    x: 4,
+                    y: 6
+                )
+        )
+        .overlay(
+            RoundedRectangle(cornerRadius: 20, style: .continuous)
+                .strokeBorder(Color.black.opacity(0.15), lineWidth: 1.5)
+        )
     }
 
     func categoryRow(_ stat: CategoryStat, percentage: Decimal) -> some View {
@@ -287,6 +277,7 @@ private extension StatisticsView {
                 VStack(alignment: .leading, spacing: 3) {
                     Text(stat.category.name)
                         .font(.system(size: 15, weight: .semibold))
+                        .foregroundStyle(.primary)
                     
                     Text("\(Int((percentage as NSDecimalNumber).doubleValue * 100))%")
                         .font(.system(size: 12, weight: .medium))
@@ -308,6 +299,7 @@ private extension StatisticsView {
             .padding(.vertical, 6)
             .contentShape(Rectangle())
         }
+        .buttonStyle(.plain)
     }
 }
 

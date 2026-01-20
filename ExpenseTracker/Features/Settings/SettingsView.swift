@@ -46,10 +46,20 @@ struct SettingsView: View {
                                     destination: PlansView()
                                 )
                             }
-                            .background {
-                                RoundedRectangle(cornerRadius: 16)
-                                    .fill(Color(.systemBackground))
-                            }
+                            .background(
+                                RoundedRectangle(cornerRadius: 16, style: .continuous)
+                                    .fill(Color(uiColor: .systemBackground))
+                                    .shadow(
+                                        color: .black.opacity(0.65),
+                                        radius: 0,
+                                        x: 4,
+                                        y: 6
+                                    )
+                            )
+                            .overlay(
+                                RoundedRectangle(cornerRadius: 16, style: .continuous)
+                                    .strokeBorder(Color.black.opacity(0.15), lineWidth: 1.5)
+                            )
                         }
                         
                         // MARK: - Информация
@@ -88,10 +98,20 @@ struct SettingsView: View {
                                     destination: PlansView()
                                 )
                             }
-                            .background {
-                                RoundedRectangle(cornerRadius: 16)
-                                    .fill(Color(.systemBackground))
-                            }
+                            .background(
+                                RoundedRectangle(cornerRadius: 16, style: .continuous)
+                                    .fill(Color(uiColor: .systemBackground))
+                                    .shadow(
+                                        color: .black.opacity(0.65),
+                                        radius: 0,
+                                        x: 4,
+                                        y: 6
+                                    )
+                            )
+                            .overlay(
+                                RoundedRectangle(cornerRadius: 16, style: .continuous)
+                                    .strokeBorder(Color.black.opacity(0.15), lineWidth: 1.5)
+                            )
                         }
                         
                         // MARK: - App Info
