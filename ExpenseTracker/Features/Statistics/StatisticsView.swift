@@ -192,6 +192,10 @@ private extension StatisticsView {
         }
         .sorted { $0.amount > $1.amount }
     }
+    
+    func categoryTransactions(for category: Category) -> [Transaction] {
+        expenses.filter { $0.category == category }
+    }
 }
 
 private extension StatisticsView {
@@ -262,33 +266,48 @@ private extension StatisticsView {
     }
 
     func categoryRow(_ stat: CategoryStat, percentage: Decimal) -> some View {
-        HStack(spacing: 12) {
-            ZStack {
-                RoundedRectangle(cornerRadius: 8)
-                    .fill(Color(hex: stat.category.colorHex).opacity(0.15))
-                    .frame(width: 38, height: 38)
+        NavigationLink {
+            CategoryTransactionsView(
+                category: stat.category,
+                month: selectedMonth,
+                transactions: categoryTransactions(for: stat.category)
+            )
+        } label: {
+            HStack(spacing: 12) {
+                ZStack {
+                    RoundedRectangle(cornerRadius: 8)
+                        .fill(Color(hex: stat.category.colorHex).opacity(0.15))
+                        .frame(width: 38, height: 38)
 
-                Image(systemName: stat.category.icon)
-                    .foregroundStyle(Color(hex: stat.category.colorHex))
-                    .font(.system(size: 18, weight: .semibold))
+                    Image(systemName: stat.category.icon)
+                        .foregroundStyle(Color(hex: stat.category.colorHex))
+                        .font(.system(size: 18, weight: .semibold))
+                }
+
+                VStack(alignment: .leading, spacing: 3) {
+                    Text(stat.category.name)
+                        .font(.system(size: 15, weight: .semibold))
+                    
+                    Text("\(Int((percentage as NSDecimalNumber).doubleValue * 100))%")
+                        .font(.system(size: 12, weight: .medium))
+                        .foregroundStyle(.secondary)
+                }
+
+                Spacer()
+
+                HStack(spacing: 8) {
+                    Text(stat.amount.formatted(.currency(code: "KZT")))
+                        .font(.system(size: 15, weight: .semibold, design: .rounded))
+                        .foregroundStyle(.primary)
+                    
+                    Image(systemName: "chevron.right")
+                        .font(.system(size: 12, weight: .semibold))
+                        .foregroundStyle(.tertiary)
+                }
             }
-
-            VStack(alignment: .leading, spacing: 3) {
-                Text(stat.category.name)
-                    .font(.system(size: 15, weight: .semibold))
-                
-                Text("\(Int((percentage as NSDecimalNumber).doubleValue * 100))%")
-                    .font(.system(size: 12, weight: .medium))
-                    .foregroundStyle(.secondary)
-            }
-
-            Spacer()
-
-            Text(stat.amount.formatted(.currency(code: "KZT")))
-                .font(.system(size: 15, weight: .semibold, design: .rounded))
-                .foregroundStyle(.primary)
+            .padding(.vertical, 6)
+            .contentShape(Rectangle())
         }
-        .padding(.vertical, 6)
     }
 }
 
