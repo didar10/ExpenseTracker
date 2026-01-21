@@ -39,8 +39,6 @@ struct AddTransactionView: View {
                     
                     ScrollView {
                         VStack(spacing: 14) {
-                            typePicker
-                                .padding(.horizontal)
                             
                             amountView
                                 .padding(.horizontal)
@@ -75,7 +73,7 @@ struct AddTransactionView: View {
                 }
             }
             .background(Color(.systemGroupedBackground))
-            .animation(.spring(response: 0.4, dampingFraction: 0.8), value: viewModel.type)
+//            .animation(.spring(response: 0.4, dampingFraction: 0.8), value: viewModel.type)
             .navigationDestination(isPresented: $showAllCategories) {
                 AllCategoriesView(
                     categories: categories,
@@ -112,26 +110,41 @@ struct AddTransactionView: View {
 private extension AddTransactionView {
 
     var header: some View {
-        HStack {
-            Text(viewModel.isEditing ? "Редактировать" : "Новая транзакция")
-                .font(.system(size: 20, weight: .bold))
-                .foregroundStyle(.primary)
-
-            Spacer()
-
-            Button {
-                UIImpactFeedbackGenerator(style: .light).impactOccurred()
-                dismiss()
-            } label: {
-                Image(systemName: "xmark.circle.fill")
-                    .font(.system(size: 28))
-                    .foregroundStyle(.tertiary)
-                    .symbolRenderingMode(.hierarchical)
+        VStack(spacing: 8) {
+            ZStack {
+                // Centered typePicker with fixed size
+                typePicker
+                    .frame(width: 220, height: 34)
+                    .frame(maxWidth: .infinity)
             }
+            .frame(height: 50)
+            // Fixed-position close button on the left
+            .overlay(alignment: .leading) {
+                Button {
+                    UIImpactFeedbackGenerator(style: .light).impactOccurred()
+                    dismiss()
+                } label: {
+                    ZStack {
+                        Circle()
+                            .fill(Color(.secondarySystemGroupedBackground))
+                            .frame(width: 34, height: 34)
+                        Image(systemName: "xmark")
+                            .font(.system(size: 16, weight: .semibold))
+                            .foregroundStyle(.black)
+                    }
+                }
+                .padding(.leading, 12)
+            }
+            // Symmetric placeholder on the right to keep the center stable
+            .overlay(alignment: .trailing) {
+                Color.clear
+                    .frame(width: 34, height: 34)
+                    .padding(.trailing, 12)
+            }
+            .padding(.horizontal, 0)
         }
-        .padding(.horizontal)
-        .padding(.vertical, 12)
-        .background(Color(.systemBackground))
+        .padding(.vertical, 8)
+        .background(Color(.systemGroupedBackground))
     }
     
     var successOverlay: some View {
@@ -163,68 +176,98 @@ private extension AddTransactionView {
 private extension AddTransactionView {
 
     var typePicker: some View {
-        HStack(spacing: 0) {
-            ForEach([TransactionType.expense, TransactionType.income], id: \.self) { type in
-                Button {
-                    UIImpactFeedbackGenerator(style: .light).impactOccurred()
-                    withAnimation(.spring(response: 0.3, dampingFraction: 0.7)) {
-                        viewModel.type = type
-                    }
-                } label: {
-                    HStack(spacing: 6) {
-                        Image(systemName: type == .expense ? "arrow.up.circle.fill" : "arrow.down.circle.fill")
-                            .font(.system(size: 20))
-                            .foregroundStyle(viewModel.type == type ? .white : (type == .expense ? .red : .green))
-                        
-                        Text(type == .expense ? "Расход" : "Доход")
-                            .font(.system(size: 14, weight: .semibold))
-                            .foregroundStyle(viewModel.type == type ? .white : .primary)
-                    }
-                    .frame(maxWidth: .infinity)
-                    .padding(.vertical, 10)
-                    .background {
-                        RoundedRectangle(cornerRadius: 12)
-                            .fill(viewModel.type == type ? 
-                                  (type == .expense ? Color.red : Color.green) : 
-                                  Color(.secondarySystemGroupedBackground))
+        HStack(spacing: 6) {
+            // Expense button
+            Button {
+                UIImpactFeedbackGenerator(style: .medium).impactOccurred()
+                withAnimation(.spring(response: 0.3, dampingFraction: 0.7)) {
+                    viewModel.type = .expense
+                }
+            } label: {
+                HStack(spacing: 6) {
+                    Image(systemName: "arrow.up.right")
+                        .font(.system(size: 14, weight: .semibold))
+                        .foregroundStyle(Color.orange)
+                    if viewModel.type == .expense {
+                        Text("Расход")
+                            .font(.system(size: 13, weight: .semibold))
+                            .foregroundStyle(.primary)
+                            .transition(.opacity.combined(with: .move(edge: .leading)))
                     }
                 }
-                .buttonStyle(.plain)
+                .padding(.horizontal, 10)
+                .padding(.vertical, 8)
+                .background(
+                    RoundedRectangle(cornerRadius: 14, style: .continuous)
+                        .fill(viewModel.type == .expense ? Color.orange.opacity(0.15) : .clear)
+                )
             }
+            .buttonStyle(.plain)
+
+            // Income button
+            Button {
+                UIImpactFeedbackGenerator(style: .medium).impactOccurred()
+                withAnimation(.spring(response: 0.3, dampingFraction: 0.7)) {
+                    viewModel.type = .income
+                }
+            } label: {
+                HStack(spacing: 6) {
+                    Image(systemName: "arrow.down.left")
+                        .font(.system(size: 14, weight: .semibold))
+                        .foregroundStyle(Color.green)
+                    if viewModel.type == .income {
+                        Text("Доход")
+                            .font(.system(size: 13, weight: .semibold))
+                            .foregroundStyle(.primary)
+                            .transition(.opacity.combined(with: .move(edge: .trailing)))
+                    }
+                }
+                .padding(.horizontal, 10)
+                .padding(.vertical, 8)
+                .background(
+                    RoundedRectangle(cornerRadius: 14, style: .continuous)
+                        .fill(viewModel.type == .income ? Color.green.opacity(0.15) : .clear)
+                )
+            }
+            .buttonStyle(.plain)
         }
-        .padding(3)
-        .background {
-            RoundedRectangle(cornerRadius: 14)
-                .fill(Color(.systemBackground))
-                .shadow(color: .black.opacity(0.05), radius: 8, y: 2)
-        }
+        .padding(6)
+        .background(
+            Capsule().fill(Color(.secondarySystemGroupedBackground))
+        )
     }
 }
 
 private extension AddTransactionView {
 
     var amountView: some View {
-        HStack(spacing: 4) {
-            Text(viewModel.type == .expense ? "−" : "+")
-                .font(.system(size: 32, weight: .bold))
-                .foregroundStyle(viewModel.type == .expense ? .red : .green)
+        VStack(spacing: 8) {
+            // Removed the small type indicator row
             
-            Text(viewModel.amount.isEmpty ? "0" : viewModel.amount)
-                .font(.system(size: 42, weight: .bold, design: .rounded))
-                .minimumScaleFactor(0.5)
-                .lineLimit(1)
-            
-            Text("₸")
-                .font(.system(size: 24, weight: .semibold))
-                .foregroundStyle(.secondary)
+            // Сумма
+            HStack(spacing: 4) {
+                // Removed the sign text indicating "-" or "+"
+                
+                Text(viewModel.amount.isEmpty ? "0" : viewModel.amount)
+                    .font(.system(size: 52, weight: .bold, design: .rounded))
+                    .foregroundStyle(.primary)
+                    .minimumScaleFactor(0.5)
+                    .lineLimit(1)
+                
+                Text("₸")
+                    .font(.system(size: 32, weight: .semibold))
+                    .foregroundStyle(.secondary)
+                    .offset(y: -4)
+            }
         }
         .frame(maxWidth: .infinity)
-        .padding(.vertical, 14)
-        .background {
-            RoundedRectangle(cornerRadius: 20)
-                .fill(Color(.systemBackground))
-                .shadow(color: .black.opacity(0.05), radius: 8, y: 2)
-        }
+        .padding(.vertical, 12) // from 24 to 12
+//        .background {
+//            RoundedRectangle(cornerRadius: 24, style: .continuous)
+//                .fill(viewModel.type == .expense ?
+//                      Color.red.opacity(0.08) :
+//                      Color.green.opacity(0.08))
+//        }
         .contentTransition(.numericText())
     }
 }
@@ -232,71 +275,66 @@ private extension AddTransactionView {
 private extension AddTransactionView {
 
     var categoriesScroll: some View {
-        VStack(alignment: .leading, spacing: 0) {
-            HStack(spacing: 8) {
-                // Первые 4 категории
+        VStack(alignment: .leading, spacing: 8) {
+            HStack(spacing: 12) {
                 ForEach(Array(categories.prefix(4))) { category in
                     categoryItem(category)
                         .onTapGesture {
                             UIImpactFeedbackGenerator(style: .medium).impactOccurred()
-                            
                             withAnimation(.spring(response: 0.35, dampingFraction: 0.7)) {
                                 viewModel.selectedCategory = category
                             }
                         }
                 }
-                
-                // Кнопка "Ещё"
-                Button {
+                // Circular "More" button styled like a category
+                VStack(spacing: 8) {
+                    ZStack {
+                        Circle()
+                            .fill(Color(.secondarySystemGroupedBackground))
+                            .frame(width: 54, height: 54)
+                        Image(systemName: "ellipsis")
+                            .font(.system(size: 24, weight: .semibold))
+                            .foregroundStyle(.secondary)
+                    }
+                    Text("Еще")
+                        .font(.system(size: 11, weight: .semibold))
+                        .foregroundStyle(.secondary)
+                        .lineLimit(1)
+                        .truncationMode(.tail)
+                        .multilineTextAlignment(.center)
+                        .frame(width: 64)
+                }
+                .contentShape(Rectangle())
+                .onTapGesture {
                     UIImpactFeedbackGenerator(style: .light).impactOccurred()
                     showAllCategories = true
-                } label: {
-                    VStack(spacing: 6) {
-                        ZStack {
-                            Circle()
-                                .fill(Color(.secondarySystemGroupedBackground))
-                                .frame(width: Constants.categoryIconSize, height: Constants.categoryIconSize)
-
-                            Image(systemName: "ellipsis")
-                                .font(.system(size: 20, weight: .semibold))
-                                .foregroundStyle(.secondary)
-                        }
-                        
-                        Text("Ещё")
-                            .font(.system(size: 11, weight: .medium))
-                            .foregroundStyle(.secondary)
-                            .lineLimit(1)
-                    }
-                    .frame(maxWidth: .infinity)
                 }
-                .buttonStyle(.plain)
             }
+            .padding(.horizontal, 4)
+            .padding(.vertical, 6)
         }
-        .padding(.vertical, 12)
-        .background {
-            RoundedRectangle(cornerRadius: 20)
-                .fill(Color(.systemBackground))
-                .shadow(color: .black.opacity(0.05), radius: 8, y: 2)
-        }
+        .padding(.vertical, 4)
     }
 
     func categoryItem(_ category: Category) -> some View {
         let isSelected = viewModel.selectedCategory?.id == category.id
 
-        return VStack(spacing: 6) {
+        return VStack(spacing: 8) {
             ZStack {
                 Circle()
-                    .fill(isSelected ? Color(hex: category.colorHex) : Color(.secondarySystemGroupedBackground))
-                    .frame(width: Constants.categoryIconSize, height: Constants.categoryIconSize)
-                    .shadow(
-                        color: isSelected ? Color(hex: category.colorHex).opacity(0.3) : .clear,
-                        radius: isSelected ? 6 : 0,
-                        y: isSelected ? 3 : 0
-                    )
+                    .fill(Color(hex: category.colorHex).opacity(isSelected ? 1.0 : 0.15))
+                    .frame(width: 54, height: 54)
+                    .overlay {
+                        if isSelected {
+                            Circle()
+                                .strokeBorder(Color(hex: category.colorHex).opacity(0.3), lineWidth: 3)
+                                .scaleEffect(1.15)
+                        }
+                    }
 
                 Image(systemName: category.icon)
-                    .font(.system(size: 20, weight: .semibold))
-                    .foregroundStyle(isSelected ? .white : .secondary)
+                    .font(.system(size: 24, weight: .semibold))
+                    .foregroundStyle(isSelected ? .white : Color(hex: category.colorHex))
                     .symbolEffect(.bounce, value: isSelected)
             }
             
@@ -304,49 +342,65 @@ private extension AddTransactionView {
                 .font(.system(size: 11, weight: isSelected ? .semibold : .medium))
                 .foregroundStyle(isSelected ? .primary : .secondary)
                 .lineLimit(2)
+                .truncationMode(.tail)
                 .multilineTextAlignment(.center)
-                .minimumScaleFactor(0.8)
-                .frame(height: 28)
+                .frame(width: 64) // give a bit more width
         }
-        .frame(maxWidth: .infinity)
     }
 }
 
 private extension AddTransactionView {
 
     var details: some View {
-        VStack(spacing: 12) {
+        VStack(spacing: 16) {
             // Date Picker
-            HStack {
-                Image(systemName: "calendar")
-                    .foregroundStyle(.secondary)
-                    .font(.system(size: 18))
+            VStack(alignment: .leading, spacing: 8) {
+//                Text("Дата")
+//                    .font(.system(size: 13, weight: .semibold))
+//                    .foregroundStyle(.secondary)
+//                    .padding(.horizontal, 4)
                 
-                DatePicker("Дата", selection: $viewModel.date, displayedComponents: .date)
-                    .datePickerStyle(.compact)
-            }
-            .padding(.horizontal)
-            .padding(.vertical, 10)
-            .background {
-                RoundedRectangle(cornerRadius: 16)
-                    .fill(Color(.systemBackground))
+                HStack {
+                    Image(systemName: "calendar")
+                        .foregroundStyle(.secondary)
+                        .font(.system(size: 18))
+                    
+                    DatePicker("", selection: $viewModel.date, displayedComponents: .date)
+                        .datePickerStyle(.compact)
+                        .labelsHidden()
+                    
+                    Spacer()
+                }
+                .padding(.horizontal, 16)
+                .padding(.vertical, 14)
+                .background {
+                    RoundedRectangle(cornerRadius: 16, style: .continuous)
+                        .fill(Color(.systemBackground))
+                }
             }
 
             // Note Field
-            HStack(alignment: .top, spacing: 12) {
-                Image(systemName: "text.alignleft")
-                    .foregroundStyle(.secondary)
-                    .font(.system(size: 18))
-                    .padding(.top, 10)
+            VStack(alignment: .leading, spacing: 8) {
+//                Text("Комментарий")
+//                    .font(.system(size: 13, weight: .semibold))
+//                    .foregroundStyle(.secondary)
+//                    .padding(.horizontal, 4)
                 
-                TextField("Добавить комментарий...", text: $viewModel.note, axis: .vertical)
-                    .lineLimit(3...5)
-                    .padding(.vertical, 10)
-            }
-            .padding(.horizontal)
-            .background {
-                RoundedRectangle(cornerRadius: 16)
-                    .fill(Color(.systemBackground))
+                HStack(alignment: .top, spacing: 12) {
+                    Image(systemName: "text.alignleft")
+                        .foregroundStyle(.secondary)
+                        .font(.system(size: 18))
+                        .padding(.top, 14)
+                    
+                    TextField("Добавить комментарий...", text: $viewModel.note, axis: .vertical)
+                        .lineLimit(2...4)
+                        .padding(.vertical, 14)
+                }
+                .padding(.horizontal, 16)
+                .background {
+                    RoundedRectangle(cornerRadius: 16, style: .continuous)
+                        .fill(Color(.systemBackground))
+                }
             }
         }
     }
@@ -430,3 +484,4 @@ struct AllCategoriesView: View {
 private enum Constants {
     static let categoryIconSize: CGFloat = 48
 }
+

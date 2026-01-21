@@ -29,10 +29,9 @@ struct NumericKeypadView: View {
     ]
 
     var body: some View {
-        VStack(spacing: 10) {
-
+        VStack(spacing: 12) {
             ForEach(rows, id: \.self) { row in
-                HStack(spacing: 10) {
+                HStack(spacing: 12) {
                     ForEach(row, id: \.self) { key in
                         keyButton(key)
                     }
@@ -47,7 +46,7 @@ struct NumericKeypadView: View {
 
     private func keyButton(_ key: Key) -> some View {
         Button {
-            UIImpactFeedbackGenerator(style: .light).impactOccurred()
+            UIImpactFeedbackGenerator(style: .medium).impactOccurred()
             
             withAnimation(.easeInOut(duration: 0.1)) {
                 pressedKey = key
@@ -62,61 +61,75 @@ struct NumericKeypadView: View {
             }
         } label: {
             ZStack {
-                RoundedRectangle(cornerRadius: 12)
-                    .fill(pressedKey == key ? Color(.tertiarySystemBackground) : Color(.secondarySystemGroupedBackground))
-                    .shadow(color: .black.opacity(0.05), radius: pressedKey == key ? 0 : 2, y: pressedKey == key ? 0 : 1)
+                RoundedRectangle(cornerRadius: 16, style: .continuous)
+                    .fill(Color(uiColor: .systemBackground))
+                    .shadow(
+                        color: .black.opacity(pressedKey == key ? 0.3 : 0.65),
+                        radius: 0,
+                        x: pressedKey == key ? 2 : 4,
+                        y: pressedKey == key ? 3 : 6
+                    )
+                    .overlay(
+                        RoundedRectangle(cornerRadius: 16, style: .continuous)
+                            .strokeBorder(Color.black.opacity(0.15), lineWidth: 1.5)
+                    )
 
                 switch key {
                 case .number(let value):
                     Text(value)
-                        .font(.system(size: 26, weight: .medium, design: .rounded))
+                        .font(.system(size: 28, weight: .semibold, design: .rounded))
                         .foregroundStyle(.primary)
                 case .decimal:
                     Text(".")
-                        .font(.system(size: 26, weight: .bold))
+                        .font(.system(size: 32, weight: .bold))
                         .foregroundStyle(.primary)
                 case .delete:
                     Image(systemName: "delete.backward.fill")
-                        .font(.system(size: 22))
-                        .foregroundStyle(.secondary)
+                        .font(.system(size: 24, weight: .semibold))
+                        .foregroundStyle(.red)
                         .symbolRenderingMode(.hierarchical)
                 }
             }
         }
-        .frame(height: 58)
+        .frame(height: 60)
         .scaleEffect(pressedKey == key ? 0.95 : 1.0)
         .animation(.spring(response: 0.2, dampingFraction: 0.6), value: pressedKey == key)
     }
 
     private var enterButton: some View {
         Button {
-            UINotificationFeedbackGenerator().notificationOccurred(.success)
-            onEnterTap()
+            if isEnterEnabled {
+                UINotificationFeedbackGenerator().notificationOccurred(.success)
+                onEnterTap()
+            } else {
+                UIImpactFeedbackGenerator(style: .light).impactOccurred()
+            }
         } label: {
-            HStack(spacing: 8) {
-                Text(isEnterEnabled ? "Сохранить" : "Введите сумму")
-                    .font(.system(size: 18, weight: .semibold))
-                
+            HStack(spacing: 10) {
                 if isEnterEnabled {
                     Image(systemName: "checkmark.circle.fill")
-                        .font(.system(size: 20))
+                        .font(.system(size: 22))
                         .transition(.scale.combined(with: .opacity))
                 }
+                
+                Text(isEnterEnabled ? "Сохранить" : "Введите сумму")
+                    .font(.system(size: 18, weight: .bold))
             }
             .frame(maxWidth: .infinity)
-            .frame(height: 58)
+            .frame(height: 60)
             .background {
-                RoundedRectangle(cornerRadius: 16)
-                    .fill(isEnterEnabled ? 
-                          LinearGradient(colors: [.green, .green.opacity(0.8)], startPoint: .topLeading, endPoint: .bottomTrailing) :
-                          LinearGradient(colors: [Color(.systemGray4), Color(.systemGray5)], startPoint: .topLeading, endPoint: .bottomTrailing)
+                RoundedRectangle(cornerRadius: 16, style: .continuous)
+                    .fill(isEnterEnabled ? Color.green : Color.gray.opacity(0.5))
+                    .shadow(
+                        color: isEnterEnabled ? Color.green.opacity(0.4) : Color.clear,
+                        radius: isEnterEnabled ? 10 : 0,
+                        y: isEnterEnabled ? 4 : 0
                     )
-                    .shadow(color: isEnterEnabled ? .green.opacity(0.3) : .clear, radius: 8, y: 4)
             }
             .foregroundStyle(.white)
         }
         .disabled(!isEnterEnabled)
-        .padding(.top, 6)
+        .padding(.top, 4)
         .animation(.spring(response: 0.4, dampingFraction: 0.7), value: isEnterEnabled)
     }
 }
