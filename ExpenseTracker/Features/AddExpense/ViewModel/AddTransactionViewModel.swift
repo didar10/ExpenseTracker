@@ -7,16 +7,21 @@
 
 import Foundation
 import SwiftData
+import UIKit
 
 @MainActor
 final class AddTransactionViewModel: ObservableObject {
 
-    // MARK: - Input
+    // MARK: - Input Data
     @Published var amount: String = ""
     @Published var selectedCategory: Category?
     @Published var note: String = ""
     @Published var date: Date = .now
     @Published var type: TransactionType = .expense
+    
+    // MARK: - UI State
+    @Published var showSuccessAnimation = false
+    @Published var showAllCategories = false
 
     private(set) var editingTransaction: Transaction?
 
@@ -33,7 +38,7 @@ final class AddTransactionViewModel: ObservableObject {
         type = transaction.type
     }
 
-    // MARK: - State
+    // MARK: - Computed Properties
     var isEditing: Bool {
         editingTransaction != nil
     }
@@ -51,9 +56,28 @@ final class AddTransactionViewModel: ObservableObject {
         Decimal(string: amount.replacingOccurrences(of: ",", with: "."))
     }
 
+    // MARK: - Actions
+    
+    func selectCategory(_ category: Category) {
+        selectedCategory = category
+        provideFeedback(.medium)
+    }
+    
+    func toggleShowAllCategories() {
+        showAllCategories.toggle()
+        provideFeedback(.light)
+    }
+    
+    func changeType(to type: TransactionType) {
+        self.type = type
+        provideFeedback(.medium)
+    }
+    
     // MARK: - Save
-    func save(using context: ModelContext) {
-        guard let value = amountDecimal else { return }
+    func save(using context: ModelContext) -> Bool {
+        guard let value = amountDecimal else { return false }
+        
+        provideFeedback(.medium)
 
         if let transaction = editingTransaction {
             transaction.amount = value
@@ -71,9 +95,20 @@ final class AddTransactionViewModel: ObservableObject {
             )
             context.insert(newTransaction)
         }
+        
+        return true
+    }
+    
+    func showSuccessAndDismiss(onDismiss: @escaping () -> Void) {
+        showSuccessAnimation = true
+        
+        Task {
+            try? await Task.sleep(nanoseconds: 600_000_000) // 0.6 seconds
+            onDismiss()
+        }
     }
 
-    // MARK: - Keypad logic
+    // MARK: - Keypad Logic
     func handleKeyTap(_ key: NumericKeypadView.Key) {
         switch key {
         case .number(let value):
@@ -101,5 +136,10 @@ final class AddTransactionViewModel: ObservableObject {
     private func deleteLast() {
         guard !amount.isEmpty else { return }
         amount.removeLast()
+    }
+    
+    // MARK: - Haptic Feedback
+    private func provideFeedback(_ style: UIImpactFeedbackGenerator.FeedbackStyle) {
+        UIImpactFeedbackGenerator(style: style).impactOccurred()
     }
 }
