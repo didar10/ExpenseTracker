@@ -16,13 +16,9 @@ struct EmptyStateView: View {
                 .foregroundStyle(.tertiary)
             
             VStack(spacing: 8) {
-                Text("Нет транзакций")
-                    .font(.system(size: 20, weight: .semibold))
+                AppText("Нет транзакций", style: .title)
                 
-                Text("Нажмите + чтобы добавить первую транзакцию")
-                    .font(.system(size: 15))
-                    .foregroundStyle(.secondary)
-                    .multilineTextAlignment(.center)
+                AppText("Нажмите + чтобы добавить первую транзакцию", style: .bodySmall, color: .secondary, alignment: .center)
             }
         }
         .padding(40)

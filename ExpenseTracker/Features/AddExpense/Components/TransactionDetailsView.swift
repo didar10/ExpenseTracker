@@ -64,6 +64,7 @@ struct NoteInputView: View {
                     .padding(.top, 14)
                 
                 TextField("Добавить комментарий...", text: $note, axis: .vertical)
+                    .font(.app(.body))
                     .lineLimit(2...4)
                     .padding(.vertical, 14)
             }

@@ -24,9 +24,7 @@ struct TransactionTypePickerView: View {
                         .font(.system(size: 14, weight: .semibold))
                         .foregroundStyle(Color.orange)
                     if selectedType == .expense {
-                        Text("Расход")
-                            .font(.system(size: 13, weight: .semibold))
-                            .foregroundStyle(.primary)
+                        AppText("Расход", style: .caption)
                             .transition(.opacity.combined(with: .move(edge: .leading)))
                     }
                 }
@@ -51,9 +49,7 @@ struct TransactionTypePickerView: View {
                         .font(.system(size: 14, weight: .semibold))
                         .foregroundStyle(Color.green)
                     if selectedType == .income {
-                        Text("Доход")
-                            .font(.system(size: 13, weight: .semibold))
-                            .foregroundStyle(.primary)
+                        AppText("Доход", style: .caption)
                             .transition(.opacity.combined(with: .move(edge: .trailing)))
                     }
                 }

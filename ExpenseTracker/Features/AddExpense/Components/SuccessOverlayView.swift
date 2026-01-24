@@ -21,9 +21,8 @@ struct SuccessOverlayView: View {
                     .foregroundStyle(.green)
                     .symbolEffect(.bounce, value: isShowing)
                 
-                Text("Сохранено!")
-                    .font(.system(size: 18, weight: .semibold))
-                    .foregroundStyle(.white)
+                AppText("Сохранено!", style: .section)
+                    .color(.white)
             }
             .padding(32)
             .background {

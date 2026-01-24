@@ -61,13 +61,14 @@ private extension CategoryTransactionsView {
                             // Date header
                             HStack {
                                 Text(group.date, style: .date)
-                                    .font(.system(size: 14, weight: .semibold))
+                                    .font(.app(.sectionHeader))
                                     .foregroundStyle(.secondary)
                                 
                                 Spacer()
                                 
                                 Text(group.total.formatted(.currency(code: "KZT")))
-                                    .font(.system(size: 14, weight: .semibold))
+                                    .font(.app(.sectionHeader))
+                                    .fontDesign(.rounded)
                                     .foregroundStyle(.secondary)
                             }
                             .padding(.horizontal, 16)
@@ -113,12 +114,9 @@ private extension CategoryTransactionsView {
                 }
                 
                 VStack(alignment: .leading, spacing: 4) {
-                    Text("Всего транзакций")
-                        .font(.system(size: 14, weight: .medium))
-                        .foregroundStyle(.secondary)
+                    AppText("Всего транзакций", style: .sectionHeader, color: .secondary)
                     
-                    Text("\(transactions.count)")
-                        .font(.system(size: 18, weight: .bold))
+                    AppText("\(transactions.count)", style: .section)
                 }
                 
                 Spacer()
@@ -127,14 +125,13 @@ private extension CategoryTransactionsView {
             Divider()
             
             HStack {
-                Text("Сумма")
-                    .font(.system(size: 14, weight: .medium))
-                    .foregroundStyle(.secondary)
+                AppText("Сумма", style: .sectionHeader, color: .secondary)
                 
                 Spacer()
                 
                 Text(totalAmount.formatted(.currency(code: "KZT")))
-                    .font(.system(size: 24, weight: .bold, design: .rounded))
+                    .font(.app(.title))
+                    .fontDesign(.rounded)
                     .foregroundStyle(Color(hex: category.colorHex))
             }
         }
@@ -154,13 +151,9 @@ private extension CategoryTransactionsView {
                 .symbolRenderingMode(.hierarchical)
             
             VStack(spacing: 6) {
-                Text("Нет транзакций")
-                    .font(.system(size: 18, weight: .semibold))
+                AppText("Нет транзакций", style: .section)
                 
-                Text("В этом месяце нет транзакций в категории «\(category.name)»")
-                    .font(.system(size: 14))
-                    .foregroundStyle(.secondary)
-                    .multilineTextAlignment(.center)
+                AppText("В этом месяце нет транзакций в категории «\(category.name)»", style: .sectionHeader, color: .secondary, alignment: .center)
                     .padding(.horizontal, 32)
             }
         }

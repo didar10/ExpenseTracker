@@ -12,8 +12,7 @@ struct SettingsView: View {
         NavigationStack {
             VStack(spacing: 0) {
                 // Custom Header
-                Text("Настройки")
-                    .font(.system(size: 20, weight: .semibold))
+                AppText("Настройки", style: .title)
                     .frame(maxWidth: .infinity, alignment: .center)
                     .padding(.vertical, 16)
                     .background(Color(.systemGroupedBackground))
@@ -22,9 +21,7 @@ struct SettingsView: View {
                     VStack(spacing: 20) {
                         // MARK: - Основные настройки
                         VStack(spacing: 12) {
-                            Text("Основные")
-                                .font(.system(size: 14, weight: .semibold))
-                                .foregroundStyle(.secondary)
+                            AppText("Основные", style: .sectionHeader, color: .secondary)
                                 .frame(maxWidth: .infinity, alignment: .leading)
                                 .padding(.horizontal, 4)
                             
@@ -64,9 +61,7 @@ struct SettingsView: View {
                         
                         // MARK: - Информация
                         VStack(spacing: 12) {
-                            Text("Информация")
-                                .font(.system(size: 14, weight: .semibold))
-                                .foregroundStyle(.secondary)
+                            AppText("Информация", style: .sectionHeader, color: .secondary)
                                 .frame(maxWidth: .infinity, alignment: .leading)
                                 .padding(.horizontal, 4)
                             
@@ -116,13 +111,9 @@ struct SettingsView: View {
                         
                         // MARK: - App Info
                         VStack(spacing: 8) {
-                            Text("ExpenseTracker")
-                                .font(.system(size: 14, weight: .semibold))
-                                .foregroundStyle(.secondary)
+                            AppText("ExpenseTracker", style: .sectionHeader, color: .secondary)
                             
-                            Text("Версия 1.0.0")
-                                .font(.system(size: 12))
-                                .foregroundStyle(.tertiary)
+                            AppText("Версия 1.0.0", style: .caption, color: .secondary)
                         }
                         .padding(.top, 20)
                     }
@@ -160,9 +151,7 @@ struct SettingsRowView<Destination: View>: View {
                 }
                 
                 // Title
-                Text(title)
-                    .font(.system(size: 16))
-                    .foregroundStyle(.primary)
+                AppText(title, style: .body)
                 
                 Spacer()
                 

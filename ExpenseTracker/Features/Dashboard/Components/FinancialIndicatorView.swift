@@ -19,8 +19,10 @@ struct FinancialIndicatorView: View {
                 .font(.system(size: 16))
                 .foregroundStyle(color)
             
+            // Применяем .rounded design на уровне view
             Text(amount.formatted(.currency(code: "KZT")))
-                .font(.system(size: 15, weight: .semibold, design: .rounded))
+                .font(.app(.bodySmall))
+                .fontDesign(.rounded)
                 .foregroundStyle(.primary)
         }
     }

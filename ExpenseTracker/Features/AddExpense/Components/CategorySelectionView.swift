@@ -65,7 +65,8 @@ struct CategoryItemView: View {
             }
             
             Text(category.name)
-                .font(.system(size: 11, weight: isSelected ? .semibold : .medium))
+                .font(.app(.microCaption))
+                .fontWeight(isSelected ? .semibold : .medium)
                 .foregroundStyle(isSelected ? .primary : .secondary)
                 .lineLimit(2)
                 .truncationMode(.tail)
@@ -90,9 +91,7 @@ struct MoreCategoriesButton: View {
                     .font(.system(size: 24, weight: .semibold))
                     .foregroundStyle(.secondary)
             }
-            Text("Еще")
-                .font(.system(size: 11, weight: .semibold))
-                .foregroundStyle(.secondary)
+            AppText("Еще", style: .microCaption, color: .secondary)
                 .lineLimit(1)
                 .truncationMode(.tail)
                 .multilineTextAlignment(.center)

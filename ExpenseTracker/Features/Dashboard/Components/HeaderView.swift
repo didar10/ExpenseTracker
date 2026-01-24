@@ -12,8 +12,7 @@ struct HeaderView: View {
     let title: String
     
     var body: some View {
-        Text(title)
-            .font(.system(size: 20, weight: .semibold))
+        AppText(title, style: .title)
             .frame(maxWidth: .infinity, alignment: .center)
             .padding(.vertical, 16)
             .background(Color(.systemGroupedBackground))

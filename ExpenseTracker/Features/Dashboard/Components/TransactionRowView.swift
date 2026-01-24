@@ -22,8 +22,7 @@ struct TransactionRowView: View {
 
             VStack(alignment: .leading, spacing: 4) {
                 HStack(spacing: 6) {
-                    Text(title)
-                        .font(.system(size: 15, weight: .semibold))
+                    AppText(title, style: .bodySmall)
                     
                     if let note = transaction.note, !note.isEmpty {
                         Image(systemName: "text.bubble")
@@ -33,9 +32,7 @@ struct TransactionRowView: View {
                 }
 
                 if let note = transaction.note, !note.isEmpty {
-                    Text(note)
-                        .font(.system(size: 12))
-                        .foregroundStyle(.secondary)
+                    AppText(note, style: .microCaption, color: .secondary)
                         .lineLimit(1)
                 }
             }
@@ -43,12 +40,14 @@ struct TransactionRowView: View {
             Spacer()
             
             VStack(alignment: .trailing, spacing: 3) {
+                // Применяем .rounded design на уровне view
                 Text(amountText)
-                    .font(.system(size: 15, weight: .semibold, design: .rounded))
+                    .font(.app(.bodySmall))
+                    .fontDesign(.rounded)
                     .foregroundStyle(amountColor)
                 
                 Text(transaction.date, style: .time)
-                    .font(.system(size: 10, weight: .medium))
+                    .font(.app(.microCaption))
                     .foregroundStyle(.tertiary)
             }
         }

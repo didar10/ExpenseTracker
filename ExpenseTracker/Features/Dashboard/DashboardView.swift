@@ -36,7 +36,7 @@ struct DashboardView: View {
                 HeaderView(title: "Главная")
                 
                 ScrollView {
-                    VStack(spacing: 20) {
+                    VStack(spacing: .zero) {
                         BalanceCardView(balanceData: balanceData)
                         
                         TransactionsListView(

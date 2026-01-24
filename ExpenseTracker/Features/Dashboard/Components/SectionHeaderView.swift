@@ -12,9 +12,7 @@ struct SectionHeaderView: View {
     let date: Date
     
     var body: some View {
-        Text(dateTitle)
-            .font(.system(size: 15, weight: .semibold))
-            .foregroundStyle(.secondary)
+        AppText(dateTitle, style: .bodySmall, color: .secondary)
             .padding(.horizontal)
             .textCase(.uppercase)
     }

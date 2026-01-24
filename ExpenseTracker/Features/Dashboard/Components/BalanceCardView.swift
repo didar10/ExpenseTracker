@@ -13,12 +13,12 @@ struct BalanceCardView: View {
     
     var body: some View {
         VStack(spacing: 12) {
-            Text("Баланс")
-                .font(.system(size: 13, weight: .medium))
-                .foregroundStyle(.secondary)
+            AppText("Баланс", style: .caption, color: .secondary)
             
+            // Применяем .rounded design на уровне view
             Text(balanceData.balance.formatted(.currency(code: "KZT")))
-                .font(.system(size: 40, weight: .bold, design: .rounded))
+                .font(.app(.balance))
+                .fontDesign(.rounded)
                 .foregroundStyle(.primary)
                 .contentTransition(.numericText())
             

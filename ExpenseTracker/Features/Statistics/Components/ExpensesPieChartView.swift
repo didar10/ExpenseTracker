@@ -36,12 +36,12 @@ struct ExpensesPieChartView: View {
             .frame(height: 220)
             .chartBackground { _ in
                 VStack(spacing: 3) {
-                    Text("Расходы")
-                        .font(.system(size: 12, weight: .medium))
-                        .foregroundStyle(.secondary)
+                    AppText("Расходы", style: .microCaption, color: .secondary)
                     
+                    // Используем .rounded для сумм
                     Text(totalExpenses.formatted(.currency(code: "KZT")))
-                        .font(.system(size: 16, weight: .bold, design: .rounded))
+                        .font(.app(.body))
+                        .fontDesign(.rounded)
                         .foregroundStyle(.primary)
                 }
             }

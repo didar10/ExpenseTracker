@@ -20,9 +20,7 @@ struct TransactionAmountView: View {
                     .minimumScaleFactor(0.5)
                     .lineLimit(1)
                 
-                Text("₸")
-                    .font(.system(size: 32, weight: .semibold))
-                    .foregroundStyle(.secondary)
+                AppText("₸", style: .title, color: .secondary)
                     .offset(y: -4)
             }
         }

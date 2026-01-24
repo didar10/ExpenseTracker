@@ -17,13 +17,9 @@ struct StatisticsEmptyStateView: View {
                 .symbolRenderingMode(.hierarchical)
             
             VStack(spacing: 6) {
-                Text("Нет данных")
-                    .font(.system(size: 18, weight: .semibold))
+                AppText("Нет данных", style: .section)
                 
-                Text("Добавьте расходы за выбранный месяц")
-                    .font(.system(size: 14))
-                    .foregroundStyle(.secondary)
-                    .multilineTextAlignment(.center)
+                AppText("Добавьте расходы за выбранный месяц", style: .sectionHeader, color: .secondary, alignment: .center)
             }
         }
         .padding(32)

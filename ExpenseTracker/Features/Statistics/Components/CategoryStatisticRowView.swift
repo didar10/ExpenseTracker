@@ -40,20 +40,18 @@ struct CategoryStatisticRowView: View {
     
     private var categoryInfo: some View {
         VStack(alignment: .leading, spacing: 3) {
-            Text(statistic.category.name)
-                .font(.system(size: 15, weight: .semibold))
-                .foregroundStyle(.primary)
+            AppText(statistic.category.name, style: .bodySmall)
             
-            Text(statistic.percentageString(of: totalExpenses))
-                .font(.system(size: 12, weight: .medium))
-                .foregroundStyle(.secondary)
+            AppText(statistic.percentageString(of: totalExpenses), style: .microCaption, color: .secondary)
         }
     }
     
     private var amountInfo: some View {
         HStack(spacing: 8) {
+            // Используем .rounded для сумм
             Text(statistic.amount.formatted(.currency(code: "KZT")))
-                .font(.system(size: 15, weight: .semibold, design: .rounded))
+                .font(.app(.bodySmall))
+                .fontDesign(.rounded)
                 .foregroundStyle(.primary)
             
             Image(systemName: "chevron.right")

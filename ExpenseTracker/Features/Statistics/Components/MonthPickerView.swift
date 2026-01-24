@@ -26,7 +26,7 @@ struct MonthPickerView: View {
             Spacer()
             
             Text(monthTitle)
-                .font(.system(size: 18, weight: .bold))
+                .font(.app(.section))
                 .contentTransition(.numericText())
             
             Spacer()

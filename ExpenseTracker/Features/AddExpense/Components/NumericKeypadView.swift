@@ -78,11 +78,9 @@ struct NumericKeypadView: View {
                 case .number(let value):
                     Text(value)
                         .font(.system(size: 28, weight: .semibold, design: .rounded))
-                        .foregroundStyle(.primary)
+                        .foregroundColor(.primary)
                 case .decimal:
-                    Text(".")
-                        .font(.system(size: 32, weight: .bold))
-                        .foregroundStyle(.primary)
+                    AppText(".", style: .title)
                 case .delete:
                     Image(systemName: "delete.backward.fill")
                         .font(.system(size: 24, weight: .semibold))
@@ -106,14 +104,8 @@ struct NumericKeypadView: View {
             }
         } label: {
             HStack(spacing: 10) {
-                if isEnterEnabled {
-                    Image(systemName: "checkmark.circle.fill")
-                        .font(.system(size: 22))
-                        .transition(.scale.combined(with: .opacity))
-                }
-                
-                Text(isEnterEnabled ? "Сохранить" : "Введите сумму")
-                    .font(.system(size: 18, weight: .bold))
+                AppText(isEnterEnabled ? "Сохранить" : "Введите сумму", style: .section)
+                    .color(.white)
             }
             .frame(maxWidth: .infinity)
             .frame(height: 60)
@@ -126,7 +118,6 @@ struct NumericKeypadView: View {
                         y: isEnterEnabled ? 4 : 0
                     )
             }
-            .foregroundStyle(.white)
         }
         .disabled(!isEnterEnabled)
         .padding(.top, 4)

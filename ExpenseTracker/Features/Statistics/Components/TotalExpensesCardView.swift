@@ -13,12 +13,12 @@ struct TotalExpensesCardView: View {
     
     var body: some View {
         VStack(spacing: 8) {
-            Text("Всего расходов")
-                .font(.system(size: 13, weight: .medium))
-                .foregroundStyle(.secondary)
+            AppText("Всего расходов", style: .caption, color: .secondary)
             
+            // Используем .rounded для сумм
             Text(amount.formatted(.currency(code: "KZT")))
-                .font(.system(size: 36, weight: .bold, design: .rounded))
+                .font(.app(.largeTitle))
+                .fontDesign(.rounded)
                 .foregroundStyle(.primary)
                 .contentTransition(.numericText())
         }

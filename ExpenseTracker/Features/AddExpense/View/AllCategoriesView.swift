@@ -68,7 +68,8 @@ struct AllCategoriesItemView: View {
             }
             
             Text(category.name)
-                .font(.system(size: 12, weight: isSelected ? .semibold : .medium))
+                .font(.app(.microCaption))
+                .fontWeight(isSelected ? .semibold : .medium)
                 .foregroundStyle(isSelected ? .primary : .secondary)
                 .lineLimit(2)
                 .multilineTextAlignment(.center)
