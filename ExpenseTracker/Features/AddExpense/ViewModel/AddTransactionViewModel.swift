@@ -15,6 +15,7 @@ final class AddTransactionViewModel: ObservableObject {
     // MARK: - Input Data
     @Published var amount: String = ""
     @Published var selectedCategory: Category?
+    @Published var selectedAccount: Account?
     @Published var note: String = ""
     @Published var date: Date = .now
     @Published var type: TransactionType = .expense
@@ -33,6 +34,7 @@ final class AddTransactionViewModel: ObservableObject {
 
         amount = transaction.amount.description
         selectedCategory = transaction.category
+        selectedAccount = transaction.account
         note = transaction.note ?? ""
         date = transaction.date
         type = transaction.type
@@ -45,6 +47,7 @@ final class AddTransactionViewModel: ObservableObject {
 
     var isSaveEnabled: Bool {
         Decimal(string: amount) != nil &&
+        selectedAccount != nil &&
         (type == .income || selectedCategory != nil)
     }
 
@@ -82,6 +85,7 @@ final class AddTransactionViewModel: ObservableObject {
         if let transaction = editingTransaction {
             transaction.amount = value
             transaction.category = type == .expense ? selectedCategory : nil
+            transaction.account = selectedAccount
             transaction.note = note.isEmpty ? nil : note
             transaction.date = date
             transaction.type = type
@@ -91,7 +95,8 @@ final class AddTransactionViewModel: ObservableObject {
                 date: date,
                 note: note.isEmpty ? nil : note,
                 type: type,
-                category: type == .expense ? selectedCategory : nil
+                category: type == .expense ? selectedCategory : nil,
+                account: selectedAccount
             )
             context.insert(newTransaction)
         }

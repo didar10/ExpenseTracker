@@ -16,6 +16,7 @@ struct AppRootView: View {
         RootTabView()
             .task {
                 CategorySeeder.seedIfNeeded(context: context)
+                AccountSeeder.seedIfNeeded(context: context)
             }
     }
 }

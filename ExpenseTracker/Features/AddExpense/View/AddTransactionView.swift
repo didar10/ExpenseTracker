@@ -36,6 +36,10 @@ struct AddTransactionView: View {
                             
                             TransactionAmountView(amount: viewModel.amount)
                                 .padding(.horizontal)
+                            
+                            // Выбор счета
+                            AccountPickerView(selectedAccount: $viewModel.selectedAccount)
+                                .padding(.horizontal)
 
                             if viewModel.type == .expense {
                                 CategorySelectionView(
@@ -108,40 +112,46 @@ private extension AddTransactionView {
 
     var header: some View {
         VStack(spacing: 8) {
-            ZStack {
-                // Centered typePicker
-                TransactionTypePickerView(selectedType: $viewModel.type)
-                    .frame(width: 220, height: 34)
-                    .frame(maxWidth: .infinity)
-            }
-            .frame(height: 50)
-            // Close button on the left
-            .overlay(alignment: .leading) {
-                Button {
-                    UIImpactFeedbackGenerator(style: .light).impactOccurred()
-                    dismiss()
-                } label: {
-                    ZStack {
-                        Circle()
-                            .fill(Color(.secondarySystemGroupedBackground))
-                            .frame(width: 34, height: 34)
-                        Image(systemName: "xmark")
-                            .font(.system(size: 16, weight: .semibold))
-                            .foregroundStyle(.black)
-                    }
-                }
-                .padding(.leading, 12)
-            }
-            // Symmetric placeholder on the right
-            .overlay(alignment: .trailing) {
-                Color.clear
-                    .frame(width: 34, height: 34)
-                    .padding(.trailing, 12)
-            }
-            .padding(.horizontal, 0)
+            headerContent
         }
         .padding(.vertical, 8)
         .background(Color(.systemGroupedBackground))
+    }
+    
+    var headerContent: some View {
+        ZStack {
+            // Centered typePicker
+            HStack {
+                Spacer()
+                TransactionTypePickerView(selectedType: $viewModel.type)
+                    .frame(width: 220, height: 34)
+                Spacer()
+            }
+            
+            // Close button on the left
+            HStack {
+                closeButton
+                Spacer()
+            }
+        }
+        .frame(height: 50)
+    }
+    
+    var closeButton: some View {
+        Button {
+            UIImpactFeedbackGenerator(style: .light).impactOccurred()
+            dismiss()
+        } label: {
+            ZStack {
+                Circle()
+                    .fill(Color(.secondarySystemGroupedBackground))
+                    .frame(width: 34, height: 34)
+                Image(systemName: "xmark")
+                    .font(.system(size: 16, weight: .semibold))
+                    .foregroundStyle(.black)
+            }
+        }
+        .padding(.leading, 12)
     }
 }
 

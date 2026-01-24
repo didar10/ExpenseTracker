@@ -13,6 +13,7 @@ struct BalanceData {
     let totalIncome: Decimal
     let totalExpenses: Decimal
     
+    /// Инициализатор для транзакций (обратная совместимость)
     init(transactions: [Transaction]) {
         var balance: Decimal = 0
         var income: Decimal = 0
@@ -31,5 +32,22 @@ struct BalanceData {
         self.balance = balance
         self.totalIncome = income
         self.totalExpenses = expenses
+    }
+    
+    /// Инициализатор для счетов (общий баланс всех счетов)
+    init(accounts: [Account]) {
+        var totalBalance: Decimal = 0
+        var totalIncome: Decimal = 0
+        var totalExpenses: Decimal = 0
+        
+        for account in accounts {
+            totalBalance += account.currentBalance
+            totalIncome += account.totalIncome
+            totalExpenses += account.totalExpenses
+        }
+        
+        self.balance = totalBalance
+        self.totalIncome = totalIncome
+        self.totalExpenses = totalExpenses
     }
 }

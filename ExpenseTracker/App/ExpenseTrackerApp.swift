@@ -28,7 +28,8 @@ struct ExpenseTrackerApp: App {
         }
         .modelContainer(for: [
             Transaction.self,
-            Category.self
+            Category.self,
+            Account.self
         ])
     }
 }
