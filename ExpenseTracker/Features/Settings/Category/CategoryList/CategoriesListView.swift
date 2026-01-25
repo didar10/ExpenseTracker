@@ -43,16 +43,28 @@ struct CategoriesListView: View {
         .navigationTitle("Категории")
         .navigationBarTitleDisplayMode(.inline)
         .navigationBarBackButtonHidden(true)
+        .toolbarBackground(.hidden, for: .navigationBar)
         .toolbar {
             ToolbarItem(placement: .navigationBarLeading) {
                 Button {
                     isTabBarVisible.wrappedValue = true
                     dismiss()
                 } label: {
-                    Image(systemName: "chevron.left.circle.fill")
-                        .font(.system(size: 28))
-                        .foregroundStyle(.green)
-                        .symbolRenderingMode(.hierarchical)
+                    ZStack {
+                        Circle()
+                            .fill(Color.white)
+                            .frame(width: 40, height: 40)
+                            .shadow(
+                                color: .black.opacity(0.1),
+                                radius: 3,
+                                x: 0,
+                                y: 2
+                            )
+                        
+                        Image(systemName: "chevron.left")
+                            .font(.system(size: 14, weight: .semibold))
+                            .foregroundStyle(.black)
+                    }
                 }
             }
             
@@ -60,10 +72,21 @@ struct CategoriesListView: View {
                 NavigationLink {
                     AddEditCategoryView()
                 } label: {
-                    Image(systemName: "plus.circle.fill")
-                        .font(.system(size: 28))
-                        .foregroundStyle(.green)
-                        .symbolRenderingMode(.hierarchical)
+                    ZStack {
+                        Circle()
+                            .fill(Color.white)
+                            .frame(width: 40, height: 40)
+                            .shadow(
+                                color: .black.opacity(0.1),
+                                radius: 3,
+                                x: 0,
+                                y: 2
+                            )
+                        
+                        Image(systemName: "plus")
+                            .font(.system(size: 15, weight: .semibold))
+                            .foregroundStyle(.black)
+                    }
                 }
             }
         }

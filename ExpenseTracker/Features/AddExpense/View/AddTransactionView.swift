@@ -35,31 +35,40 @@ struct AddTransactionView: View {
                         VStack(spacing: 14) {
                             
                             TransactionAmountView(amount: viewModel.amount)
-                                .padding(.horizontal)
                             
                             // Выбор счета
-                            AccountPickerView(selectedAccount: $viewModel.selectedAccount)
-                                .padding(.horizontal)
+                            AccountPickerView(
+                                selectedAccount: $viewModel.selectedAccount,
+                                transactionAmount: viewModel.amount,
+                                transactionType: viewModel.type
+                            )
 
-                            if viewModel.type == .expense {
-                                CategorySelectionView(
-                                    categories: categories,
-                                    selectedCategory: $viewModel.selectedCategory,
-                                    onShowAll: {
-                                        viewModel.toggleShowAllCategories()
-                                    }
-                                )
-                                .padding(.horizontal)
-                                .transition(.move(edge: .trailing).combined(with: .opacity))
+                            // Выбор категории (только для расходов)
+                            Group {
+                                if viewModel.type == .expense {
+                                    CategorySelectionView(
+                                        categories: categories,
+                                        selectedCategory: $viewModel.selectedCategory,
+                                        onShowAll: {
+                                            viewModel.toggleShowAllCategories()
+                                        }
+                                    )
+                                    .transition(.asymmetric(
+                                        insertion: .move(edge: .trailing).combined(with: .opacity),
+                                        removal: .move(edge: .trailing).combined(with: .opacity)
+                                    ))
+                                }
                             }
+                            .animation(.spring(response: 0.35, dampingFraction: 0.7), value: viewModel.type)
 
                             TransactionDetailsView(
                                 date: $viewModel.date,
                                 note: $viewModel.note
                             )
-                            .padding(.horizontal)
                         }
+                        .padding(.horizontal) // Общий padding для всех элементов
                         .padding(.top, 10)
+                        .frame(maxWidth: .infinity, alignment: .top) // Фиксируем ширину
                     }
                     
                     Divider()
@@ -116,6 +125,7 @@ private extension AddTransactionView {
         }
         .padding(.vertical, 8)
         .background(Color(.systemGroupedBackground))
+        .frame(maxWidth: .infinity) // Фиксируем ширину
     }
     
     var headerContent: some View {
@@ -135,6 +145,7 @@ private extension AddTransactionView {
             }
         }
         .frame(height: 50)
+        .frame(maxWidth: .infinity) // Фиксируем ширину
     }
     
     var closeButton: some View {
@@ -152,6 +163,7 @@ private extension AddTransactionView {
             }
         }
         .padding(.leading, 12)
+        .fixedSize() // Фиксируем размер кнопки
     }
 }
 

@@ -11,9 +11,26 @@ import SwiftData
 struct AccountPickerView: View {
     
     @Binding var selectedAccount: Account?
+    let transactionAmount: String
+    let transactionType: TransactionType
+    
     @Query(sort: \Account.createdAt, order: .forward) private var accounts: [Account]
     
     @State private var showingAccountPicker = false
+    
+    private var amountDecimal: Decimal {
+        Decimal(string: transactionAmount.replacingOccurrences(of: ",", with: ".")) ?? 0
+    }
+    
+    private var predictedBalance: Decimal? {
+        guard let account = selectedAccount, amountDecimal > 0 else { return nil }
+        
+        if transactionType == .income {
+            return account.currentBalance + amountDecimal
+        } else {
+            return account.currentBalance - amountDecimal
+        }
+    }
     
     var body: some View {
         Button {
@@ -34,17 +51,25 @@ struct AccountPickerView: View {
                         }
                         
                         VStack(alignment: .leading, spacing: 2) {
-                            AppText("Счет", style: .caption)
+                            AppText(account.name, style: .caption)
                                 .color(.secondary)
-                            AppText(account.name, style: .body)
-                                .color(.primary)
+                            
+                            if let predicted = predictedBalance, amountDecimal > 0 {
+                                // Показываем изменение баланса
+                                Text(predicted.formatted(.currency(code: "KZT")))
+                                    .font(.system(size: 15, weight: .semibold))
+                                    .fontDesign(.rounded)
+                                    .foregroundStyle(transactionType == .income ? .green : .red)
+                            } else {
+                                // Показываем текущий баланс
+                                Text(account.currentBalance.formatted(.currency(code: "KZT")))
+                                    .font(.system(size: 15, weight: .semibold))
+                                    .fontDesign(.rounded)
+                                    .foregroundStyle(.black)
+                            }
                         }
                         
                         Spacer()
-                        
-                        Image(systemName: "chevron.right")
-                            .font(.system(size: 14))
-                            .foregroundStyle(.secondary)
                     }
                 } else {
                     // Показываем плейсхолдер
@@ -56,10 +81,6 @@ struct AccountPickerView: View {
                             .color(.secondary)
                         
                         Spacer()
-                        
-                        Image(systemName: "chevron.right")
-                            .font(.system(size: 14))
-                            .foregroundStyle(.secondary)
                     }
                 }
             }
@@ -101,14 +122,14 @@ struct AccountPickerSheet: View {
                     ScrollView {
                         VStack(spacing: 12) {
                             ForEach(accounts) { account in
-                                AccountPickerRow(
-                                    account: account,
-                                    isSelected: selectedAccount?.id == account.id
-                                ) {
+                                Button {
                                     selectedAccount = account
                                     UIImpactFeedbackGenerator(style: .light).impactOccurred()
                                     dismiss()
+                                } label: {
+                                    accountRow(account)
                                 }
+                                .buttonStyle(.plain)
                             }
                         }
                         .padding()
@@ -117,14 +138,75 @@ struct AccountPickerSheet: View {
             }
             .navigationTitle("Выбор счета")
             .navigationBarTitleDisplayMode(.inline)
+            .toolbarBackground(.hidden, for: .navigationBar)
             .toolbar {
-                ToolbarItem(placement: .navigationBarTrailing) {
-                    Button("Готово") {
+                ToolbarItem(placement: .navigationBarLeading) {
+                    Button {
                         dismiss()
+                    } label: {
+                        ZStack {
+                            Circle()
+                                .fill(Color.white)
+                                .frame(width: 40, height: 40)
+                                .shadow(
+                                    color: .black.opacity(0.1),
+                                    radius: 3,
+                                    x: 0,
+                                    y: 2
+                                )
+                            
+                            Image(systemName: "xmark")
+                                .font(.system(size: 13, weight: .semibold))
+                                .foregroundStyle(.black)
+                        }
                     }
                 }
             }
         }
+    }
+    
+    private func accountRow(_ account: Account) -> some View {
+        HStack(spacing: 12) {
+            ZStack {
+                RoundedRectangle(cornerRadius: 10, style: .continuous)
+                    .fill(account.swiftUIColor.opacity(0.2))
+                    .frame(width: 44, height: 44)
+                
+                Image(systemName: account.icon)
+                    .font(.system(size: 20, weight: .medium))
+                    .foregroundStyle(account.swiftUIColor)
+            }
+            
+            HStack(spacing: 4) {
+                Text(account.name)
+                    .font(.system(size: 15, weight: .medium))
+                    .foregroundStyle(.primary)
+                
+                if account.isDefault {
+                    Image(systemName: "star.fill")
+                        .font(.system(size: 10))
+                        .foregroundStyle(.yellow)
+                }
+            }
+            
+            Spacer(minLength: 8)
+            
+            HStack(spacing: 8) {
+                Text(account.currentBalance.formatted(.currency(code: "KZT")))
+                    .font(.system(size: 14, weight: .semibold))
+                    .fontDesign(.rounded)
+                    .foregroundStyle(.secondary)
+                
+                if selectedAccount?.id == account.id {
+                    Image(systemName: "checkmark.circle.fill")
+                        .font(.system(size: 20))
+                        .foregroundStyle(.blue)
+                }
+            }
+        }
+        .padding(.horizontal, 14)
+        .padding(.vertical, 10)
+        .cardShadow(cornerRadius: 14)
     }
     
     private var emptyStateView: some View {
@@ -144,72 +226,14 @@ struct AccountPickerSheet: View {
     }
 }
 
-// MARK: - Account Picker Row
-
-struct AccountPickerRow: View {
-    
-    let account: Account
-    let isSelected: Bool
-    let action: () -> Void
-    
-    var body: some View {
-        Button(action: action) {
-            HStack(spacing: 16) {
-                // Иконка
-                ZStack {
-                    RoundedRectangle(cornerRadius: 10, style: .continuous)
-                        .fill(account.swiftUIColor.opacity(0.2))
-                        .frame(width: 48, height: 48)
-                    
-                    Image(systemName: account.icon)
-                        .font(.system(size: 20))
-                        .foregroundStyle(account.swiftUIColor)
-                }
-                
-                // Информация
-                VStack(alignment: .leading, spacing: 4) {
-                    HStack {
-                        AppText(account.name, style: .body)
-                            .color(.primary)
-                        
-                        if account.isDefault {
-                            Image(systemName: "star.fill")
-                                .font(.system(size: 10))
-                                .foregroundStyle(.yellow)
-                        }
-                    }
-                    
-                    AppText(account.currentBalance.formatted(.currency(code: "KZT")), style: .caption)
-                        .color(.secondary)
-                }
-                
-                Spacer()
-                
-                // Индикатор выбора
-                if isSelected {
-                    Image(systemName: "checkmark.circle.fill")
-                        .font(.system(size: 22))
-                        .foregroundStyle(.blue)
-                }
-            }
-            .padding(16)
-            .background {
-                RoundedRectangle(cornerRadius: 12, style: .continuous)
-                    .fill(Color(uiColor: .systemBackground))
-                    .overlay(
-                        RoundedRectangle(cornerRadius: 12, style: .continuous)
-                            .strokeBorder(isSelected ? Color.blue : Color.clear, lineWidth: 2)
-                    )
-            }
-        }
-        .buttonStyle(.plain)
-    }
-}
-
 #Preview {
     @Previewable @State var selectedAccount: Account? = nil
     
-    return AccountPickerView(selectedAccount: $selectedAccount)
-        .padding()
-        .modelContainer(for: [Account.self], inMemory: true)
+    return AccountPickerView(
+        selectedAccount: $selectedAccount,
+        transactionAmount: "5000",
+        transactionType: .expense
+    )
+    .padding()
+    .modelContainer(for: [Account.self], inMemory: true)
 }

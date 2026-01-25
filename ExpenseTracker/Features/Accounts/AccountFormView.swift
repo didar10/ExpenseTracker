@@ -73,19 +73,51 @@ struct AccountFormView: View {
             }
             .navigationTitle(isEditMode ? "Редактировать счет" : "Новый счет")
             .navigationBarTitleDisplayMode(.inline)
+            .toolbarBackground(.hidden, for: .navigationBar)
             .toolbar {
                 ToolbarItem(placement: .navigationBarLeading) {
-                    Button("Отмена") {
+                    Button {
                         dismiss()
+                    } label: {
+                        ZStack {
+                            Circle()
+                                .fill(Color.white)
+                                .frame(width: 40, height: 40)
+                                .shadow(
+                                    color: .black.opacity(0.1),
+                                    radius: 3,
+                                    x: 0,
+                                    y: 2
+                                )
+                            
+                            Image(systemName: "xmark")
+                                .font(.system(size: 13, weight: .semibold))
+                                .foregroundStyle(.black)
+                        }
                     }
                 }
                 
                 ToolbarItem(placement: .navigationBarTrailing) {
-                    Button(isEditMode ? "Сохранить" : "Создать") {
+                    Button {
                         saveAccount()
+                    } label: {
+                        ZStack {
+                            Circle()
+                                .fill(isValid ? Color.white : Color.white.opacity(0.5))
+                                .frame(width: 40, height: 40)
+                                .shadow(
+                                    color: .black.opacity(isValid ? 0.1 : 0.05),
+                                    radius: 3,
+                                    x: 0,
+                                    y: 2
+                                )
+                            
+                            Image(systemName: "checkmark")
+                                .font(.system(size: 14, weight: .bold))
+                                .foregroundStyle(isValid ? .black : .gray)
+                        }
                     }
                     .disabled(!isValid)
-                    .bold()
                 }
             }
             .onAppear {
@@ -141,11 +173,7 @@ struct AccountFormView: View {
             Spacer()
         }
         .padding(20)
-        .background {
-            RoundedRectangle(cornerRadius: 20, style: .continuous)
-                .fill(Color(uiColor: .systemBackground))
-                .shadow(color: .black.opacity(0.05), radius: 10, y: 5)
-        }
+        .cardShadow(cornerRadius: 20)
     }
     
     private var formContent: some View {
@@ -252,10 +280,7 @@ struct FormSection<Content: View>: View {
                 content
             }
             .padding(12)
-            .background {
-                RoundedRectangle(cornerRadius: 12, style: .continuous)
-                    .fill(Color(uiColor: .systemBackground))
-            }
+            .cardShadow(cornerRadius: 12)
         }
     }
 }

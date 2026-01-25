@@ -28,24 +28,22 @@ struct DateSelectionView: View {
     @Binding var date: Date
     
     var body: some View {
-        VStack(alignment: .leading, spacing: 8) {
-            HStack {
-                Image(systemName: "calendar")
-                    .foregroundStyle(.secondary)
-                    .font(.system(size: 18))
-                
-                DatePicker("", selection: $date, displayedComponents: .date)
-                    .datePickerStyle(.compact)
-                    .labelsHidden()
-                
-                Spacer()
-            }
-            .padding(.horizontal, 16)
-            .padding(.vertical, 14)
-            .background {
-                RoundedRectangle(cornerRadius: 16, style: .continuous)
-                    .fill(Color(.systemBackground))
-            }
+        HStack {
+            Image(systemName: "calendar")
+                .foregroundStyle(.secondary)
+                .font(.system(size: 18))
+            
+            DatePicker("", selection: $date, displayedComponents: .date)
+                .datePickerStyle(.compact)
+                .labelsHidden()
+            
+            Spacer()
+        }
+        .padding(.horizontal, 16)
+        .padding(.vertical, 14)
+        .background {
+            RoundedRectangle(cornerRadius: 16, style: .continuous)
+                .fill(Color(.systemBackground))
         }
     }
 }
@@ -56,23 +54,21 @@ struct NoteInputView: View {
     @Binding var note: String
     
     var body: some View {
-        VStack(alignment: .leading, spacing: 8) {
-            HStack(alignment: .top, spacing: 12) {
-                Image(systemName: "text.alignleft")
-                    .foregroundStyle(.secondary)
-                    .font(.system(size: 18))
-                    .padding(.top, 14)
-                
-                TextField("Добавить комментарий...", text: $note, axis: .vertical)
-                    .font(.app(.body))
-                    .lineLimit(2...4)
-                    .padding(.vertical, 14)
-            }
-            .padding(.horizontal, 16)
-            .background {
-                RoundedRectangle(cornerRadius: 16, style: .continuous)
-                    .fill(Color(.systemBackground))
-            }
+        HStack(alignment: .top, spacing: 12) {
+            Image(systemName: "text.alignleft")
+                .foregroundStyle(.secondary)
+                .font(.system(size: 18))
+                .padding(.top, 14)
+            
+            TextField("Добавить комментарий...", text: $note, axis: .vertical)
+                .font(.app(.body))
+                .lineLimit(2...4)
+                .padding(.vertical, 14)
+        }
+        .padding(.horizontal, 16)
+        .background {
+            RoundedRectangle(cornerRadius: 16, style: .continuous)
+                .fill(Color(.systemBackground))
         }
     }
 }

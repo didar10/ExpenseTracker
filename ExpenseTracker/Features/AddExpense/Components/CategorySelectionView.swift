@@ -49,7 +49,7 @@ struct CategoryItemView: View {
             ZStack {
                 Circle()
                     .fill(Color(hex: category.colorHex).opacity(isSelected ? 1.0 : 0.15))
-                    .frame(width: 54, height: 54)
+                    .frame(width: 48, height: 48)
                     .overlay {
                         if isSelected {
                             Circle()
@@ -59,7 +59,7 @@ struct CategoryItemView: View {
                     }
 
                 Image(systemName: category.icon)
-                    .font(.system(size: 24, weight: .semibold))
+                    .font(.system(size: 20, weight: .semibold))
                     .foregroundStyle(isSelected ? .white : Color(hex: category.colorHex))
                     .symbolEffect(.bounce, value: isSelected)
             }
@@ -68,10 +68,10 @@ struct CategoryItemView: View {
                 .font(.app(.microCaption))
                 .fontWeight(isSelected ? .semibold : .medium)
                 .foregroundStyle(isSelected ? .primary : .secondary)
-                .lineLimit(2)
+                .lineLimit(1)
                 .truncationMode(.tail)
                 .multilineTextAlignment(.center)
-                .frame(width: 64)
+                .frame(width: 60)
         }
     }
 }
@@ -86,16 +86,16 @@ struct MoreCategoriesButton: View {
             ZStack {
                 Circle()
                     .fill(Color(.secondarySystemGroupedBackground))
-                    .frame(width: 54, height: 54)
+                    .frame(width: 48, height: 48)
                 Image(systemName: "ellipsis")
-                    .font(.system(size: 24, weight: .semibold))
+                    .font(.system(size: 20, weight: .semibold))
                     .foregroundStyle(.secondary)
             }
             AppText("Еще", style: .microCaption, color: .secondary)
                 .lineLimit(1)
                 .truncationMode(.tail)
                 .multilineTextAlignment(.center)
-                .frame(width: 64)
+                .frame(width: 60)
         }
         .contentShape(Rectangle())
         .onTapGesture {

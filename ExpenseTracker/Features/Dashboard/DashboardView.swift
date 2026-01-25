@@ -107,46 +107,63 @@ private extension DashboardView {
                 UIImpactFeedbackGenerator(style: .light).impactOccurred()
                 showingAccountsView = true
             } label: {
-                HStack(spacing: 8) {
+                HStack(spacing: 6) {
                     if let selectedAccount = selectedAccount {
                         ZStack {
                             Circle()
                                 .fill(selectedAccount.swiftUIColor.opacity(0.2))
-                                .frame(width: 32, height: 32)
+                                .frame(width: 24, height: 24)
                             
                             Image(systemName: selectedAccount.icon)
-                                .font(.system(size: 16))
+                                .font(.system(size: 12, weight: .medium))
                                 .foregroundStyle(selectedAccount.swiftUIColor)
                         }
                         
-                        AppText(selectedAccount.name, style: .section)
-                            .color(.primary)
+                        VStack(alignment: .leading, spacing: 1) {
+                            Text(selectedAccount.name)
+                                .font(.system(size: 13, weight: .medium))
+                                .foregroundStyle(.primary)
+                            
+                            Text(selectedAccount.currentBalance.formatted(.currency(code: "KZT")))
+                                .font(.system(size: 11, weight: .regular))
+                                .fontDesign(.rounded)
+                                .foregroundStyle(.secondary)
+                        }
                     } else {
                         Image(systemName: "square.stack.3d.up.fill")
-                            .font(.system(size: 20))
+                            .font(.system(size: 16, weight: .medium))
                             .foregroundStyle(.blue)
                         
-                        AppText("Все счета", style: .section)
-                            .color(.primary)
+                        VStack(alignment: .leading, spacing: 1) {
+                            Text("Все счета")
+                                .font(.system(size: 13, weight: .medium))
+                                .foregroundStyle(.primary)
+                            
+                            Text(balanceData.balance.formatted(.currency(code: "KZT")))
+                                .font(.system(size: 11, weight: .regular))
+                                .fontDesign(.rounded)
+                                .foregroundStyle(.secondary)
+                        }
                     }
                     
                     Image(systemName: "chevron.down")
-                        .font(.system(size: 12, weight: .semibold))
+                        .font(.system(size: 10, weight: .semibold))
                         .foregroundStyle(.secondary)
                 }
-                .padding(.horizontal, 16)
-                .padding(.vertical, 12)
+                .padding(.horizontal, 12)
+                .padding(.vertical, 8)
                 .background {
-                    RoundedRectangle(cornerRadius: 12, style: .continuous)
+                    Capsule()
                         .fill(Color(uiColor: .systemBackground))
-                        .shadow(color: .black.opacity(0.05), radius: 5, y: 2)
+                        .shadow(color: .black.opacity(0.04), radius: 4, y: 1)
                 }
             }
+            .buttonStyle(.plain)
             
             Spacer()
         }
-        .padding(.horizontal)
-        .padding(.vertical, 12)
+        .padding(.horizontal, 16)
+        .padding(.vertical, 8)
         .background(Color(.systemGroupedBackground))
     }
 }

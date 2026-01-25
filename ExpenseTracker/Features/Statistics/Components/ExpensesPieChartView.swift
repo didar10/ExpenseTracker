@@ -47,11 +47,7 @@ struct ExpensesPieChartView: View {
             }
         }
         .padding(16)
-        .background {
-            RoundedRectangle(cornerRadius: 16)
-                .fill(Color(.systemBackground))
-                .shadow(color: .black.opacity(0.05), radius: 8, y: 2)
-        }
+        .cardShadow(cornerRadius: 16)
     }
     
     private func shouldShowAnnotation(for stat: CategoryStatistic) -> Bool {

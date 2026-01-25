@@ -44,27 +44,57 @@ struct AccountSelectionSheet: View {
                             }
                             .buttonStyle(.plain)
                         }
-                        
-                        // Кнопка "Создать счет"
-                        Button {
-                            UIImpactFeedbackGenerator(style: .light).impactOccurred()
-                            showingAddAccount = true
-                        } label: {
-                            createAccountButton
-                        }
-                        .buttonStyle(.plain)
                     }
                     .padding()
                 }
             }
             .navigationTitle("Выбор счета")
             .navigationBarTitleDisplayMode(.inline)
+            .toolbarBackground(.hidden, for: .navigationBar)
             .toolbar {
-                ToolbarItem(placement: .navigationBarTrailing) {
-                    Button("Готово") {
+                ToolbarItem(placement: .navigationBarLeading) {
+                    Button {
                         dismiss()
+                    } label: {
+                        ZStack {
+                            Circle()
+                                .fill(Color.white)
+                                .frame(width: 40, height: 40)
+                                .shadow(
+                                    color: .black.opacity(0.1),
+                                    radius: 3,
+                                    x: 0,
+                                    y: 2
+                                )
+                            
+                            Image(systemName: "xmark")
+                                .font(.system(size: 13, weight: .semibold))
+                                .foregroundStyle(.black)
+                        }
                     }
-                    .bold()
+                }
+                
+                ToolbarItem(placement: .navigationBarTrailing) {
+                    Button {
+                        UIImpactFeedbackGenerator(style: .light).impactOccurred()
+                        showingAddAccount = true
+                    } label: {
+                        ZStack {
+                            Circle()
+                                .fill(Color.white)
+                                .frame(width: 40, height: 40)
+                                .shadow(
+                                    color: .black.opacity(0.1),
+                                    radius: 3,
+                                    x: 0,
+                                    y: 2
+                                )
+                            
+                            Image(systemName: "plus")
+                                .font(.system(size: 15, weight: .semibold))
+                                .foregroundStyle(.black)
+                        }
+                    }
                 }
             }
             .sheet(isPresented: $showingAddAccount) {
@@ -102,72 +132,50 @@ struct AccountSelectionSheet: View {
             }
         }
         .padding(16)
-        .background {
-            RoundedRectangle(cornerRadius: 16, style: .continuous)
-                .fill(Color(uiColor: .systemBackground))
-                .shadow(color: .black.opacity(0.05), radius: 8, y: 4)
-        }
+        .cardShadow(cornerRadius: 16)
     }
     
     private func accountRow(_ account: Account) -> some View {
-        HStack(spacing: 16) {
+        HStack(spacing: 12) {
             ZStack {
-                RoundedRectangle(cornerRadius: 12, style: .continuous)
+                RoundedRectangle(cornerRadius: 10, style: .continuous)
                     .fill(account.swiftUIColor.opacity(0.2))
-                    .frame(width: 56, height: 56)
+                    .frame(width: 44, height: 44)
                 
                 Image(systemName: account.icon)
-                    .font(.system(size: 24))
+                    .font(.system(size: 20, weight: .medium))
                     .foregroundStyle(account.swiftUIColor)
             }
             
-            VStack(alignment: .leading, spacing: 4) {
-                HStack {
-                    AppText(account.name, style: .section)
-                        .color(.primary)
-                    
-                    if account.isDefault {
-                        Image(systemName: "star.fill")
-                            .font(.system(size: 12))
-                            .foregroundStyle(.yellow)
-                    }
-                }
+            HStack(spacing: 4) {
+                Text(account.name)
+                    .font(.system(size: 15, weight: .medium))
+                    .foregroundStyle(.primary)
                 
-                AppText(account.currentBalance.formatted(.currency(code: "KZT")), style: .caption)
-                    .color(.secondary)
+                if account.isDefault {
+                    Image(systemName: "star.fill")
+                        .font(.system(size: 10))
+                        .foregroundStyle(.yellow)
+                }
             }
             
-            Spacer()
+            Spacer(minLength: 8)
             
-            if selectedAccount?.id == account.id {
-                Image(systemName: "checkmark.circle.fill")
-                    .font(.system(size: 24))
-                    .foregroundStyle(.blue)
+            HStack(spacing: 8) {
+                Text(account.currentBalance.formatted(.currency(code: "KZT")))
+                    .font(.system(size: 14, weight: .semibold))
+                    .fontDesign(.rounded)
+                    .foregroundStyle(.secondary)
+                
+                if selectedAccount?.id == account.id {
+                    Image(systemName: "checkmark.circle.fill")
+                        .font(.system(size: 20))
+                        .foregroundStyle(.blue)
+                }
             }
         }
-        .padding(16)
-        .background {
-            RoundedRectangle(cornerRadius: 16, style: .continuous)
-                .fill(Color(uiColor: .systemBackground))
-                .shadow(color: .black.opacity(0.05), radius: 8, y: 4)
-        }
-    }
-    
-    private var createAccountButton: some View {
-        HStack {
-            Image(systemName: "plus.circle.fill")
-                .font(.system(size: 20))
-            
-            AppText("Создать счет", style: .section)
-            
-            Spacer()
-        }
-        .foregroundStyle(.blue)
-        .padding(16)
-        .background {
-            RoundedRectangle(cornerRadius: 16, style: .continuous)
-                .fill(Color(uiColor: .systemBackground))
-                .shadow(color: .black.opacity(0.05), radius: 8, y: 4)
-        }
+        .padding(.horizontal, 14)
+        .padding(.vertical, 10)
+        .cardShadow(cornerRadius: 14)
     }
 }
