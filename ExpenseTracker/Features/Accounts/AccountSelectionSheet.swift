@@ -16,6 +16,7 @@ struct AccountSelectionSheet: View {
     
     @Environment(\.dismiss) private var dismiss
     @State private var showingAddAccount = false
+    @State private var editingAccount: Account?
     
     var body: some View {
         NavigationStack {
@@ -36,13 +37,7 @@ struct AccountSelectionSheet: View {
                         
                         // Список счетов
                         ForEach(accounts) { account in
-                            Button {
-                                UIImpactFeedbackGenerator(style: .light).impactOccurred()
-                                onSelect(account)
-                            } label: {
-                                accountRow(account)
-                            }
-                            .buttonStyle(.plain)
+                            accountRow(account)
                         }
                     }
                     .padding()
@@ -100,6 +95,9 @@ struct AccountSelectionSheet: View {
             .sheet(isPresented: $showingAddAccount) {
                 AccountFormView()
             }
+            .sheet(item: $editingAccount) { account in
+                AccountFormView(account: account)
+            }
         }
     }
     
@@ -137,40 +135,65 @@ struct AccountSelectionSheet: View {
     
     private func accountRow(_ account: Account) -> some View {
         HStack(spacing: 12) {
-            ZStack {
-                RoundedRectangle(cornerRadius: 10, style: .continuous)
-                    .fill(account.swiftUIColor.opacity(0.2))
-                    .frame(width: 44, height: 44)
-                
-                Image(systemName: account.icon)
-                    .font(.system(size: 20, weight: .medium))
-                    .foregroundStyle(account.swiftUIColor)
-            }
-            
-            HStack(spacing: 4) {
-                Text(account.name)
-                    .font(.system(size: 15, weight: .medium))
-                    .foregroundStyle(.primary)
-                
-                if account.isDefault {
-                    Image(systemName: "star.fill")
-                        .font(.system(size: 10))
-                        .foregroundStyle(.yellow)
+            // Основная кнопка выбора счета
+            Button {
+                UIImpactFeedbackGenerator(style: .light).impactOccurred()
+                onSelect(account)
+            } label: {
+                HStack(spacing: 12) {
+                    ZStack {
+                        RoundedRectangle(cornerRadius: 10, style: .continuous)
+                            .fill(account.swiftUIColor.opacity(0.2))
+                            .frame(width: 44, height: 44)
+                        
+                        Image(systemName: account.icon)
+                            .font(.system(size: 20, weight: .medium))
+                            .foregroundStyle(account.swiftUIColor)
+                    }
+                    
+                    HStack(spacing: 4) {
+                        Text(account.name)
+                            .font(.system(size: 15, weight: .medium))
+                            .foregroundStyle(.primary)
+                        
+                        if account.isDefault {
+                            Image(systemName: "star.fill")
+                                .font(.system(size: 10))
+                                .foregroundStyle(.yellow)
+                        }
+                    }
+                    
+                    Spacer(minLength: 8)
+                    
+                    HStack(spacing: 8) {
+                        Text(account.currentBalance.formatted(.currency(code: "KZT")))
+                            .font(.system(size: 14, weight: .semibold))
+                            .fontDesign(.rounded)
+                            .foregroundStyle(.secondary)
+                        
+                        if selectedAccount?.id == account.id {
+                            Image(systemName: "checkmark.circle.fill")
+                                .font(.system(size: 20))
+                                .foregroundStyle(.blue)
+                        }
+                    }
                 }
             }
+            .buttonStyle(.plain)
             
-            Spacer(minLength: 8)
-            
-            HStack(spacing: 8) {
-                Text(account.currentBalance.formatted(.currency(code: "KZT")))
-                    .font(.system(size: 14, weight: .semibold))
-                    .fontDesign(.rounded)
-                    .foregroundStyle(.secondary)
-                
-                if selectedAccount?.id == account.id {
-                    Image(systemName: "checkmark.circle.fill")
-                        .font(.system(size: 20))
-                        .foregroundStyle(.blue)
+            // Кнопка редактирования
+            Button {
+                UIImpactFeedbackGenerator(style: .light).impactOccurred()
+                editingAccount = account
+            } label: {
+                ZStack {
+                    Circle()
+                        .fill(Color(uiColor: .secondarySystemGroupedBackground))
+                        .frame(width: 40, height: 40)
+                    
+                    Image(systemName: "pencil")
+                        .font(.system(size: 16, weight: .semibold))
+                        .foregroundStyle(.black)
                 }
             }
         }

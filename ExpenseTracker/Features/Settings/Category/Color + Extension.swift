@@ -19,6 +19,25 @@ extension Color {
             blue: Double(value & 0xFF) / 255
         )
     }
+    
+    /// Создает Color из названия цвета (например: "blue", "green", "red")
+    init(named colorName: String) {
+        switch colorName.lowercased() {
+        case "blue": self = .blue
+        case "green": self = .green
+        case "orange": self = .orange
+        case "red": self = .red
+        case "purple": self = .purple
+        case "pink": self = .pink
+        case "yellow": self = .yellow
+        case "teal": self = .teal
+        case "indigo": self = .indigo
+        case "brown": self = .brown
+        case "cyan": self = .cyan
+        case "mint": self = .mint
+        default: self = .blue
+        }
+    }
 
     func toHex() -> String {
         let uiColor = UIColor(self)

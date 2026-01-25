@@ -14,9 +14,14 @@ struct AddTransactionView: View {
     @Environment(\.dismiss) private var dismiss
 
     @StateObject private var viewModel: AddTransactionViewModel
+    
+    @State private var showingAccountPicker = false
 
     @Query(sort: \Category.name)
     private var categories: [Category]
+    
+    @Query(sort: \Account.createdAt, order: .forward)
+    private var accounts: [Account]
 
     init(transaction: Transaction? = nil) {
         _viewModel = StateObject(
@@ -40,7 +45,8 @@ struct AddTransactionView: View {
                             AccountPickerView(
                                 selectedAccount: $viewModel.selectedAccount,
                                 transactionAmount: viewModel.amount,
-                                transactionType: viewModel.type
+                                transactionType: viewModel.type,
+                                showingAccountPicker: $showingAccountPicker
                             )
 
                             // Выбор категории (только для расходов)
@@ -89,6 +95,12 @@ struct AddTransactionView: View {
                 }
             }
             .background(Color(.systemGroupedBackground))
+            .sheet(isPresented: $showingAccountPicker) {
+                AccountPickerSheet(
+                    selectedAccount: $viewModel.selectedAccount,
+                    accounts: accounts
+                )
+            }
             .navigationDestination(isPresented: $viewModel.showAllCategories) {
                 AllCategoriesView(
                     categories: categories,
