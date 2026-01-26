@@ -29,7 +29,8 @@ struct ExpenseTrackerApp: App {
         .modelContainer(for: [
             Transaction.self,
             Category.self,
-            Account.self
+            Account.self,
+            BudgetPlan.self
         ])
     }
 }

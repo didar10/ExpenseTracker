@@ -57,7 +57,7 @@ struct SettingsView: View {
                                     icon: "hand.raised.fill",
                                     iconColor: .purple,
                                     title: "Политика конфиденциальности",
-                                    destination: PlansView()
+                                    destination: PrivacyPolicyView()
                                 )
                                 
                                 Divider()
@@ -67,7 +67,7 @@ struct SettingsView: View {
                                     icon: "questionmark.circle",
                                     iconColor: .orange,
                                     title: "Помощь и поддержка",
-                                    destination: PlansView()
+                                    destination: HelpSupportView()
                                 )
                                 
                                 Divider()
@@ -77,7 +77,7 @@ struct SettingsView: View {
                                     icon: "doc.text",
                                     iconColor: .red,
                                     title: "Условия использования",
-                                    destination: PlansView()
+                                    destination: TermsOfServiceView()
                                 )
                             }
                             .cardShadow(cornerRadius: 16)
