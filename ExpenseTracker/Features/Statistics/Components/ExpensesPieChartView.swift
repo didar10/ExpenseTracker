@@ -14,7 +14,7 @@ struct ExpensesPieChartView: View {
     let totalExpenses: Decimal
     
     var body: some View {
-        VStack(spacing: 12) {
+        VStack(spacing: 16) {
             Chart {
                 ForEach(statistics) { stat in
                     SectorMark(
@@ -26,28 +26,27 @@ struct ExpensesPieChartView: View {
                     .annotation(position: .overlay) {
                         if shouldShowAnnotation(for: stat) {
                             Image(systemName: stat.category.icon)
-                                .font(.system(size: 18, weight: .semibold))
+                                .font(.system(size: 20, weight: .semibold))
                                 .foregroundStyle(.white)
                                 .shadow(radius: 2)
                         }
                     }
                 }
             }
-            .frame(height: 220)
+            .frame(height: 300)
             .chartBackground { _ in
-                VStack(spacing: 3) {
+                VStack(spacing: 4) {
                     AppText("Расходы", style: .microCaption, color: .secondary)
                     
                     // Используем .rounded для сумм
                     Text(totalExpenses.formatted(.currency(code: "KZT")))
-                        .font(.app(.body))
+                        .font(.system(size: 20, weight: .semibold))
                         .fontDesign(.rounded)
                         .foregroundStyle(.primary)
                 }
             }
         }
-        .padding(16)
-        .cardShadow(cornerRadius: 16)
+        .padding(.vertical, 8)
     }
     
     private func shouldShowAnnotation(for stat: CategoryStatistic) -> Bool {

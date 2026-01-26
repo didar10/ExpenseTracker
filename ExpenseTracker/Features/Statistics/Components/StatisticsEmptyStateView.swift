@@ -19,16 +19,10 @@ struct StatisticsEmptyStateView: View {
             VStack(spacing: 6) {
                 AppText("Нет данных", style: .section)
                 
-                AppText("Добавьте расходы за выбранный месяц", style: .sectionHeader, color: .secondary, alignment: .center)
+                AppText("Добавьте расходы за выбранный период", style: .sectionHeader, color: .secondary, alignment: .center)
             }
         }
-        .padding(32)
-        .frame(maxWidth: .infinity)
-        .background {
-            RoundedRectangle(cornerRadius: 16)
-                .fill(Color(.systemBackground))
-                .shadow(color: .black.opacity(0.05), radius: 8, y: 2)
-        }
+        .padding(.vertical, 32)
     }
 }
 

@@ -132,7 +132,7 @@ private extension DashboardView {
                     } else {
                         Image(systemName: "square.stack.3d.up.fill")
                             .font(.system(size: 16, weight: .medium))
-                            .foregroundStyle(.blue)
+                            .foregroundStyle(.black)
                         
                         VStack(alignment: .leading, spacing: 1) {
                             Text("Все счета")

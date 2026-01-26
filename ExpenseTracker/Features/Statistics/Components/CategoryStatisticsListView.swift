@@ -11,7 +11,7 @@ import SwiftUI
 struct CategoryStatisticsListView: View {
     let statistics: [CategoryStatistic]
     let totalExpenses: Decimal
-    let selectedMonth: Date
+    let selectedPeriod: StatisticsPeriod
     let onCategoryTap: (CategoryStatistic) -> Void
     
     var body: some View {
@@ -53,7 +53,7 @@ struct CategoryStatisticsListView: View {
             )
         ],
         totalExpenses: 450000,
-        selectedMonth: .now,
+        selectedPeriod: .month,
         onCategoryTap: { _ in }
     )
     .padding()

@@ -11,10 +11,11 @@ import SwiftData
 struct CategoryTransactionsView: View {
     
     let category: Category
-    let month: Date
+    let period: StatisticsPeriod
     let transactions: [Transaction]
     
     @Environment(\.dismiss) private var dismiss
+    @Environment(\.tabBarVisibility) private var isTabBarVisible
     
     var body: some View {
         ZStack {
@@ -27,20 +28,48 @@ struct CategoryTransactionsView: View {
                 transactionsList
             }
         }
-        .navigationTitle(category.name)
+        .navigationTitle("")
         .navigationBarTitleDisplayMode(.inline)
         .navigationBarBackButtonHidden(true)
+        .toolbarBackground(.hidden, for: .navigationBar)
         .toolbar {
-            ToolbarItem(placement: .navigationBarLeading) {
-                Button {
-                    dismiss()
-                } label: {
-                    Image(systemName: "chevron.left.circle.fill")
-                        .font(.system(size: 28))
-                        .foregroundStyle(.green)
-                        .symbolRenderingMode(.hierarchical)
+            ToolbarItem(placement: .principal) {
+                VStack(spacing: 2) {
+                    Text(category.name)
+                        .font(.system(size: 17, weight: .semibold))
+                        .foregroundStyle(.primary)
+                    
+                    Text(period.rawValue)
+                        .font(.system(size: 13, weight: .regular))
+                        .foregroundStyle(.secondary)
                 }
             }
+            
+            ToolbarItem(placement: .navigationBarLeading) {
+                Button {
+                    isTabBarVisible.wrappedValue = true
+                    dismiss()
+                } label: {
+                    ZStack {
+                        Circle()
+                            .fill(Color.white)
+                            .frame(width: 40, height: 40)
+                            .shadow(
+                                color: .black.opacity(0.1),
+                                radius: 3,
+                                x: 0,
+                                y: 2
+                            )
+                        
+                        Image(systemName: "chevron.left")
+                            .font(.system(size: 14, weight: .semibold))
+                            .foregroundStyle(.black)
+                    }
+                }
+            }
+        }
+        .onAppear {
+            isTabBarVisible.wrappedValue = false
         }
     }
 }
@@ -87,11 +116,7 @@ private extension CategoryTransactionsView {
                                 }
                             }
                         }
-                        .background {
-                            RoundedRectangle(cornerRadius: 16)
-                                .fill(Color(.systemBackground))
-                                .shadow(color: .black.opacity(0.05), radius: 8, y: 2)
-                        }
+                        .cardShadow(cornerRadius: 16)
                     }
                 }
             }
@@ -101,46 +126,30 @@ private extension CategoryTransactionsView {
     }
     
     var totalCard: some View {
-        VStack(spacing: 12) {
-            HStack {
-                ZStack {
-                    RoundedRectangle(cornerRadius: 10)
-                        .fill(Color(hex: category.colorHex).opacity(0.15))
-                        .frame(width: 44, height: 44)
-                    
-                    Image(systemName: category.icon)
-                        .foregroundStyle(Color(hex: category.colorHex))
-                        .font(.system(size: 22, weight: .semibold))
-                }
+        HStack(spacing: 16) {
+            ZStack {
+                RoundedRectangle(cornerRadius: 12, style: .continuous)
+                    .fill(Color(hex: category.colorHex).opacity(0.15))
+                    .frame(width: 56, height: 56)
                 
-                VStack(alignment: .leading, spacing: 4) {
-                    AppText("Всего транзакций", style: .sectionHeader, color: .secondary)
-                    
-                    AppText("\(transactions.count)", style: .section)
-                }
-                
-                Spacer()
+                Image(systemName: category.icon)
+                    .foregroundStyle(Color(hex: category.colorHex))
+                    .font(.system(size: 26, weight: .semibold))
             }
             
-            Divider()
-            
-            HStack {
-                AppText("Сумма", style: .sectionHeader, color: .secondary)
-                
-                Spacer()
+            VStack(alignment: .leading, spacing: 4) {
+                AppText("Всего за период", style: .sectionHeader, color: .secondary)
                 
                 Text(totalAmount.formatted(.currency(code: "KZT")))
-                    .font(.app(.title))
+                    .font(.system(size: 22, weight: .bold))
                     .fontDesign(.rounded)
                     .foregroundStyle(Color(hex: category.colorHex))
             }
+            
+            Spacer()
         }
         .padding(16)
-        .background {
-            RoundedRectangle(cornerRadius: 16)
-                .fill(Color(.systemBackground))
-                .shadow(color: .black.opacity(0.05), radius: 8, y: 2)
-        }
+        .cardShadow(cornerRadius: 16)
     }
     
     var emptyState: some View {
@@ -153,7 +162,7 @@ private extension CategoryTransactionsView {
             VStack(spacing: 6) {
                 AppText("Нет транзакций", style: .section)
                 
-                AppText("В этом месяце нет транзакций в категории «\(category.name)»", style: .sectionHeader, color: .secondary, alignment: .center)
+                AppText("За выбранный период нет транзакций в категории «\(category.name)»", style: .sectionHeader, color: .secondary, alignment: .center)
                     .padding(.horizontal, 32)
             }
         }
