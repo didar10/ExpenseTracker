@@ -18,15 +18,38 @@ struct CardShadowModifier: ViewModifier {
                 RoundedRectangle(cornerRadius: cornerRadius, style: .continuous)
                     .fill(fillColor)
                     .shadow(
-                        color: .black.opacity(0.45),
+                        color: .black.opacity(0.7),
                         radius: 0,
-                        x: 2,
-                        y: 4
+                        x: 1,
+                        y: 2.5
                     )
             )
             .overlay(
                 RoundedRectangle(cornerRadius: cornerRadius, style: .continuous)
-                    .strokeBorder(Color.black.opacity(0.12), lineWidth: 1.5)
+                    .strokeBorder(Color.black.opacity(0.7), lineWidth: 1.5)
+            )
+    }
+}
+
+/// Модификатор для применения единого стиля теней к круглым элементам
+struct CircleShadowModifier: ViewModifier {
+    var fillColor: Color = Color(uiColor: .systemBackground)
+    
+    func body(content: Content) -> some View {
+        content
+            .background(
+                Circle()
+                    .fill(fillColor)
+                    .shadow(
+                        color: .black.opacity(0.7),
+                        radius: 0,
+                        x: 1,
+                        y: 2
+                    )
+            )
+            .overlay(
+                Circle()
+                    .strokeBorder(Color.black.opacity(0.7), lineWidth: 1.5)
             )
     }
 }
@@ -38,5 +61,11 @@ extension View {
     ///   - fillColor: Цвет фона карточки (по умолчанию systemBackground)
     func cardShadow(cornerRadius: CGFloat = 16, fillColor: Color = Color(uiColor: .systemBackground)) -> some View {
         modifier(CardShadowModifier(cornerRadius: cornerRadius, fillColor: fillColor))
+    }
+    
+    /// Применяет стандартную тень для круглых элементов
+    /// - Parameter fillColor: Цвет фона элемента (по умолчанию systemBackground)
+    func circleShadow(fillColor: Color = Color(uiColor: .systemBackground)) -> some View {
+        modifier(CircleShadowModifier(fillColor: fillColor))
     }
 }

@@ -29,6 +29,7 @@ struct AddButton: View {
                     .font(.system(size: 24, weight: .semibold))
                     .foregroundStyle(.black)
             }
+            .circleShadow()
         }
         .offset(y: isVisible ? 0 : 120)
         .animation(.spring(response: 0.4, dampingFraction: 0.8), value: isVisible)

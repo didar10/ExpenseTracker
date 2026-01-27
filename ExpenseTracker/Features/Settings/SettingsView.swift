@@ -115,17 +115,18 @@ struct SettingsRowView<Destination: View>: View {
             HStack(spacing: 16) {
                 // Icon
                 ZStack {
-                    RoundedRectangle(cornerRadius: 8)
+                    Circle()
                         .fill(iconColor.opacity(0.15))
-                        .frame(width: 36, height: 36)
+                        .frame(width: 38, height: 38)
                     
                     Image(systemName: icon)
                         .font(.system(size: 16, weight: .semibold))
                         .foregroundStyle(iconColor)
                 }
+                .circleShadow()
                 
                 // Title
-                AppText(title, style: .body)
+                AppText(title, style: .bodySmaller)
                 
                 Spacer()
                 

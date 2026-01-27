@@ -28,7 +28,7 @@ struct CategoryStatisticRowView: View {
     
     private var categoryIcon: some View {
         ZStack {
-            RoundedRectangle(cornerRadius: 8)
+            Circle()
                 .fill(Color(hex: statistic.category.colorHex).opacity(0.15))
                 .frame(width: 38, height: 38)
             
@@ -36,6 +36,7 @@ struct CategoryStatisticRowView: View {
                 .foregroundStyle(Color(hex: statistic.category.colorHex))
                 .font(.system(size: 18, weight: .semibold))
         }
+        .circleShadow()
     }
     
     private var categoryInfo: some View {
