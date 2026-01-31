@@ -35,60 +35,62 @@ struct AccountPickerView: View {
         Button {
             showingAccountPicker = true
         } label: {
-            HStack {
+            HStack(spacing: 10) {
                 if let account = selectedAccount {
                     // Показываем выбранный счет
-                    HStack(spacing: 12) {
-                        ZStack {
-                            RoundedRectangle(cornerRadius: 8, style: .continuous)
-                                .fill(account.swiftUIColor.opacity(0.2))
-                                .frame(width: 36, height: 36)
-                            
-                            Image(systemName: account.icon)
-                                .font(.system(size: 16))
-                                .foregroundStyle(account.swiftUIColor)
-                        }
+                    ZStack {
+                        RoundedRectangle(cornerRadius: 8, style: .continuous)
+                            .fill(account.swiftUIColor.opacity(0.2))
+                            .frame(width: 36, height: 36)
                         
-                        VStack(alignment: .leading, spacing: 2) {
-                            AppText(account.name, style: .caption)
-                                .color(.secondary)
-                            
-                            if let predicted = predictedBalance, amountDecimal > 0 {
-                                // Показываем изменение баланса
-                                Text(predicted.formatted(.currency(code: "KZT")))
-                                    .font(.system(size: 15, weight: .semibold))
-                                    .fontDesign(.rounded)
-                                    .foregroundStyle(transactionType == .income ? .green : .red)
-                            } else {
-                                // Показываем текущий баланс
-                                Text(account.currentBalance.formatted(.currency(code: "KZT")))
-                                    .font(.system(size: 15, weight: .semibold))
-                                    .fontDesign(.rounded)
-                                    .foregroundStyle(.black)
-                            }
-                        }
-                        
-                        Spacer()
+                        Image(systemName: account.icon)
+                            .font(.system(size: 15))
+                            .foregroundStyle(account.swiftUIColor)
                     }
-                } else {
-                    // Показываем плейсхолдер
-                    HStack {
-                        Image(systemName: "creditcard")
+                    
+                    VStack(alignment: .leading, spacing: 2) {
+                        Text(account.name)
+                            .font(.system(size: 12, weight: .regular))
                             .foregroundStyle(.secondary)
                         
-                        AppText("Выберите счет", style: .body)
-                            .color(.secondary)
-                        
-                        Spacer()
+                        if let predicted = predictedBalance, amountDecimal > 0 {
+                            // Показываем изменение баланса
+                            Text(predicted.formatted(.currency(code: "KZT")))
+                                .font(.system(size: 15, weight: .semibold))
+                                .fontDesign(.rounded)
+                                .foregroundStyle(transactionType == .income ? .green : .red)
+                        } else {
+                            // Показываем текущий баланс
+                            Text(account.currentBalance.formatted(.currency(code: "KZT")))
+                                .font(.system(size: 15, weight: .semibold))
+                                .fontDesign(.rounded)
+                                .foregroundStyle(.primary)
+                        }
                     }
+                    .frame(maxWidth: .infinity, alignment: .leading)
+                } else {
+                    // Показываем плейсхолдер
+                    Image(systemName: "creditcard")
+                        .foregroundStyle(.secondary)
+                        .font(.system(size: 18))
+                    
+                    Text("Выберите счет")
+                        .font(.system(size: 15))
+                        .foregroundStyle(.secondary)
+                    
+                    Spacer()
                 }
             }
-            .padding(12)
+            .padding(.horizontal, 12)
+            .padding(.vertical, 10)
+            .frame(maxWidth: .infinity, alignment: .leading)
+            .frame(height: 60)
             .background {
                 RoundedRectangle(cornerRadius: 12, style: .continuous)
                     .fill(Color(uiColor: .systemBackground))
             }
         }
+        .buttonStyle(.plain)
         .onAppear {
             // Автоматически выбираем счет по умолчанию, если он есть
             if selectedAccount == nil {

@@ -26,24 +26,64 @@ struct TransactionDetailsView: View {
 
 struct DateSelectionView: View {
     @Binding var date: Date
+    @State private var showingDatePicker = false
+    
+    private var dateText: String {
+        let calendar = Calendar.current
+        
+        if calendar.isDateInToday(date) {
+            return "Сегодня"
+        } else if calendar.isDateInYesterday(date) {
+            return "Вчера"
+        } else {
+            let formatter = DateFormatter()
+            formatter.dateFormat = "dd.MM.yy"
+            return formatter.string(from: date)
+        }
+    }
     
     var body: some View {
-        HStack {
-            Image(systemName: "calendar")
-                .foregroundStyle(.secondary)
-                .font(.system(size: 18))
-            
-            DatePicker("", selection: $date, displayedComponents: .date)
-                .datePickerStyle(.compact)
-                .labelsHidden()
-            
-            Spacer()
+        Button {
+            showingDatePicker = true
+        } label: {
+            VStack(spacing: 4) {
+                Image(systemName: "calendar")
+                    .font(.system(size: 18))
+                    .foregroundStyle(.secondary)
+                
+                Text(dateText)
+                    .font(.system(size: 13, weight: .medium))
+                    .foregroundStyle(.primary)
+                    .lineLimit(1)
+            }
+            .frame(width: 90)
+            .frame(height: 60)
+            .background {
+                RoundedRectangle(cornerRadius: 12, style: .continuous)
+                    .fill(Color(.systemBackground))
+            }
         }
-        .padding(.horizontal, 16)
-        .padding(.vertical, 14)
-        .background {
-            RoundedRectangle(cornerRadius: 16, style: .continuous)
-                .fill(Color(.systemBackground))
+        .buttonStyle(.plain)
+        .sheet(isPresented: $showingDatePicker) {
+            NavigationStack {
+                DatePicker(
+                    "Выберите дату",
+                    selection: $date,
+                    displayedComponents: .date
+                )
+                .datePickerStyle(.graphical)
+                .padding()
+                .navigationTitle("Дата")
+                .navigationBarTitleDisplayMode(.inline)
+                .toolbar {
+                    ToolbarItem(placement: .confirmationAction) {
+                        Button("Готово") {
+                            showingDatePicker = false
+                        }
+                    }
+                }
+            }
+            .presentationDetents([.medium])
         }
     }
 }

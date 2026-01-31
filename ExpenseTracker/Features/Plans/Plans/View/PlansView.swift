@@ -30,6 +30,8 @@ struct PlansView: View {
     var body: some View {
         NavigationStack {
             VStack(spacing: 0) {
+                headerView
+              
                 ScrollView {
                     VStack(spacing: 16) {
                         if filteredPlans.isEmpty {
@@ -49,38 +51,7 @@ struct PlansView: View {
                 }
             }
             .background(Color(.systemGroupedBackground))
-            .navigationBarTitleDisplayMode(.inline)
-            .navigationBarBackButtonHidden(true)
-            .toolbarBackground(.hidden, for: .navigationBar)
-            .toolbar {
-                ToolbarItem(placement: .navigationBarLeading) {
-                    PeriodPickerButton(selectedPeriod: selectedPeriod) { period in
-                        selectedPeriod = period
-                    }
-                }
-                
-                ToolbarItem(placement: .navigationBarTrailing) {
-                    Button {
-                        showingAddPlan = true
-                    } label: {
-                        ZStack {
-                            Circle()
-                                .fill(Color.white)
-                                .frame(width: 40, height: 40)
-                                .shadow(
-                                    color: .black.opacity(0.1),
-                                    radius: 3,
-                                    x: 0,
-                                    y: 2
-                                )
-                            
-                            Image(systemName: "plus")
-                                .font(.system(size: 15, weight: .semibold))
-                                .foregroundStyle(.black)
-                        }
-                    }
-                }
-            }
+            .navigationBarHidden(true)
             .sheet(isPresented: $showingAddPlan, onDismiss: {
                 print("✅ Budget plan sheet dismissed")
             }) {
@@ -106,6 +77,39 @@ struct PlansView: View {
 
 // MARK: - Computed Properties
 private extension PlansView {
+    
+    var headerView: some View {
+        HStack {
+            PeriodPickerButton(selectedPeriod: selectedPeriod) { period in
+                selectedPeriod = period
+            }
+            
+            Spacer()
+            
+            Button {
+                showingAddPlan = true
+            } label: {
+                ZStack {
+                    Circle()
+                        .fill(Color.white)
+                        .frame(width: 40, height: 40)
+                        .shadow(
+                            color: .black.opacity(0.1),
+                            radius: 3,
+                            x: 0,
+                            y: 2
+                        )
+                    
+                    Image(systemName: "plus")
+                        .font(.system(size: 15, weight: .semibold))
+                        .foregroundStyle(.black)
+                }
+            }
+        }
+        .padding(.horizontal, 16)
+        .padding(.vertical, 8)
+        .background(Color(.systemGroupedBackground))
+    }
     
     var filteredPlans: [BudgetPlan] {
         budgetPlans.filter { $0.period == selectedPeriod && $0.isActive }

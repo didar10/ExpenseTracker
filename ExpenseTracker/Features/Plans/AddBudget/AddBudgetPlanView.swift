@@ -108,7 +108,7 @@ struct AddBudgetPlanView: View {
                     .foregroundStyle(.secondary)
             }
             .padding()
-            .cardShadow(cornerRadius: 12)
+            .card(cornerRadius: 12)
         }
     }
     
@@ -134,7 +134,7 @@ struct AddBudgetPlanView: View {
                     .buttonStyle(.plain)
                 }
             }
-            .cardShadow(cornerRadius: 12)
+            .card(cornerRadius: 12)
         }
     }
     

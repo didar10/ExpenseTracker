@@ -7,6 +7,19 @@
 
 import SwiftUI
 
+struct CardModifier: ViewModifier {
+    var cornerRadius: CGFloat
+    var fillColor: Color = Color(uiColor: .systemBackground)
+    
+    func body(content: Content) -> some View {
+        content
+            .background(
+                RoundedRectangle(cornerRadius: cornerRadius, style: .continuous)
+                    .fill(fillColor)
+            )
+    }
+}
+
 /// Модификатор для применения единого стиля теней к карточкам
 struct CardShadowModifier: ViewModifier {
     var cornerRadius: CGFloat
@@ -55,6 +68,10 @@ struct CircleShadowModifier: ViewModifier {
 }
 
 extension View {
+    func card(cornerRadius: CGFloat = 16, fillColor: Color = Color(uiColor: .systemBackground)) -> some View {
+        modifier(CardModifier(cornerRadius: cornerRadius, fillColor: fillColor))
+    }
+    
     /// Применяет стандартную тень карточки
     /// - Parameters:
     ///   - cornerRadius: Радиус скругления углов

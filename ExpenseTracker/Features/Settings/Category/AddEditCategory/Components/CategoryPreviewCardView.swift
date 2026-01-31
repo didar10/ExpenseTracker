@@ -33,7 +33,7 @@ struct CategoryPreviewCardView: View {
         }
         .frame(maxWidth: .infinity)
         .padding(.vertical, 32)
-        .cardShadow(cornerRadius: 20)
+        .card(cornerRadius: 20)
     }
 }
 

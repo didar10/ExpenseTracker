@@ -118,7 +118,7 @@ private extension StatisticsView {
             Spacer()
         }
         .padding(.horizontal, 16)
-        .padding(.vertical, 12)
+        .padding(.vertical, 8)
         .background(Color(.systemGroupedBackground))
     }
     

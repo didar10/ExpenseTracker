@@ -133,7 +133,7 @@ struct AccountFormView: View {
             Spacer()
         }
         .padding(16)
-        .cardShadow(cornerRadius: 16)
+        .card(cornerRadius: 16)
     }
     
     private var formContent: some View {

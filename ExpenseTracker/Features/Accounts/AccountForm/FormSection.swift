@@ -23,7 +23,7 @@ struct FormSection<Content: View>: View {
                 content
             }
             .padding(12)
-            .cardShadow(cornerRadius: 12)
+            .card(cornerRadius: 12)
         }
     }
 }

@@ -41,13 +41,20 @@ struct AddTransactionView: View {
                             
                             TransactionAmountView(amount: viewModel.amount)
                             
-                            // Выбор счета
-                            AccountPickerView(
-                                selectedAccount: $viewModel.selectedAccount,
-                                transactionAmount: viewModel.amount,
-                                transactionType: viewModel.type,
-                                showingAccountPicker: $showingAccountPicker
-                            )
+                            // Выбор счета и дата в одной линии
+                            HStack(spacing: 20) {
+                                // Выбор счета (занимает доступное пространство)
+                                AccountPickerView(
+                                    selectedAccount: $viewModel.selectedAccount,
+                                    transactionAmount: viewModel.amount,
+                                    transactionType: viewModel.type,
+                                    showingAccountPicker: $showingAccountPicker
+                                )
+                                
+                                // Выбор даты (компактный)
+                                DateSelectionView(date: $viewModel.date)
+                            }
+                            .frame(height: 60)
 
                             // Выбор категории (только для расходов)
                             Group {
@@ -67,10 +74,8 @@ struct AddTransactionView: View {
                             }
                             .animation(.spring(response: 0.35, dampingFraction: 0.7), value: viewModel.type)
 
-                            TransactionDetailsView(
-                                date: $viewModel.date,
-                                note: $viewModel.note
-                            )
+                            // Только комментарий
+                            NoteInputView(note: $viewModel.note)
                         }
                         .padding(.horizontal) // Общий padding для всех элементов
                         .padding(.top, 10)
