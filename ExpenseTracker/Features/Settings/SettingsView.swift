@@ -57,7 +57,7 @@ struct SettingsView: View {
                                     icon: "hand.raised.fill",
                                     iconColor: .purple,
                                     title: "Политика конфиденциальности",
-                                    destination: PlansView()
+                                    destination: PrivacyPolicyView()
                                 )
                                 
                                 Divider()
@@ -67,7 +67,7 @@ struct SettingsView: View {
                                     icon: "questionmark.circle",
                                     iconColor: .orange,
                                     title: "Помощь и поддержка",
-                                    destination: PlansView()
+                                    destination: HelpSupportView()
                                 )
                                 
                                 Divider()
@@ -77,7 +77,7 @@ struct SettingsView: View {
                                     icon: "doc.text",
                                     iconColor: .red,
                                     title: "Условия использования",
-                                    destination: PlansView()
+                                    destination: TermsOfServiceView()
                                 )
                             }
                             .cardShadow(cornerRadius: 16)
@@ -115,17 +115,18 @@ struct SettingsRowView<Destination: View>: View {
             HStack(spacing: 16) {
                 // Icon
                 ZStack {
-                    RoundedRectangle(cornerRadius: 8)
+                    Circle()
                         .fill(iconColor.opacity(0.15))
-                        .frame(width: 36, height: 36)
+                        .frame(width: 38, height: 38)
                     
                     Image(systemName: icon)
                         .font(.system(size: 16, weight: .semibold))
                         .foregroundStyle(iconColor)
                 }
+                .circleShadow()
                 
                 // Title
-                AppText(title, style: .body)
+                AppText(title, style: .bodySmaller)
                 
                 Spacer()
                 

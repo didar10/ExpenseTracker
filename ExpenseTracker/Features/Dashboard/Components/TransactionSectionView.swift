@@ -13,21 +13,19 @@ struct TransactionSectionView: View {
     let onTransactionTap: (Transaction) -> Void
     
     var body: some View {
-        VStack(alignment: .leading, spacing: 16) {
+        VStack(alignment: .leading, spacing: 8) {
             SectionHeaderView(date: section.date)
-                .padding(.top, 16)
+                .padding(.bottom, 4)
             
-            VStack(spacing: 8) {
-                ForEach(section.transactions) { transaction in
-                    TransactionRowView(transaction: transaction)
-                        .onTapGesture {
-                            onTransactionTap(transaction)
-                        }
-                }
+            ForEach(section.transactions) { transaction in
+                TransactionRowView(transaction: transaction)
+                    .padding(.horizontal, 10)
+                    .padding(.vertical, 4)
+                    .cardShadow(cornerRadius: 12)
+                    .onTapGesture {
+                        onTransactionTap(transaction)
+                    }
             }
-            .padding(.horizontal, 16)
-            .padding(.vertical, 16)
-            .cardShadow(cornerRadius: 20)
         }
     }
 }

@@ -15,6 +15,7 @@ enum AppFont {
     case section
     case sectionHeader
     case body
+    case bodySmaller
     case bodySmall
     case caption
     case microCaption
@@ -39,6 +40,9 @@ enum AppFont {
 
         case .body:
             return .custom("Montserrat-Regular", size: 16)
+        
+        case .bodySmaller:
+            return .custom("Montserrat-Medium", size: 15)
             
         case .bodySmall:
             return .custom("Montserrat-SemiBold", size: 15)

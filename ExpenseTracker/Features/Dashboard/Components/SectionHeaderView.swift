@@ -12,9 +12,9 @@ struct SectionHeaderView: View {
     let date: Date
     
     var body: some View {
-        AppText(dateTitle, style: .bodySmall, color: .secondary)
-            .padding(.horizontal)
-            .textCase(.uppercase)
+        AppText(dateTitle, style: .bodySmaller)
+            .foregroundStyle(.gray)
+            .padding(.horizontal, 4)
     }
     
     private var dateTitle: String {
@@ -25,12 +25,10 @@ struct SectionHeaderView: View {
         } else if calendar.isDateInYesterday(date) {
             return "Вчера"
         } else {
-            return date.formatted(
-                Date.FormatStyle()
-                    .day()
-                    .month(.wide)
-                    .year()
-            )
+            let formatter = DateFormatter()
+            formatter.locale = Locale(identifier: "ru_RU")
+            formatter.dateFormat = "EE, d MMMM"
+            return formatter.string(from: date)
         }
     }
 }

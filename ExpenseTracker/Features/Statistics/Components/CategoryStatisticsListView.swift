@@ -15,8 +15,8 @@ struct CategoryStatisticsListView: View {
     let onCategoryTap: (CategoryStatistic) -> Void
     
     var body: some View {
-        VStack(spacing: 0) {
-            ForEach(Array(statistics.enumerated()), id: \.element.id) { index, stat in
+        VStack(spacing: 8) {
+            ForEach(statistics) { stat in
                 Button {
                     onCategoryTap(stat)
                 } label: {
@@ -24,17 +24,13 @@ struct CategoryStatisticsListView: View {
                         statistic: stat,
                         totalExpenses: totalExpenses
                     )
+                    .padding(.horizontal, 16)
+                    .padding(.vertical, 12)
                 }
                 .buttonStyle(.plain)
-                
-                if index < statistics.count - 1 {
-                    Divider()
-                        .padding(.leading, 60)
-                }
+                .cardShadow(cornerRadius: 16)
             }
         }
-        .padding(16)
-        .cardShadow(cornerRadius: 20)
     }
 }
 

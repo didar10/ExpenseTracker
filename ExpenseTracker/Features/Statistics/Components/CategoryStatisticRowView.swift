@@ -28,7 +28,7 @@ struct CategoryStatisticRowView: View {
     
     private var categoryIcon: some View {
         ZStack {
-            RoundedRectangle(cornerRadius: 8)
+            Circle()
                 .fill(Color(hex: statistic.category.colorHex).opacity(0.15))
                 .frame(width: 38, height: 38)
             
@@ -36,11 +36,12 @@ struct CategoryStatisticRowView: View {
                 .foregroundStyle(Color(hex: statistic.category.colorHex))
                 .font(.system(size: 18, weight: .semibold))
         }
+        .circleShadow()
     }
     
     private var categoryInfo: some View {
         VStack(alignment: .leading, spacing: 3) {
-            AppText(statistic.category.name, style: .bodySmall)
+            AppText(statistic.category.name, style: .bodySmaller)
             
             AppText(statistic.percentageString(of: totalExpenses), style: .microCaption, color: .secondary)
         }
@@ -50,7 +51,7 @@ struct CategoryStatisticRowView: View {
         HStack(spacing: 8) {
             // Используем .rounded для сумм
             Text(statistic.amount.formatted(.currency(code: "KZT")))
-                .font(.app(.bodySmall))
+                .font(.app(.bodySmaller))
                 .fontDesign(.rounded)
                 .foregroundStyle(.primary)
             
