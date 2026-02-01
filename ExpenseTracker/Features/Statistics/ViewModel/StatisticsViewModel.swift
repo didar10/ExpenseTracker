@@ -7,62 +7,7 @@
 
 import Foundation
 import SwiftUI
-
-/// Период для фильтрации статистики
-enum StatisticsPeriod: String, CaseIterable, Identifiable {
-    case today = "Сегодня"
-    case yesterday = "Вчера"
-    case week = "Неделя"
-    case month = "Месяц"
-    case lastMonth = "Прошлый месяц"
-    case year = "Год"
-    case lastYear = "Прошлый год"
-    case allTime = "Все время"
-    
-    var id: String { rawValue }
-    
-    var dateInterval: DateInterval {
-        let calendar = Calendar.current
-        let now = Date()
-        
-        switch self {
-        case .today:
-            let start = calendar.startOfDay(for: now)
-            let end = calendar.date(byAdding: .day, value: 1, to: start)!
-            return DateInterval(start: start, end: end)
-            
-        case .yesterday:
-            let start = calendar.date(byAdding: .day, value: -1, to: calendar.startOfDay(for: now))!
-            let end = calendar.startOfDay(for: now)
-            return DateInterval(start: start, end: end)
-            
-        case .week:
-            let start = calendar.date(from: calendar.dateComponents([.yearForWeekOfYear, .weekOfYear], from: now))!
-            let end = calendar.date(byAdding: .weekOfYear, value: 1, to: start)!
-            return DateInterval(start: start, end: end)
-            
-        case .month:
-            return calendar.dateInterval(of: .month, for: now)!
-            
-        case .lastMonth:
-            let lastMonth = calendar.date(byAdding: .month, value: -1, to: now)!
-            return calendar.dateInterval(of: .month, for: lastMonth)!
-            
-        case .year:
-            return calendar.dateInterval(of: .year, for: now)!
-            
-        case .lastYear:
-            let lastYear = calendar.date(byAdding: .year, value: -1, to: now)!
-            return calendar.dateInterval(of: .year, for: lastYear)!
-            
-        case .allTime:
-            // От далекого прошлого до далекого будущего
-            let start = calendar.date(from: DateComponents(year: 2000, month: 1, day: 1))!
-            let end = calendar.date(from: DateComponents(year: 2100, month: 1, day: 1))!
-            return DateInterval(start: start, end: end)
-        }
-    }
-}
+import SwiftData
 
 /// ViewModel для экрана статистики
 @Observable
@@ -76,6 +21,9 @@ final class StatisticsViewModel {
     private(set) var totalExpenses: Decimal = 0
     
     private var transactions: [Transaction] = []
+    private(set) var accounts: [Account] = []
+    
+    var modelContext: ModelContext?
     
     // MARK: - Computed Properties
     
@@ -87,11 +35,36 @@ final class StatisticsViewModel {
         selectedPeriod.dateInterval
     }
     
+    var totalBalance: Decimal {
+        accounts.reduce(0) { $0 + $1.currentBalance }
+    }
+    
+    // MARK: - Initialization
+    
+    /// Устанавливает ModelContext и загружает данные
+    func setup(with modelContext: ModelContext) {
+        self.modelContext = modelContext
+        fetchData()
+    }
+    
     // MARK: - Methods
     
-    /// Обновляет транзакции и пересчитывает статистику
-    func updateTransactions(_ transactions: [Transaction]) {
-        self.transactions = transactions
+    /// Загружает данные из ModelContext
+    func fetchData() {
+        guard let modelContext = modelContext else { return }
+        
+        // Загружаем транзакции
+        let transactionDescriptor = FetchDescriptor<Transaction>(
+            sortBy: [SortDescriptor(\.date, order: .reverse)]
+        )
+        transactions = (try? modelContext.fetch(transactionDescriptor)) ?? []
+        
+        // Загружаем счета
+        let accountDescriptor = FetchDescriptor<Account>(
+            sortBy: [SortDescriptor(\.createdAt, order: .forward)]
+        )
+        accounts = (try? modelContext.fetch(accountDescriptor)) ?? []
+        
         calculateStatistics()
     }
     

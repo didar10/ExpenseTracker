@@ -103,63 +103,13 @@ private extension DashboardView {
     
     var accountPickerHeader: some View {
         HStack(spacing: 12) {
-            Button {
-                UIImpactFeedbackGenerator(style: .light).impactOccurred()
-                showingAccountsView = true
-            } label: {
-                HStack(spacing: 6) {
-                    if let selectedAccount = selectedAccount {
-                        ZStack {
-                            Circle()
-                                .fill(selectedAccount.swiftUIColor.opacity(0.2))
-                                .frame(width: 24, height: 24)
-                            
-                            Image(systemName: selectedAccount.icon)
-                                .font(.system(size: 12, weight: .medium))
-                                .foregroundStyle(selectedAccount.swiftUIColor)
-                        }
-                        
-                        VStack(alignment: .leading, spacing: 1) {
-                            Text(selectedAccount.name)
-                                .font(.system(size: 13, weight: .medium))
-                                .foregroundStyle(.primary)
-                            
-                            Text(selectedAccount.currentBalance.formatted(.currency(code: "KZT")))
-                                .font(.system(size: 11, weight: .regular))
-                                .fontDesign(.rounded)
-                                .foregroundStyle(.secondary)
-                        }
-                    } else {
-                        Image(systemName: "square.stack.3d.up.fill")
-                            .font(.system(size: 16, weight: .medium))
-                            .foregroundStyle(.black)
-                        
-                        VStack(alignment: .leading, spacing: 1) {
-                            Text("Все счета")
-                                .font(.system(size: 13, weight: .medium))
-                                .foregroundStyle(.primary)
-                            
-                            Text(balanceData.balance.formatted(.currency(code: "KZT")))
-                                .font(.system(size: 11, weight: .regular))
-                                .fontDesign(.rounded)
-                                .foregroundStyle(.secondary)
-                        }
-                    }
-                    
-                    Image(systemName: "chevron.down")
-                        .font(.system(size: 10, weight: .semibold))
-                        .foregroundStyle(.secondary)
+            AccountPickerButton(
+                selectedAccount: selectedAccount,
+                totalBalance: balanceData.balance,
+                action: {
+                    showingAccountsView = true
                 }
-                .padding(.horizontal, 12)
-                .padding(.vertical, 8)
-                .background {
-                    Capsule()
-                        .fill(Color(uiColor: .systemBackground))
-                        .shadow(color: .black.opacity(0.04), radius: 4, y: 1)
-                }
-            }
-            .buttonStyle(.plain)
-            
+            )
             Spacer()
         }
         .padding(.horizontal, 16)

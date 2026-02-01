@@ -12,17 +12,19 @@ struct StatisticsView: View {
     
     // MARK: - Properties
     
-    @Query(sort: \Transaction.date, order: .reverse)
-    private var transactions: [Transaction]
-    
-    @Query(sort: \Account.createdAt, order: .forward)
-    private var accounts: [Account]
-    
-    @State private var viewModel = StatisticsViewModel()
+    @Bindable var viewModel: StatisticsViewModel
     @State private var scrollOffset: CGFloat = 0
     @State private var navigationPath = NavigationPath()
     @State private var showingAccountsView = false
     
+    // Для триггера обновления при изменениях в базе данных
+    @Query(sort: \Transaction.date, order: .reverse)
+    private var transactionsTrigger: [Transaction]
+    
+    @Query(sort: \Account.createdAt, order: .forward)
+    private var accountsTrigger: [Account]
+    
+    @Environment(\.modelContext) private var modelContext
     @Environment(\.tabBarVisibility) private var isTabBarVisible
     
     // MARK: - Body
@@ -75,7 +77,7 @@ struct StatisticsView: View {
             }
             .sheet(isPresented: $showingAccountsView) {
                 AccountSelectionSheet(
-                    accounts: accounts,
+                    accounts: viewModel.accounts,
                     selectedAccount: viewModel.selectedAccount,
                     onSelect: { account in
                         withAnimation(.spring(response: 0.3, dampingFraction: 0.7)) {
@@ -88,15 +90,23 @@ struct StatisticsView: View {
                     }
                 )
             }
-            .onChange(of: transactions) { oldValue, newValue in
-                viewModel.updateTransactions(newValue)
+            .onChange(of: transactionsTrigger) { oldValue, newValue in
+                // Обновляем данные при изменении транзакций
+                viewModel.fetchData()
+            }
+            .onChange(of: accountsTrigger) { oldValue, newValue in
+                // Обновляем данные при изменении счетов
+                viewModel.fetchData()
             }
             .onChange(of: viewModel.selectedAccount) { oldValue, newValue in
                 // Пересчет статистики при изменении счета
                 viewModel.changeAccount(newValue)
             }
             .onAppear {
-                viewModel.updateTransactions(transactions)
+                // Инициализируем ModelContext только если еще не инициализирован
+                if viewModel.modelContext == nil {
+                    viewModel.setup(with: modelContext)
+                }
             }
         }
     }
@@ -114,72 +124,18 @@ private extension StatisticsView {
     
     var headerView: some View {
         HStack(spacing: 12) {
-            accountPickerButton
+            AccountPickerButton(
+                selectedAccount: viewModel.selectedAccount,
+                totalBalance: viewModel.totalBalance,
+                action: {
+                    showingAccountsView = true
+                }
+            )
             Spacer()
         }
         .padding(.horizontal, 16)
         .padding(.vertical, 8)
         .background(Color(.systemGroupedBackground))
-    }
-    
-    var accountPickerButton: some View {
-        Button {
-            UIImpactFeedbackGenerator(style: .light).impactOccurred()
-            showingAccountsView = true
-        } label: {
-            HStack(spacing: 6) {
-                if let selectedAccount = viewModel.selectedAccount {
-                    ZStack {
-                        Circle()
-                            .fill(selectedAccount.swiftUIColor.opacity(0.2))
-                            .frame(width: 24, height: 24)
-                        
-                        Image(systemName: selectedAccount.icon)
-                            .font(.system(size: 12, weight: .medium))
-                            .foregroundStyle(selectedAccount.swiftUIColor)
-                    }
-                    
-                    VStack(alignment: .leading, spacing: 1) {
-                        Text(selectedAccount.name)
-                            .font(.system(size: 13, weight: .medium))
-                            .foregroundStyle(.primary)
-                        
-                        Text(selectedAccount.currentBalance.formatted(.currency(code: "KZT")))
-                            .font(.system(size: 11, weight: .regular))
-                            .fontDesign(.rounded)
-                            .foregroundStyle(.secondary)
-                    }
-                } else {
-                    Image(systemName: "square.stack.3d.up.fill")
-                        .font(.system(size: 16, weight: .medium))
-                        .foregroundStyle(.black)
-                    
-                    VStack(alignment: .leading, spacing: 1) {
-                        Text("Все счета")
-                            .font(.system(size: 13, weight: .medium))
-                            .foregroundStyle(.primary)
-                        
-                        let totalBalance = accounts.reduce(0) { $0 + $1.currentBalance }
-                        Text(totalBalance.formatted(.currency(code: "KZT")))
-                            .font(.system(size: 11, weight: .regular))
-                            .fontDesign(.rounded)
-                            .foregroundStyle(.secondary)
-                    }
-                }
-                
-                Image(systemName: "chevron.down")
-                    .font(.system(size: 10, weight: .semibold))
-                    .foregroundStyle(.secondary)
-            }
-            .padding(.horizontal, 12)
-            .padding(.vertical, 8)
-            .background {
-                Capsule()
-                    .fill(Color(uiColor: .systemBackground))
-                    .shadow(color: .black.opacity(0.04), radius: 4, y: 1)
-            }
-        }
-        .buttonStyle(.plain)
     }
     
     var periodPickerButton: some View {

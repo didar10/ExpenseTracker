@@ -79,48 +79,34 @@ private extension CategoryTransactionsView {
     
     var transactionsList: some View {
         ScrollView {
-            VStack(spacing: 16) {
+            VStack(spacing: 0) {
                 // Header card with total
                 totalCard
+                    .padding(.horizontal, 16)
+                    .padding(.top, 16)
                 
                 // Transactions grouped by date
-                VStack(spacing: 12) {
+                VStack(spacing: 0) {
                     ForEach(groupedTransactions, id: \.date) { group in
-                        VStack(spacing: 0) {
-                            // Date header
-                            HStack {
-                                Text(group.date, style: .date)
-                                    .font(.app(.sectionHeader))
-                                    .foregroundStyle(.secondary)
-                                
-                                Spacer()
-                                
-                                Text(group.total.formatted(.currency(code: "KZT")))
-                                    .font(.app(.sectionHeader))
-                                    .fontDesign(.rounded)
-                                    .foregroundStyle(.secondary)
-                            }
-                            .padding(.horizontal, 16)
-                            .padding(.vertical, 8)
+                        VStack(alignment: .leading, spacing: 8) {
+                            // Date header - отдельно от карточек
+                            SectionHeaderView(date: group.date)
+                                .padding(.bottom, 4)
                             
-                            // Transactions for this date
-                            VStack(spacing: 0) {
-                                ForEach(Array(group.transactions.enumerated()), id: \.element.id) { index, transaction in
-                                    TransactionRowView(transaction: transaction)
-                                        .padding(.horizontal, 16)
-                                    
-                                    if index < group.transactions.count - 1 {
-                                        Divider()
-                                            .padding(.leading, 66)
-                                    }
-                                }
+                            // Transactions for this date - каждая отдельной карточкой
+                            ForEach(group.transactions) { transaction in
+                                TransactionRowView(transaction: transaction)
+                                    .padding(.horizontal, 10)
+                                    .padding(.vertical, 4)
+                                    .cardShadow(cornerRadius: 12)
                             }
                         }
-                        .cardShadow(cornerRadius: 16)
+                        .padding(.horizontal, 16)
+                        .padding(.bottom, 12)
                     }
                 }
+                .padding(.top, 16)
             }
-            .padding()
             .padding(.bottom, 32)
         }
     }
@@ -143,7 +129,7 @@ private extension CategoryTransactionsView {
                 Text(totalAmount.formatted(.currency(code: "KZT")))
                     .font(.system(size: 22, weight: .bold))
                     .fontDesign(.rounded)
-                    .foregroundStyle(Color(hex: category.colorHex))
+                    .foregroundColor(.black)
             }
             
             Spacer()

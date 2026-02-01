@@ -14,6 +14,9 @@ struct RootTabView: View {
     @State private var tabBarOffset: CGFloat = 0
     @State private var isTabBarVisible = true
     
+    // ViewModels на уровне RootTabView для сохранения состояния между переключениями табов
+    @State private var statisticsViewModel = StatisticsViewModel()
+    
     var body: some View {
         ZStack(alignment: .bottom) {
             // Content views
@@ -23,7 +26,7 @@ struct RootTabView: View {
                     DashboardView()
                         .environment(\.tabBarVisibility, $isTabBarVisible)
                 case .statistics:
-                    StatisticsView()
+                    StatisticsView(viewModel: statisticsViewModel)
                         .environment(\.tabBarVisibility, $isTabBarVisible)
                 case .plans:
                     PlansView()
