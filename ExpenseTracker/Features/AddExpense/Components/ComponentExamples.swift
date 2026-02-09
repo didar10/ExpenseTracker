@@ -56,11 +56,10 @@ struct TransactionAmountViewExamples: View {
 
 struct CategorySelectionViewExamples: View {
     @State private var selectedCategory: Category?
-    @State private var showAllCategories = false
-    
+
     // Пример категорий (в реальном приложении используйте @Query)
     let sampleCategories: [Category] = []
-    
+
     var body: some View {
         VStack {
             if let selected = selectedCategory {
@@ -68,28 +67,13 @@ struct CategorySelectionViewExamples: View {
                     .font(.headline)
                     .padding()
             }
-            
+
             CategorySelectionView(
                 categories: sampleCategories,
-                selectedCategory: $selectedCategory,
-                onShowAll: {
-                    showAllCategories = true
-                }
+                selectedCategory: $selectedCategory
             )
-            
+
             Spacer()
-        }
-        .sheet(isPresented: $showAllCategories) {
-            NavigationStack {
-                AllCategoriesView(
-                    categories: sampleCategories,
-                    selectedCategory: selectedCategory,
-                    onSelect: { category in
-                        selectedCategory = category
-                        showAllCategories = false
-                    }
-                )
-            }
         }
     }
 }
@@ -156,35 +140,21 @@ struct SuccessOverlayViewExamples: View {
 // MARK: - CategoryItemView Examples
 
 struct CategoryItemViewExamples: View {
-    @State private var selectedIndex: Int? = 0
-    
+    @State private var selectedCategory: Category?
+
     // Пример категорий
     let sampleCategories: [Category] = []
-    
+
     var body: some View {
-        ScrollView {
-            LazyVGrid(
-                columns: [
-                    GridItem(.flexible()),
-                    GridItem(.flexible()),
-                    GridItem(.flexible())
-                ],
-                spacing: 16
-            ) {
-                ForEach(Array(sampleCategories.enumerated()), id: \.element.id) { index, category in
-                    CategoryItemView(
-                        category: category,
-                        isSelected: selectedIndex == index
-                    )
-                    .onTapGesture {
-                        withAnimation {
-                            selectedIndex = index
-                        }
-                    }
-                }
-            }
-            .padding()
+        VStack {
+            CategorySelectionView(
+                categories: sampleCategories,
+                selectedCategory: $selectedCategory
+            )
+
+            Spacer()
         }
+        .padding()
     }
 }
 
@@ -214,10 +184,8 @@ struct CompositeComponentExample: View {
                     if type == .expense {
                         CategorySelectionView(
                             categories: categories,
-                            selectedCategory: $selectedCategory,
-                            onShowAll: { }
+                            selectedCategory: $selectedCategory
                         )
-                        .padding(.horizontal)
                     }
                     
                     // Details

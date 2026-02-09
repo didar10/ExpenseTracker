@@ -102,19 +102,19 @@ private extension TransactionRowView {
     var title: String {
         transaction.type == .income
         ? "Доход"
-        : transaction.category?.name ?? "Расход"
+        : transaction.category?.name ?? "Без категории"
     }
 
     var iconName: String {
         transaction.type == .income
         ? "arrow.down.circle.fill"
-        : transaction.category?.icon ?? "questionmark.circle.fill"
+        : transaction.category?.icon ?? "minus"
     }
 
     var iconBackgroundColor: Color {
         transaction.type == .income
         ? .green
-        : Color(hex: transaction.category?.colorHex ?? "#34C759")
+        : Color(hex: transaction.category?.colorHex ?? "#8E8E93")
     }
 
     var amountText: String {

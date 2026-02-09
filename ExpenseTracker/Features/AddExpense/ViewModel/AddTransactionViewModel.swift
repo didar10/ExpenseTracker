@@ -47,8 +47,7 @@ final class AddTransactionViewModel: ObservableObject {
 
     var isSaveEnabled: Bool {
         Decimal(string: amount) != nil &&
-        selectedAccount != nil &&
-        (type == .income || selectedCategory != nil)
+        selectedAccount != nil
     }
 
     var amountDisplay: String {

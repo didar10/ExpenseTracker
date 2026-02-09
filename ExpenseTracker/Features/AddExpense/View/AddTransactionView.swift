@@ -61,10 +61,7 @@ struct AddTransactionView: View {
                                 if viewModel.type == .expense {
                                     CategorySelectionView(
                                         categories: categories,
-                                        selectedCategory: $viewModel.selectedCategory,
-                                        onShowAll: {
-                                            viewModel.toggleShowAllCategories()
-                                        }
+                                        selectedCategory: $viewModel.selectedCategory
                                     )
                                     .transition(.asymmetric(
                                         insertion: .move(edge: .trailing).combined(with: .opacity),
@@ -104,18 +101,6 @@ struct AddTransactionView: View {
                 AccountPickerSheet(
                     selectedAccount: $viewModel.selectedAccount,
                     accounts: accounts
-                )
-            }
-            .navigationDestination(isPresented: $viewModel.showAllCategories) {
-                AllCategoriesView(
-                    categories: categories,
-                    selectedCategory: viewModel.selectedCategory,
-                    onSelect: { category in
-                        withAnimation(.spring(response: 0.35, dampingFraction: 0.7)) {
-                            viewModel.selectCategory(category)
-                        }
-                        viewModel.showAllCategories = false
-                    }
                 )
             }
         }
