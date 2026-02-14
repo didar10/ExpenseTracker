@@ -44,7 +44,7 @@ struct CategoryIconPickerButtonView: View {
             )
             .overlay(
                 RoundedRectangle(cornerRadius: 16, style: .continuous)
-                    .strokeBorder(Color.black.opacity(0.08), lineWidth: 1)
+                    .strokeBorder(Color.primary.opacity(0.08), lineWidth: 1)
             )
         }
         .buttonStyle(.plain)

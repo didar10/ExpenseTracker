@@ -41,7 +41,7 @@ struct AccountPickerButton: View {
             .background {
                 Capsule()
                     .fill(Color(uiColor: .systemBackground))
-                    .shadow(color: .black.opacity(0.04), radius: 4, y: 1)
+                    .shadow(color: Color.primary.opacity(0.04), radius: 4, y: 1)
             }
         }
         .buttonStyle(.plain)
@@ -83,7 +83,7 @@ private extension AccountPickerButton {
     var allAccountsIcon: some View {
         Image(systemName: "square.stack.3d.up.fill")
             .font(.system(size: 16, weight: .medium))
-            .foregroundStyle(.black)
+            .foregroundStyle(.primary)
     }
     
     /// Информация о всех счетах

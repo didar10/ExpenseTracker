@@ -27,7 +27,7 @@ struct AddButton: View {
                 
                 Image(systemName: "plus")
                     .font(.system(size: 24, weight: .semibold))
-                    .foregroundStyle(.black)
+                    .foregroundStyle(.primary)
             }
             .circleShadow()
         }

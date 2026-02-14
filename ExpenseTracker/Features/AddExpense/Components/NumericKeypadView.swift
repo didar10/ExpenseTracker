@@ -64,14 +64,14 @@ struct NumericKeypadView: View {
                 RoundedRectangle(cornerRadius: 16, style: .continuous)
                     .fill(Color(uiColor: .systemBackground))
                     .shadow(
-                        color: .black.opacity(pressedKey == key ? 0.3 : 0.65),
+                        color: Color.primary.opacity(pressedKey == key ? 0.3 : 0.65),
                         radius: 0,
                         x: pressedKey == key ? 2 : 4,
                         y: pressedKey == key ? 3 : 6
                     )
                     .overlay(
                         RoundedRectangle(cornerRadius: 16, style: .continuous)
-                            .strokeBorder(Color.black.opacity(0.15), lineWidth: 1.5)
+                            .strokeBorder(Color.primary.opacity(0.15), lineWidth: 1.5)
                     )
 
                 switch key {

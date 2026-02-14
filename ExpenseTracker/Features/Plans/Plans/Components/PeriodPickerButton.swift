@@ -30,16 +30,16 @@ struct PeriodPickerButton: View {
             HStack(spacing: 6) {
                 Image(systemName: "calendar")
                     .font(.system(size: 16, weight: .medium))
-                    .foregroundStyle(.black)
-                
+                    .foregroundStyle(.primary)
+
                 VStack(alignment: .leading, spacing: 1) {
                     Text("Бюджеты")
                         .font(.system(size: 13, weight: .medium))
-                        .foregroundStyle(.black)
-                    
+                        .foregroundStyle(.primary)
+
                     Text(selectedPeriod.rawValue)
                         .font(.system(size: 11, weight: .regular))
-                        .foregroundStyle(.black.opacity(0.6))
+                        .foregroundStyle(.secondary)
                 }
                 
                 Image(systemName: "chevron.down")
@@ -51,7 +51,7 @@ struct PeriodPickerButton: View {
             .background {
                 Capsule()
                     .fill(Color(uiColor: .systemBackground))
-                    .shadow(color: .black.opacity(0.04), radius: 4, y: 1)
+                    .shadow(color: Color.primary.opacity(0.04), radius: 4, y: 1)
             }
         }
         .buttonStyle(.plain)

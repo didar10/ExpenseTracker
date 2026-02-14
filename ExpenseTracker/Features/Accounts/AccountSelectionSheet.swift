@@ -48,47 +48,15 @@ struct AccountSelectionSheet: View {
             .toolbarBackground(.hidden, for: .navigationBar)
             .toolbar {
                 ToolbarItem(placement: .navigationBarLeading) {
-                    Button {
+                    ToolbarIconButton(icon: "xmark") {
                         dismiss()
-                    } label: {
-                        ZStack {
-                            Circle()
-                                .fill(Color.white)
-                                .frame(width: 40, height: 40)
-                                .shadow(
-                                    color: .black.opacity(0.1),
-                                    radius: 3,
-                                    x: 0,
-                                    y: 2
-                                )
-                            
-                            Image(systemName: "xmark")
-                                .font(.system(size: 13, weight: .semibold))
-                                .foregroundStyle(.black)
-                        }
                     }
                 }
-                
+
                 ToolbarItem(placement: .navigationBarTrailing) {
-                    Button {
+                    ToolbarIconButton(icon: "plus") {
                         UIImpactFeedbackGenerator(style: .light).impactOccurred()
                         showingAddAccount = true
-                    } label: {
-                        ZStack {
-                            Circle()
-                                .fill(Color.white)
-                                .frame(width: 40, height: 40)
-                                .shadow(
-                                    color: .black.opacity(0.1),
-                                    radius: 3,
-                                    x: 0,
-                                    y: 2
-                                )
-                            
-                            Image(systemName: "plus")
-                                .font(.system(size: 15, weight: .semibold))
-                                .foregroundStyle(.black)
-                        }
                     }
                 }
             }
@@ -193,7 +161,7 @@ struct AccountSelectionSheet: View {
                     
                     Image(systemName: "pencil")
                         .font(.system(size: 16, weight: .semibold))
-                        .foregroundStyle(.black)
+                        .foregroundStyle(.primary)
                 }
             }
         }

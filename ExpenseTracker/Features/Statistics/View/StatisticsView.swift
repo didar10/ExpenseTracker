@@ -158,7 +158,7 @@ private extension StatisticsView {
             HStack(spacing: 6) {
                 Image(systemName: "calendar")
                     .font(.system(size: 14, weight: .medium))
-                    .foregroundStyle(.black)
+                    .foregroundStyle(.primary)
                 
                 Text(viewModel.selectedPeriod.rawValue)
                     .font(.system(size: 13, weight: .medium))
@@ -173,7 +173,7 @@ private extension StatisticsView {
             .background {
                 Capsule()
                     .fill(Color(uiColor: .systemBackground))
-                    .shadow(color: .black.opacity(0.04), radius: 4, y: 1)
+                    .shadow(color: Color.primary.opacity(0.04), radius: 4, y: 1)
             }
         }
         .buttonStyle(.plain)

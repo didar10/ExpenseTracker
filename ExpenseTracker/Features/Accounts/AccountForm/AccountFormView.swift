@@ -45,49 +45,16 @@ struct AccountFormView: View {
             .toolbarBackground(.hidden, for: .navigationBar)
             .toolbar {
                 ToolbarItem(placement: .navigationBarLeading) {
-                    Button {
+                    ToolbarIconButton(icon: "xmark") {
                         dismiss()
-                    } label: {
-                        ZStack {
-                            Circle()
-                                .fill(Color.white)
-                                .frame(width: 40, height: 40)
-                                .shadow(
-                                    color: .black.opacity(0.1),
-                                    radius: 3,
-                                    x: 0,
-                                    y: 2
-                                )
-                            
-                            Image(systemName: "xmark")
-                                .font(.system(size: 13, weight: .semibold))
-                                .foregroundStyle(.black)
-                        }
                     }
                 }
-                
+
                 ToolbarItem(placement: .navigationBarTrailing) {
-                    Button {
+                    ToolbarIconButton(icon: "checkmark", isEnabled: viewModel.isValid) {
                         viewModel.save(accounts: accounts, using: modelContext)
                         dismiss()
-                    } label: {
-                        ZStack {
-                            Circle()
-                                .fill(viewModel.isValid ? Color.white : Color.white.opacity(0.5))
-                                .frame(width: 40, height: 40)
-                                .shadow(
-                                    color: .black.opacity(viewModel.isValid ? 0.1 : 0.05),
-                                    radius: 3,
-                                    x: 0,
-                                    y: 2
-                                )
-                            
-                            Image(systemName: "checkmark")
-                                .font(.system(size: 14, weight: .bold))
-                                .foregroundStyle(viewModel.isValid ? .black : .gray)
-                        }
                     }
-                    .disabled(!viewModel.isValid)
                 }
             }
             .alert("Удалить счет?", isPresented: $showingDeleteAlert) {

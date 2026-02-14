@@ -22,7 +22,7 @@ struct SuccessOverlayView: View {
                     .symbolEffect(.bounce, value: isShowing)
                 
                 AppText("Сохранено!", style: .section)
-                    .color(.white)
+                    .color(.primary)
             }
             .padding(32)
             .background {

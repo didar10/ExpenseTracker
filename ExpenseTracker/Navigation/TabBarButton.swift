@@ -22,7 +22,7 @@ struct TabBarButton: View {
                 .frame(height: 44)
                 .background(
                     RoundedRectangle(cornerRadius: 16, style: .continuous)
-                        .fill(isSelected ? Color.black.opacity(0.08) : Color.clear)
+                        .fill(isSelected ? Color.primary.opacity(0.08) : Color.clear)
                 )
                 .contentShape(Rectangle())
         }

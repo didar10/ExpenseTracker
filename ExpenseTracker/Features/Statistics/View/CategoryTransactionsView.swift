@@ -46,25 +46,9 @@ struct CategoryTransactionsView: View {
             }
             
             ToolbarItem(placement: .navigationBarLeading) {
-                Button {
+                ToolbarIconButton(icon: "chevron.left") {
                     isTabBarVisible.wrappedValue = true
                     dismiss()
-                } label: {
-                    ZStack {
-                        Circle()
-                            .fill(Color.white)
-                            .frame(width: 40, height: 40)
-                            .shadow(
-                                color: .black.opacity(0.1),
-                                radius: 3,
-                                x: 0,
-                                y: 2
-                            )
-                        
-                        Image(systemName: "chevron.left")
-                            .font(.system(size: 14, weight: .semibold))
-                            .foregroundStyle(.black)
-                    }
                 }
             }
         }
@@ -129,7 +113,7 @@ private extension CategoryTransactionsView {
                 Text(totalAmount.formatted(.currency(code: "KZT")))
                     .font(.system(size: 22, weight: .bold))
                     .fontDesign(.rounded)
-                    .foregroundColor(.black)
+                    .foregroundStyle(.primary)
             }
             
             Spacer()

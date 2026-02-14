@@ -40,19 +40,19 @@ struct AddBudgetPlanView: View {
             }
             .navigationTitle("Новый бюджет")
             .navigationBarTitleDisplayMode(.inline)
+            .navigationBarBackButtonHidden(true)
+            .toolbarBackground(.hidden, for: .navigationBar)
             .toolbar {
-                ToolbarItem(placement: .cancellationAction) {
-                    Button("Отмена") {
+                ToolbarItem(placement: .navigationBarLeading) {
+                    ToolbarIconButton(icon: "xmark") {
                         dismiss()
                     }
                 }
-                
-                ToolbarItem(placement: .confirmationAction) {
-                    Button("Создать") {
+
+                ToolbarItem(placement: .navigationBarTrailing) {
+                    ToolbarIconButton(icon: "checkmark", isEnabled: canSave) {
                         savePlan()
                     }
-                    .disabled(!canSave)
-                    .bold()
                 }
             }
         }

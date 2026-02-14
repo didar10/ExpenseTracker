@@ -131,25 +131,9 @@ struct HelpSupportView: View {
         .toolbarBackground(.hidden, for: .navigationBar)
         .toolbar {
             ToolbarItem(placement: .navigationBarLeading) {
-                Button {
+                ToolbarIconButton(icon: "chevron.left") {
                     isTabBarVisible.wrappedValue = true
                     dismiss()
-                } label: {
-                    ZStack {
-                        Circle()
-                            .fill(Color.white)
-                            .frame(width: 40, height: 40)
-                            .shadow(
-                                color: .black.opacity(0.1),
-                                radius: 3,
-                                x: 0,
-                                y: 2
-                            )
-                        
-                        Image(systemName: "chevron.left")
-                            .font(.system(size: 14, weight: .semibold))
-                            .foregroundStyle(.black)
-                    }
                 }
             }
         }
@@ -282,7 +266,7 @@ struct FAQItemView: View {
         }
         .background(Color(uiColor: .systemBackground))
         .clipShape(RoundedRectangle(cornerRadius: 12))
-        .shadow(color: .black.opacity(0.05), radius: 4, y: 2)
+        .shadow(color: Color.primary.opacity(0.05), radius: 4, y: 2)
     }
 }
 

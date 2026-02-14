@@ -161,7 +161,7 @@ private extension AddTransactionView {
                     .frame(width: 34, height: 34)
                 Image(systemName: "xmark")
                     .font(.system(size: 16, weight: .semibold))
-                    .foregroundStyle(.black)
+                    .foregroundStyle(.primary)
             }
         }
         .padding(.leading, 12)
