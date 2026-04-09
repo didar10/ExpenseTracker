@@ -60,5 +60,5 @@ struct ExpensesPieChartView: View {
         totalExpenses: 450000
     )
     .padding()
-    .background(Color(.systemGroupedBackground))
+    .background(Color.appBackground)
 }

@@ -40,7 +40,7 @@ struct AccountPickerButton: View {
             .padding(.vertical, 8)
             .background {
                 Capsule()
-                    .fill(Color(uiColor: .systemBackground))
+                    .fill(Color.appCardBackground)
                     .shadow(color: Color.primary.opacity(0.04), radius: 4, y: 1)
             }
         }

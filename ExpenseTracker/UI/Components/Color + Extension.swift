@@ -7,6 +7,31 @@
 
 import SwiftUI
 
+// MARK: - App Theme Colors
+
+extension UIColor {
+    /// Фон экрана: светлый — системный grouped, тёмный — тёмно-серый (#1C1C1E)
+    static let appBackground = UIColor { traits in
+        traits.userInterfaceStyle == .dark
+            ? UIColor(red: 28/255, green: 28/255, blue: 30/255, alpha: 1)
+            : .systemGroupedBackground
+    }
+
+    /// Фон карточек/поверхностей: светлый — белый, тёмный — серый (#2C2C2E)
+    static let appCardBackground = UIColor { traits in
+        traits.userInterfaceStyle == .dark
+            ? UIColor(red: 44/255, green: 44/255, blue: 46/255, alpha: 1)
+            : .systemBackground
+    }
+}
+
+extension Color {
+    static let appBackground = Color(uiColor: .appBackground)
+    static let appCardBackground = Color(uiColor: .appCardBackground)
+}
+
+// MARK: - Color Utilities
+
 extension Color {
 
     init(hex: String) {

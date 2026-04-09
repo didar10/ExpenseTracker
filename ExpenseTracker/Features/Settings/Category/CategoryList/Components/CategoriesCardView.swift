@@ -27,5 +27,5 @@ struct CategoriesCardView<Content: View>: View {
         Text("Content")
     }
     .padding()
-    .background(Color(.systemGroupedBackground))
+    .background(Color.appBackground)
 }

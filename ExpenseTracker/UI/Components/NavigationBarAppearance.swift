@@ -12,7 +12,7 @@ enum NavigationBarAppearance {
     static func setup() {
         let appearance = UINavigationBarAppearance()
         appearance.configureWithOpaqueBackground()
-        appearance.backgroundColor = .systemBackground
+        appearance.backgroundColor = .appCardBackground
 
         appearance.titleTextAttributes = [
             .font: UIFont(name: "Montserrat-SemiBold", size: 18)!,

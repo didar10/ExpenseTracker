@@ -14,7 +14,7 @@ struct ToolbarIconButtonLabel: View {
     var body: some View {
         ZStack {
             Circle()
-                .fill(Color(uiColor: .systemBackground))
+                .fill(Color.appCardBackground)
                 .opacity(isEnabled ? 1 : 0.5)
                 .frame(width: 40, height: 40)
                 .shadow(

@@ -47,5 +47,5 @@ struct BalanceCardView: View {
     let balanceData = BalanceData(transactions: mockTransactions)
     
     return BalanceCardView(balanceData: balanceData)
-        .background(Color(.systemGroupedBackground))
+        .background(Color.appBackground)
 }

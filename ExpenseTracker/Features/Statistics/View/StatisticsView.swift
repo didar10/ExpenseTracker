@@ -66,7 +66,7 @@ struct StatisticsView: View {
                     .padding(.bottom, 100)
                 }
             }
-            .background(Color(.systemGroupedBackground))
+            .background(Color.appBackground)
             .navigationBarHidden(true)
             .navigationDestination(for: CategoryStatistic.self) { statistic in
                 CategoryTransactionsView(
@@ -135,7 +135,7 @@ private extension StatisticsView {
         }
         .padding(.horizontal, 16)
         .padding(.vertical, 8)
-        .background(Color(.systemGroupedBackground))
+        .background(Color.appBackground)
     }
     
     var periodPickerButton: some View {
@@ -172,7 +172,7 @@ private extension StatisticsView {
             .padding(.vertical, 8)
             .background {
                 Capsule()
-                    .fill(Color(uiColor: .systemBackground))
+                    .fill(Color.appCardBackground)
                     .shadow(color: Color.primary.opacity(0.04), radius: 4, y: 1)
             }
         }

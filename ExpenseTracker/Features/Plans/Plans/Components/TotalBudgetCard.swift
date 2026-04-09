@@ -107,5 +107,5 @@ struct TotalBudgetCard: View {
         totalSpent: 250000
     )
     .padding()
-    .background(Color(.systemGroupedBackground))
+    .background(Color.appBackground)
 }

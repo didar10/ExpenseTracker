@@ -18,7 +18,7 @@ struct AddButton: View {
         } label: {
             ZStack {
                 Circle()
-                    .fill(Color(uiColor: .systemBackground))
+                    .fill(Color.appCardBackground)
                     .frame(width: 56, height: 56)
                     .overlay(
                         Circle()

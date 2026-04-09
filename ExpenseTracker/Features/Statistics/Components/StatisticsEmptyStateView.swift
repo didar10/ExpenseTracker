@@ -29,5 +29,5 @@ struct StatisticsEmptyStateView: View {
 #Preview {
     StatisticsEmptyStateView()
         .padding()
-        .background(Color(.systemGroupedBackground))
+        .background(Color.appBackground)
 }

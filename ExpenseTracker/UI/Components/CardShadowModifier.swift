@@ -9,7 +9,7 @@ import SwiftUI
 
 struct CardModifier: ViewModifier {
     var cornerRadius: CGFloat
-    var fillColor: Color = Color(uiColor: .systemBackground)
+    var fillColor: Color = Color.appCardBackground
     
     func body(content: Content) -> some View {
         content
@@ -23,7 +23,7 @@ struct CardModifier: ViewModifier {
 /// Модификатор для применения единого стиля теней к карточкам
 struct CardShadowModifier: ViewModifier {
     var cornerRadius: CGFloat
-    var fillColor: Color = Color(uiColor: .systemBackground)
+    var fillColor: Color = Color.appCardBackground
     
     func body(content: Content) -> some View {
         content
@@ -46,7 +46,7 @@ struct CardShadowModifier: ViewModifier {
 
 /// Модификатор для применения единого стиля теней к круглым элементам
 struct CircleShadowModifier: ViewModifier {
-    var fillColor: Color = Color(uiColor: .systemBackground)
+    var fillColor: Color = Color.appCardBackground
     
     func body(content: Content) -> some View {
         content
@@ -68,7 +68,7 @@ struct CircleShadowModifier: ViewModifier {
 }
 
 extension View {
-    func card(cornerRadius: CGFloat = 16, fillColor: Color = Color(uiColor: .systemBackground)) -> some View {
+    func card(cornerRadius: CGFloat = 16, fillColor: Color = Color.appCardBackground) -> some View {
         modifier(CardModifier(cornerRadius: cornerRadius, fillColor: fillColor))
     }
     
@@ -76,13 +76,13 @@ extension View {
     /// - Parameters:
     ///   - cornerRadius: Радиус скругления углов
     ///   - fillColor: Цвет фона карточки (по умолчанию systemBackground)
-    func cardShadow(cornerRadius: CGFloat = 16, fillColor: Color = Color(uiColor: .systemBackground)) -> some View {
+    func cardShadow(cornerRadius: CGFloat = 16, fillColor: Color = Color.appCardBackground) -> some View {
         modifier(CardShadowModifier(cornerRadius: cornerRadius, fillColor: fillColor))
     }
     
     /// Применяет стандартную тень для круглых элементов
     /// - Parameter fillColor: Цвет фона элемента (по умолчанию systemBackground)
-    func circleShadow(fillColor: Color = Color(uiColor: .systemBackground)) -> some View {
+    func circleShadow(fillColor: Color = Color.appCardBackground) -> some View {
         modifier(CircleShadowModifier(fillColor: fillColor))
     }
 }

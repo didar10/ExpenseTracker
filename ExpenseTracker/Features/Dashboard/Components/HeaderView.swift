@@ -15,7 +15,7 @@ struct HeaderView: View {
         AppText(title, style: .title)
             .frame(maxWidth: .infinity, alignment: .center)
             .padding(.vertical, 16)
-            .background(Color(.systemGroupedBackground))
+            .background(Color.appBackground)
     }
 }
 

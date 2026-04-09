@@ -35,7 +35,7 @@ struct CategoryColorPickerView: View {
         .padding(16)
         .background(
             RoundedRectangle(cornerRadius: 16, style: .continuous)
-                .fill(Color(uiColor: .systemBackground))
+                .fill(Color.appCardBackground)
         )
         .overlay(
             RoundedRectangle(cornerRadius: 16, style: .continuous)
@@ -47,5 +47,5 @@ struct CategoryColorPickerView: View {
 #Preview {
     CategoryColorPickerView(colorHex: .constant("#FF6B6B"))
         .padding()
-        .background(Color(.systemGroupedBackground))
+        .background(Color.appBackground)
 }

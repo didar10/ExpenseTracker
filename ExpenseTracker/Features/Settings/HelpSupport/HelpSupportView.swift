@@ -15,7 +15,7 @@ struct HelpSupportView: View {
     
     var body: some View {
         ZStack {
-            Color(.systemGroupedBackground)
+            Color.appBackground
                 .ignoresSafeArea()
             
             ScrollView {
@@ -264,7 +264,7 @@ struct FAQItemView: View {
                     .transition(.opacity.combined(with: .move(edge: .top)))
             }
         }
-        .background(Color(uiColor: .systemBackground))
+        .background(Color.appCardBackground)
         .clipShape(RoundedRectangle(cornerRadius: 12))
         .shadow(color: Color.primary.opacity(0.05), radius: 4, y: 2)
     }

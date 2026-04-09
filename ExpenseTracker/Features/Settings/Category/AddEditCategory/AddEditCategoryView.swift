@@ -28,7 +28,7 @@ struct AddEditCategoryView: View {
     
     var body: some View {
         ZStack {
-            Color(.systemGroupedBackground)
+            Color.appBackground
                 .ignoresSafeArea()
             
             ScrollView {
@@ -86,7 +86,7 @@ struct AddEditCategoryView: View {
                 .padding(16)
                 .background(
                     RoundedRectangle(cornerRadius: 16, style: .continuous)
-                        .fill(Color(uiColor: .systemBackground))
+                        .fill(Color.appCardBackground)
                 )
                 .overlay(
                     RoundedRectangle(cornerRadius: 16, style: .continuous)

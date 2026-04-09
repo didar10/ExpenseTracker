@@ -15,7 +15,7 @@ struct SettingsView: View {
                 AppText("Настройки", style: .title)
                     .frame(maxWidth: .infinity, alignment: .center)
                     .padding(.vertical, 16)
-                    .background(Color(.systemGroupedBackground))
+                    .background(Color.appBackground)
                 
                 ScrollView {
                     VStack(spacing: 20) {
@@ -95,7 +95,7 @@ struct SettingsView: View {
                     .padding(.bottom, 100)
                 }
             }
-            .background(Color(.systemGroupedBackground))
+            .background(Color.appBackground)
             .navigationBarHidden(true)
         }
     }

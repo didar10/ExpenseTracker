@@ -52,5 +52,5 @@ struct CategoryPreviewCardView: View {
         )
     }
     .padding()
-    .background(Color(.systemGroupedBackground))
+    .background(Color.appBackground)
 }

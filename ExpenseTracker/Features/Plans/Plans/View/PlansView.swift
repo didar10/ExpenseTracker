@@ -50,7 +50,7 @@ struct PlansView: View {
                     .padding(.bottom, 100)
                 }
             }
-            .background(Color(.systemGroupedBackground))
+            .background(Color.appBackground)
             .navigationBarHidden(true)
             .sheet(isPresented: $showingAddPlan, onDismiss: {
                 print("✅ Budget plan sheet dismissed")
@@ -92,7 +92,7 @@ private extension PlansView {
         }
         .padding(.horizontal, 16)
         .padding(.vertical, 8)
-        .background(Color(.systemGroupedBackground))
+        .background(Color.appBackground)
     }
     
     var filteredPlans: [BudgetPlan] {

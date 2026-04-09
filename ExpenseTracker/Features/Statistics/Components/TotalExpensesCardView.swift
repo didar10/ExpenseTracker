@@ -32,5 +32,5 @@ struct TotalExpensesCardView: View {
         TotalExpensesCardView(amount: 450000)
         TotalExpensesCardView(amount: 0)
     }
-    .background(Color(.systemGroupedBackground))
+    .background(Color.appBackground)
 }

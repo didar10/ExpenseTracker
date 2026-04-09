@@ -36,5 +36,5 @@ struct EmptyCategoriesView: View {
 #Preview {
     EmptyCategoriesView()
         .padding()
-        .background(Color(.systemGroupedBackground))
+        .background(Color.appBackground)
 }

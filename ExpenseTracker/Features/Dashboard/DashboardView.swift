@@ -65,7 +65,7 @@ struct DashboardView: View {
                     .padding(.bottom, 100)
                 }
             }
-            .background(Color(.systemGroupedBackground))
+            .background(Color.appBackground)
             .navigationBarHidden(true)
             .fullScreenCover(item: $selectedTransaction) { transaction in
                 AddTransactionView(transaction: transaction)
@@ -114,7 +114,7 @@ private extension DashboardView {
         }
         .padding(.horizontal, 16)
         .padding(.vertical, 8)
-        .background(Color(.systemGroupedBackground))
+        .background(Color.appBackground)
     }
 }
 

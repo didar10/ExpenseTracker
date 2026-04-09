@@ -35,9 +35,9 @@ struct CategoryFormSectionView<Content: View>: View {
             .padding(16)
             .background(
                 RoundedRectangle(cornerRadius: 16)
-                    .fill(Color(.systemBackground))
+                    .fill(Color.appCardBackground)
             )
     }
     .padding()
-    .background(Color(.systemGroupedBackground))
+    .background(Color.appBackground)
 }

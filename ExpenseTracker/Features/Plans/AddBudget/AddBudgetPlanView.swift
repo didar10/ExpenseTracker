@@ -21,7 +21,7 @@ struct AddBudgetPlanView: View {
     var body: some View {
         NavigationStack {
             ZStack {
-                Color(.systemGroupedBackground)
+                Color.appBackground
                     .ignoresSafeArea()
                 
                 ScrollView {
@@ -128,7 +128,7 @@ struct AddBudgetPlanView: View {
                             .foregroundStyle(selectedPeriod == period ? .white : .primary)
                             .frame(maxWidth: .infinity)
                             .padding(.vertical, 12)
-                            .background(selectedPeriod == period ? Color.blue : Color(uiColor: .systemBackground))
+                            .background(selectedPeriod == period ? Color.blue : Color.appCardBackground)
                             .clipShape(RoundedRectangle(cornerRadius: 10))
                     }
                     .buttonStyle(.plain)

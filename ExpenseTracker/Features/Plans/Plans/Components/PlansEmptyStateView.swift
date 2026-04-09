@@ -53,5 +53,5 @@ struct PlansEmptyStateView: View {
 
 #Preview {
     PlansEmptyStateView(onCreateTap: {})
-        .background(Color(.systemGroupedBackground))
+        .background(Color.appBackground)
 }

@@ -32,7 +32,7 @@ struct ModernTabBar: View {
         .padding(.vertical, 10)
         .background(
             RoundedRectangle(cornerRadius: 28, style: .continuous)
-                .fill(Color(uiColor: .systemBackground))
+                .fill(Color.appCardBackground)
         )
         .overlay(
             RoundedRectangle(cornerRadius: 28, style: .continuous)

@@ -26,7 +26,7 @@ struct AccountFormView: View {
     var body: some View {
         NavigationStack {
             ZStack {
-                Color(uiColor: .systemGroupedBackground)
+                Color.appBackground
                     .ignoresSafeArea()
                 
                 ScrollView {

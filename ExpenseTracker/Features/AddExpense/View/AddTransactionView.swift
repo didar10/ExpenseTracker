@@ -96,7 +96,7 @@ struct AddTransactionView: View {
                     SuccessOverlayView(isShowing: viewModel.showSuccessAnimation)
                 }
             }
-            .background(Color(.systemGroupedBackground))
+            .background(Color.appBackground)
             .sheet(isPresented: $showingAccountPicker) {
                 AccountPickerSheet(
                     selectedAccount: $viewModel.selectedAccount,
@@ -126,7 +126,7 @@ private extension AddTransactionView {
             headerContent
         }
         .padding(.vertical, 8)
-        .background(Color(.systemGroupedBackground))
+        .background(Color.appBackground)
         .frame(maxWidth: .infinity) // Фиксируем ширину
     }
     

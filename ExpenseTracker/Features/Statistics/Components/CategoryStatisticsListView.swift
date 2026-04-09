@@ -53,5 +53,5 @@ struct CategoryStatisticsListView: View {
         onCategoryTap: { _ in }
     )
     .padding()
-    .background(Color(.systemGroupedBackground))
+    .background(Color.appBackground)
 }

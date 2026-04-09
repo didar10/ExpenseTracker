@@ -87,7 +87,7 @@ struct AccountPickerView: View {
             .frame(height: 60)
             .background {
                 RoundedRectangle(cornerRadius: 12, style: .continuous)
-                    .fill(Color(uiColor: .systemBackground))
+                    .fill(Color.appCardBackground)
             }
         }
         .buttonStyle(.plain)

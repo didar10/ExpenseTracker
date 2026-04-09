@@ -62,7 +62,7 @@ struct NumericKeypadView: View {
         } label: {
             ZStack {
                 RoundedRectangle(cornerRadius: 16, style: .continuous)
-                    .fill(Color(uiColor: .systemBackground))
+                    .fill(Color.appCardBackground)
                     .shadow(
                         color: Color.primary.opacity(pressedKey == key ? 0.3 : 0.65),
                         radius: 0,

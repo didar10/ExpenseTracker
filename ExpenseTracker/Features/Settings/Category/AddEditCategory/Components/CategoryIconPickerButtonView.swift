@@ -40,7 +40,7 @@ struct CategoryIconPickerButtonView: View {
             .padding(16)
             .background(
                 RoundedRectangle(cornerRadius: 16, style: .continuous)
-                    .fill(Color(uiColor: .systemBackground))
+                    .fill(Color.appCardBackground)
             )
             .overlay(
                 RoundedRectangle(cornerRadius: 16, style: .continuous)
@@ -58,5 +58,5 @@ struct CategoryIconPickerButtonView: View {
         action: {}
     )
     .padding()
-    .background(Color(.systemGroupedBackground))
+    .background(Color.appBackground)
 }

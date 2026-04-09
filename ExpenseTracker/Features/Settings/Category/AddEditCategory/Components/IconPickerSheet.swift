@@ -13,7 +13,7 @@ struct IconPickerSheet: View {
     
     var body: some View {
         ZStack {
-            Color(.systemGroupedBackground)
+            Color.appBackground
                 .ignoresSafeArea()
             
             IconPicker(selectedIcon: $selectedIcon)

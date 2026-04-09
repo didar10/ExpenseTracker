@@ -56,5 +56,5 @@ struct CategorySaveButtonView: View {
         )
     }
     .padding()
-    .background(Color(.systemGroupedBackground))
+    .background(Color.appBackground)
 }

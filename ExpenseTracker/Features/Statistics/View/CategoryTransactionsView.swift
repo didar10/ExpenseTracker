@@ -19,7 +19,7 @@ struct CategoryTransactionsView: View {
     
     var body: some View {
         ZStack {
-            Color(.systemGroupedBackground)
+            Color.appBackground
                 .ignoresSafeArea()
             
             if transactions.isEmpty {

@@ -25,7 +25,7 @@ struct CategoriesListView: View {
     
     var body: some View {
         ZStack {
-            Color(.systemGroupedBackground)
+            Color.appBackground
                 .ignoresSafeArea()
             
             ScrollView {

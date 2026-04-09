@@ -60,7 +60,7 @@ struct DateSelectionView: View {
             .frame(height: 60)
             .background {
                 RoundedRectangle(cornerRadius: 12, style: .continuous)
-                    .fill(Color(.systemBackground))
+                    .fill(Color.appCardBackground)
             }
         }
         .buttonStyle(.plain)
@@ -108,7 +108,7 @@ struct NoteInputView: View {
         .padding(.horizontal, 16)
         .background {
             RoundedRectangle(cornerRadius: 16, style: .continuous)
-                .fill(Color(.systemBackground))
+                .fill(Color.appCardBackground)
         }
     }
 }
