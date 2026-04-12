@@ -7,18 +7,20 @@
 
 import SwiftUI
 
-/// Компонент для отображения пустого состояния
 struct EmptyStateView: View {
+
+    // MARK: - Body
+
     var body: some View {
         VStack(spacing: 16) {
-            Image(systemName: "tray")
+            AppImage.emptyState
                 .font(.system(size: 56))
                 .foregroundStyle(.tertiary)
-            
+
             VStack(spacing: 8) {
-                AppText("Нет транзакций", style: .title)
-                
-                AppText("Нажмите + чтобы добавить первую транзакцию", style: .bodySmall, color: .secondary, alignment: .center)
+                AppText(AppString.noTransactions, style: .title)
+
+                AppText(AppString.noTransactionsHint, style: .bodySmall, color: AppColor.textSecondary, alignment: .center)
             }
         }
         .padding(40)

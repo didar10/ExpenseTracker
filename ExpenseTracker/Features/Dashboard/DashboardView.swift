@@ -9,112 +9,81 @@ import SwiftUI
 import SwiftData
 
 struct DashboardView: View {
-    
+
     // MARK: - Properties
-    
+
     @Query(sort: \Transaction.date, order: .reverse)
     private var transactions: [Transaction]
-    
+
     @Query(sort: \Account.createdAt, order: .forward)
     private var accounts: [Account]
-    
-    @State private var selectedTransaction: Transaction?
-    @State private var selectedAccount: Account?
-    @State private var showingAccountsView = false
-    @Environment(\.tabBarVisibility) private var isTabBarVisible
-    
-    // MARK: - Computed Properties
-    
-    private var filteredTransactions: [Transaction] {
-        if let selectedAccount = selectedAccount {
-            return transactions.filter { $0.account?.id == selectedAccount.id }
-        }
-        return transactions
-    }
-    
-    private var balanceData: BalanceData {
-        if let selectedAccount = selectedAccount {
-            return BalanceData(accounts: [selectedAccount])
-        } else if !accounts.isEmpty {
-            return BalanceData(accounts: accounts)
-        } else {
-            return BalanceData(transactions: transactions)
-        }
-    }
-    
-    private var groupedTransactions: [TransactionSection] {
-        TransactionSection.group(filteredTransactions)
-    }
-    
+
+    @StateObject private var viewModel = DashboardViewModel()
+
     // MARK: - Body
-    
+
     var body: some View {
         NavigationStack {
             VStack(spacing: 0) {
                 accountPickerHeader
-                
+
                 ScrollView {
                     VStack(spacing: .zero) {
-                        BalanceCardView(balanceData: balanceData)
-                        
+                        BalanceCardView(
+                            balanceData: viewModel.balanceData(
+                                accounts: accounts,
+                                transactions: transactions
+                            )
+                        )
+
                         TransactionsListView(
-                            sections: groupedTransactions,
-                            onTransactionTap: handleTransactionTap
+                            sections: viewModel.groupedTransactions(from: transactions),
+                            onTransactionTap: viewModel.handleTransactionTap
                         )
                     }
                     .padding(.bottom, 100)
                 }
             }
-            .background(Color.appBackground)
+            .background(AppColor.background)
             .navigationBarHidden(true)
-            .fullScreenCover(item: $selectedTransaction) { transaction in
+            .fullScreenCover(item: $viewModel.selectedTransaction) { transaction in
                 AddTransactionView(transaction: transaction)
             }
-            .sheet(isPresented: $showingAccountsView) {
+            .sheet(isPresented: $viewModel.showingAccountsView) {
                 AccountSelectionSheet(
                     accounts: accounts,
-                    selectedAccount: selectedAccount,
+                    selectedAccount: viewModel.selectedAccount,
                     onSelect: { account in
-                        withAnimation(.spring(response: 0.3, dampingFraction: 0.7)) {
-                            selectedAccount = account
-                        }
-                        showingAccountsView = false
+                        viewModel.selectAccount(account)
                     },
                     onShowAll: {
-                        showingAccountsView = false
+                        viewModel.hideAccounts()
                     }
                 )
             }
         }
     }
-    
-    // MARK: - Actions
-    
-    private func handleTransactionTap(_ transaction: Transaction) {
-        UIImpactFeedbackGenerator(style: .light).impactOccurred()
-        withAnimation {
-            selectedTransaction = transaction
-        }
-    }
 }
 
-// MARK: - Account Picker Header
+// MARK: - Subviews
 private extension DashboardView {
-    
+
     var accountPickerHeader: some View {
         HStack(spacing: 12) {
             AccountPickerButton(
-                selectedAccount: selectedAccount,
-                totalBalance: balanceData.balance,
+                selectedAccount: viewModel.selectedAccount,
+                totalBalance: viewModel.balanceData(
+                    accounts: accounts,
+                    transactions: transactions
+                ).balance,
                 action: {
-                    showingAccountsView = true
+                    viewModel.showAccounts()
                 }
             )
             Spacer()
         }
         .padding(.horizontal, 16)
         .padding(.vertical, 8)
-        .background(Color.appBackground)
+        .background(AppColor.background)
     }
 }
-

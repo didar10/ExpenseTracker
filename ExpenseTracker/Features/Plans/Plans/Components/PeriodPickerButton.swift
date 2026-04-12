@@ -8,9 +8,14 @@
 import SwiftUI
 
 struct PeriodPickerButton: View {
+
+    // MARK: - Properties
+
     let selectedPeriod: BudgetPeriod
     let onPeriodChange: (BudgetPeriod) -> Void
-    
+
+    // MARK: - Body
+
     var body: some View {
         Menu {
             ForEach(BudgetPeriod.allCases, id: \.self) { period in
@@ -21,37 +26,37 @@ struct PeriodPickerButton: View {
                         Text(period.rawValue)
                     } icon: {
                         if selectedPeriod == period {
-                            Image(systemName: "checkmark")
+                            AppImage.checkmark
                         }
                     }
                 }
             }
         } label: {
             HStack(spacing: 6) {
-                Image(systemName: "calendar")
+                AppImage.calendar
                     .font(.system(size: 16, weight: .medium))
-                    .foregroundStyle(.primary)
+                    .foregroundStyle(AppColor.textPrimary)
 
                 VStack(alignment: .leading, spacing: 1) {
-                    Text("Бюджеты")
-                        .font(.system(size: 13, weight: .medium))
-                        .foregroundStyle(.primary)
+                    Text(AppString.budgets)
+                        .font(.app(.caption))
+                        .foregroundStyle(AppColor.textPrimary)
 
                     Text(selectedPeriod.rawValue)
-                        .font(.system(size: 11, weight: .regular))
-                        .foregroundStyle(.secondary)
+                        .font(.app(.microCaption))
+                        .foregroundStyle(AppColor.textSecondary)
                 }
-                
-                Image(systemName: "chevron.down")
+
+                AppImage.chevronDown
                     .font(.system(size: 10, weight: .semibold))
-                    .foregroundStyle(.secondary)
+                    .foregroundStyle(AppColor.textSecondary)
             }
             .padding(.horizontal, 12)
             .padding(.vertical, 8)
             .background {
                 Capsule()
-                    .fill(Color.appCardBackground)
-                    .shadow(color: Color.primary.opacity(0.04), radius: 4, y: 1)
+                    .fill(AppColor.cardBackground)
+                    .shadow(color: AppColor.textPrimary.opacity(0.04), radius: 4, y: 1)
             }
         }
         .buttonStyle(.plain)
@@ -59,8 +64,5 @@ struct PeriodPickerButton: View {
 }
 
 #Preview {
-    PeriodPickerButton(
-        selectedPeriod: .month,
-        onPeriodChange: { _ in }
-    )
+    PeriodPickerButton(selectedPeriod: .month, onPeriodChange: { _ in })
 }

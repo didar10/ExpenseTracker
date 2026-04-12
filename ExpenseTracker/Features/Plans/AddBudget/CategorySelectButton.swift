@@ -8,10 +8,15 @@
 import SwiftUI
 
 struct CategorySelectButton: View {
+
+    // MARK: - Properties
+
     let category: Category
     let isSelected: Bool
     let action: () -> Void
-    
+
+    // MARK: - Body
+
     var body: some View {
         Button(action: action) {
             VStack(spacing: 8) {
@@ -19,23 +24,23 @@ struct CategorySelectButton: View {
                     Circle()
                         .fill(Color(hex: category.colorHex).opacity(0.15))
                         .frame(width: 56, height: 56)
-                    
+
                     Image(systemName: category.icon)
                         .font(.system(size: 24, weight: .semibold))
                         .foregroundStyle(Color(hex: category.colorHex))
                 }
-                
+
                 Text(category.name)
-                    .font(.system(size: 13, weight: .medium))
-                    .foregroundStyle(isSelected ? .primary : .secondary)
+                    .font(.app(.caption))
+                    .foregroundStyle(isSelected ? AppColor.textPrimary : AppColor.textSecondary)
                     .lineLimit(1)
             }
             .padding(12)
-            .background(isSelected ? Color.blue.opacity(0.1) : Color.clear)
+            .background(isSelected ? AppColor.accent.opacity(0.1) : Color.clear)
             .clipShape(RoundedRectangle(cornerRadius: 12))
             .overlay(
                 RoundedRectangle(cornerRadius: 12)
-                    .strokeBorder(isSelected ? Color.blue : Color.clear, lineWidth: 2)
+                    .strokeBorder(isSelected ? AppColor.accent : Color.clear, lineWidth: 2)
             )
         }
         .buttonStyle(.plain)

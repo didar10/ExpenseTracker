@@ -8,9 +8,12 @@
 import SwiftUI
 
 struct IconPickerView: View {
+
+    // MARK: - Properties
+
     @Binding var selectedIcon: String
     let onSelect: (String) -> Void
-    
+
     private let icons = [
         "creditcard.fill",
         "wallet.pass.fill",
@@ -19,7 +22,9 @@ struct IconPickerView: View {
         "building.columns.fill",
         "briefcase.fill"
     ]
-    
+
+    // MARK: - Body
+
     var body: some View {
         ScrollView(.horizontal, showsIndicators: false) {
             HStack(spacing: 10) {
@@ -30,12 +35,12 @@ struct IconPickerView: View {
                     } label: {
                         ZStack {
                             RoundedRectangle(cornerRadius: 10, style: .continuous)
-                                .fill(selectedIcon == icon ? Color.blue.opacity(0.2) : Color(uiColor: .secondarySystemBackground))
+                                .fill(selectedIcon == icon ? AppColor.accent.opacity(0.2) : AppColor.secondaryBackground)
                                 .frame(width: 44, height: 44)
-                            
+
                             Image(systemName: icon)
                                 .font(.system(size: 20))
-                                .foregroundStyle(selectedIcon == icon ? .blue : .secondary)
+                                .foregroundStyle(selectedIcon == icon ? AppColor.accent : AppColor.textSecondary)
                         }
                     }
                 }

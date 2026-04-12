@@ -8,11 +8,15 @@
 import SwiftUI
 
 struct TransactionTypePickerView: View {
+
+    // MARK: - Properties
+
     @Binding var selectedType: TransactionType
-    
+
+    // MARK: - Body
+
     var body: some View {
         HStack(spacing: 6) {
-            // Expense button
             Button {
                 UIImpactFeedbackGenerator(style: .medium).impactOccurred()
                 withAnimation(.spring(response: 0.3, dampingFraction: 0.7)) {
@@ -20,11 +24,11 @@ struct TransactionTypePickerView: View {
                 }
             } label: {
                 HStack(spacing: 6) {
-                    Image(systemName: "arrow.up.right")
+                    AppImage.expenseDirection
                         .font(.system(size: 14, weight: .semibold))
-                        .foregroundStyle(Color.orange)
+                        .foregroundStyle(AppColor.warning)
                     if selectedType == .expense {
-                        AppText("Расход", style: .caption)
+                        AppText(AppString.expense, style: .caption)
                             .transition(.opacity.combined(with: .move(edge: .leading)))
                     }
                 }
@@ -32,12 +36,11 @@ struct TransactionTypePickerView: View {
                 .padding(.vertical, 8)
                 .background(
                     RoundedRectangle(cornerRadius: 14, style: .continuous)
-                        .fill(selectedType == .expense ? Color.orange.opacity(0.15) : .clear)
+                        .fill(selectedType == .expense ? AppColor.warning.opacity(0.15) : .clear)
                 )
             }
             .buttonStyle(.plain)
 
-            // Income button
             Button {
                 UIImpactFeedbackGenerator(style: .medium).impactOccurred()
                 withAnimation(.spring(response: 0.3, dampingFraction: 0.7)) {
@@ -45,11 +48,11 @@ struct TransactionTypePickerView: View {
                 }
             } label: {
                 HStack(spacing: 6) {
-                    Image(systemName: "arrow.down.left")
+                    AppImage.incomeDirection
                         .font(.system(size: 14, weight: .semibold))
-                        .foregroundStyle(Color.green)
+                        .foregroundStyle(AppColor.income)
                     if selectedType == .income {
-                        AppText("Доход", style: .caption)
+                        AppText(AppString.income, style: .caption)
                             .transition(.opacity.combined(with: .move(edge: .trailing)))
                     }
                 }
@@ -57,14 +60,14 @@ struct TransactionTypePickerView: View {
                 .padding(.vertical, 8)
                 .background(
                     RoundedRectangle(cornerRadius: 14, style: .continuous)
-                        .fill(selectedType == .income ? Color.green.opacity(0.15) : .clear)
+                        .fill(selectedType == .income ? AppColor.income.opacity(0.15) : .clear)
                 )
             }
             .buttonStyle(.plain)
         }
         .padding(6)
         .background(
-            Capsule().fill(Color(.secondarySystemGroupedBackground))
+            Capsule().fill(AppColor.secondaryBackground)
         )
     }
 }

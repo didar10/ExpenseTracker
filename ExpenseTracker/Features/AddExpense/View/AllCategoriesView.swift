@@ -8,17 +8,22 @@
 import SwiftUI
 
 struct AllCategoriesView: View {
+
+    // MARK: - Properties
+
     let categories: [Category]
     let selectedCategory: Category?
     let onSelect: (Category) -> Void
-    
+
     @Environment(\.dismiss) private var dismiss
-    
+
+    // MARK: - Body
+
     var body: some View {
         ZStack {
-            Color.appBackground
+            AppColor.background
                 .ignoresSafeArea()
-            
+
             ScrollView {
                 VStack(spacing: 16) {
                     if categories.isEmpty {
@@ -30,7 +35,7 @@ struct AllCategoriesView: View {
                 .padding()
             }
         }
-        .navigationTitle("Все категории")
+        .navigationTitle(AppString.allCategories)
         .navigationBarTitleDisplayMode(.inline)
         .navigationBarBackButtonHidden(true)
         .toolbarBackground(.hidden, for: .navigationBar)
@@ -50,8 +55,12 @@ struct AllCategoriesView: View {
             }
         }
     }
-    
-    private var categoriesGrid: some View {
+}
+
+// MARK: - Subviews
+private extension AllCategoriesView {
+
+    var categoriesGrid: some View {
         LazyVGrid(
             columns: [
                 GridItem(.flexible(), spacing: 12),
@@ -70,15 +79,17 @@ struct AllCategoriesView: View {
             }
         }
     }
-    
-    private func categoryGridItem(_ category: Category) -> some View {
-        VStack(spacing: 8) {
+
+    func categoryGridItem(_ category: Category) -> some View {
+        let isSelected = selectedCategory?.id == category.id
+
+        return VStack(spacing: 8) {
             ZStack {
                 Circle()
-                    .fill(Color(hex: category.colorHex).opacity(selectedCategory?.id == category.id ? 1.0 : 0.15))
+                    .fill(Color(hex: category.colorHex).opacity(isSelected ? 1.0 : 0.15))
                     .frame(width: 56, height: 56)
                     .overlay {
-                        if selectedCategory?.id == category.id {
+                        if isSelected {
                             Circle()
                                 .strokeBorder(Color(hex: category.colorHex).opacity(0.3), lineWidth: 2.5)
                                 .scaleEffect(1.15)
@@ -87,13 +98,13 @@ struct AllCategoriesView: View {
 
                 Image(systemName: category.icon)
                     .font(.system(size: 24, weight: .semibold))
-                    .foregroundStyle(selectedCategory?.id == category.id ? .white : Color(hex: category.colorHex))
-                    .symbolEffect(.bounce, value: selectedCategory?.id == category.id)
+                    .foregroundStyle(isSelected ? AppColor.textWhite : Color(hex: category.colorHex))
+                    .symbolEffect(.bounce, value: isSelected)
             }
-            
+
             Text(category.name)
-                .font(.system(size: 12, weight: selectedCategory?.id == category.id ? .semibold : .medium))
-                .foregroundStyle(selectedCategory?.id == category.id ? .primary : .secondary)
+                .font(.app(.microCaption))
+                .foregroundStyle(isSelected ? AppColor.textPrimary : AppColor.textSecondary)
                 .lineLimit(2)
                 .multilineTextAlignment(.center)
                 .minimumScaleFactor(0.8)
@@ -101,43 +112,37 @@ struct AllCategoriesView: View {
         }
         .frame(maxWidth: .infinity)
     }
-    
-    private var emptyStateView: some View {
+
+    var emptyStateView: some View {
         VStack(spacing: 20) {
-            Image(systemName: "square.grid.2x2")
+            AppImage.categoriesGrid
                 .font(.system(size: 60))
-                .foregroundStyle(.secondary)
-            
-            Text("Нет категорий")
-                .font(.system(size: 24, weight: .bold))
-                .foregroundStyle(.primary)
-            
-            Text("Создайте категорию")
-                .font(.system(size: 16))
-                .foregroundStyle(.secondary)
+                .foregroundStyle(AppColor.textSecondary)
+
+            AppText(AppString.noCategories, style: .title)
+
+            AppText(AppString.createCategoryHint, style: .body)
+                .color(AppColor.textSecondary)
                 .multilineTextAlignment(.center)
-            
+
             NavigationLink {
                 AddEditCategoryView()
             } label: {
                 HStack(spacing: 8) {
-                    Image(systemName: "plus.circle.fill")
+                    AppImage.plusCircleFill
                         .font(.system(size: 20))
-                    
-                    Text("Создать категорию")
-                        .font(.system(size: 16, weight: .semibold))
+
+                    AppText(AppString.createCategory, style: .bodySmaller)
                 }
-                .foregroundStyle(.blue)
+                .foregroundStyle(AppColor.accent)
                 .padding(.horizontal, 20)
                 .padding(.vertical, 12)
                 .background {
                     Capsule()
-                        .fill(Color.blue.opacity(0.1))
+                        .fill(AppColor.accent.opacity(0.1))
                 }
             }
         }
         .padding()
     }
 }
-
-

@@ -7,30 +7,33 @@
 
 import SwiftUI
 
-/// Кнопка сохранения категории
 struct CategorySaveButtonView: View {
+
+    // MARK: - Properties
+
     let title: String
     let isEnabled: Bool
     let action: () -> Void
-    
+
+    // MARK: - Body
+
     var body: some View {
         Button(action: action) {
             HStack {
-                Image(systemName: "checkmark.circle.fill")
+                AppImage.checkmarkCircleFill
                     .font(.system(size: 20))
-                
-                Text(title)
-                    .font(.system(size: 17, weight: .semibold))
+
+                AppText(title, style: .section)
             }
-            .foregroundStyle(.white)
+            .foregroundStyle(AppColor.textWhite)
             .frame(maxWidth: .infinity)
             .padding(.vertical, 16)
             .background(
                 RoundedRectangle(cornerRadius: 16, style: .continuous)
-                    .fill(isEnabled ? Color.green : Color.gray)
+                    .fill(isEnabled ? AppColor.income : AppColor.textTertiary)
             )
             .shadow(
-                color: isEnabled ? Color.green.opacity(0.3) : Color.clear,
+                color: isEnabled ? AppColor.income.opacity(0.3) : Color.clear,
                 radius: 8,
                 y: 4
             )
@@ -43,18 +46,9 @@ struct CategorySaveButtonView: View {
 
 #Preview {
     VStack(spacing: 16) {
-        CategorySaveButtonView(
-            title: "Создать категорию",
-            isEnabled: true,
-            action: {}
-        )
-        
-        CategorySaveButtonView(
-            title: "Создать категорию",
-            isEnabled: false,
-            action: {}
-        )
+        CategorySaveButtonView(title: AppString.createCategory, isEnabled: true, action: {})
+        CategorySaveButtonView(title: AppString.createCategory, isEnabled: false, action: {})
     }
     .padding()
-    .background(Color.appBackground)
+    .background(AppColor.background)
 }

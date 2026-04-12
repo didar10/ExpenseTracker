@@ -1,0 +1,99 @@
+/* Common */
+"save" = "Сохранить";
+"cancel" = "Отмена";
+"delete" = "Удалить";
+"done" = "Готово";
+"today" = "Сегодня";
+"yesterday" = "Вчера";
+"income" = "Доход";
+"expense" = "Расход";
+"no_category" = "Без категории";
+"cannot_undo" = "Это действие нельзя отменить";
+
+/* Dashboard */
+"balance" = "Баланс";
+"no_transactions" = "Нет транзакций";
+"no_transactions_hint" = "Нажмите + чтобы добавить первую транзакцию";
+"delete_transaction" = "Удалить транзакцию?";
+
+/* Accounts */
+"select_account" = "Выбор счета";
+"all_accounts" = "Все счета";
+"all_accounts_hint" = "Показать транзакции по всем счетам";
+"no_accounts" = "Нет счетов";
+"no_accounts_hint" = "Создайте счет в разделе \"Счета\"";
+"choose_account" = "Выберите счет";
+"account_name" = "Название счета";
+"initial_balance" = "Начальный баланс (опционально)";
+"icon" = "Иконка";
+"color" = "Цвет";
+"default_account" = "Счет по умолчанию";
+"default_account_hint" = "Будет выбран автоматически при создании транзакций";
+"delete_account" = "Удалить счет";
+"delete_account_confirm" = "Удалить счет?";
+"delete_account_message" = "Счет и все его транзакции будут удалены. Это действие нельзя отменить.";
+"edit_account" = "Редактировать счет";
+"new_account" = "Новый счет";
+
+/* AddExpense */
+"saved" = "Сохранено!";
+"enter_amount" = "Введите сумму";
+"add_comment" = "Добавить комментарий...";
+"select_date" = "Выберите дату";
+"date" = "Дата";
+
+/* Categories */
+"all_categories" = "Все категории";
+"no_categories" = "Нет категорий";
+"create_category" = "Создать категорию";
+"create_category_hint" = "Создайте категорию";
+"categories" = "Категории";
+"delete_category_confirm" = "Удалить категорию?";
+"category_name" = "Название категории";
+"enter_name" = "Введите название";
+"select_icon" = "Выбрать иконку";
+"select_color" = "Выбрать цвет";
+"edit_category" = "Редактировать";
+"new_category" = "Новая категория";
+"save_changes" = "Сохранить изменения";
+"add_category_hint" = "Нажмите + чтобы добавить категорию";
+"name" = "Название";
+
+/* Plans */
+"budgets" = "Бюджеты";
+"no_budgets" = "Нет бюджетов";
+"no_budgets_hint" = "Создайте бюджет для отслеживания расходов по категориям";
+"create_budget" = "Создать бюджет";
+"delete_budget_confirm" = "Удалить бюджет?";
+"new_budget" = "Новый бюджет";
+"total_budget" = "Общий бюджет";
+"spent" = "Потрачено";
+"remaining" = "Осталось:";
+"exceeded" = "Превышено на";
+"category" = "Категория";
+"limit" = "Лимит";
+"period" = "Период";
+"all_categories_used" = "Все категории уже используются";
+
+/* Statistics */
+"expenses" = "Расходы";
+"no_data" = "Нет данных";
+"no_data_hint" = "Добавьте расходы за выбранный период";
+"total_for_period" = "Всего за период";
+"total_expenses" = "Всего расходов";
+"no_transactions_for_period" = "За выбранный период нет транзакций в категории «%@»";
+
+/* Settings */
+"settings" = "Настройки";
+"general" = "Основные";
+"default_currency" = "Валюта по умолчанию";
+"information" = "Информация";
+"privacy_policy" = "Политика конфиденциальности";
+"help_and_support" = "Помощь и поддержка";
+"terms_of_service" = "Условия использования";
+"app_version" = "Версия 1.0.0";
+"contact_support" = "Связаться с поддержкой";
+"quick_actions" = "Быстрые действия";
+"faq" = "Частые вопросы";
+"no_answer_found" = "Не нашли ответ?";
+"support_available" = "Наша команда поддержки готова помочь вам 24/7";

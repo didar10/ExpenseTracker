@@ -7,31 +7,34 @@
 
 import SwiftUI
 
-/// Компонент карточки баланса с отображением доходов и расходов
 struct BalanceCardView: View {
+
+    // MARK: - Properties
+
     let balanceData: BalanceData
-    
+
+    // MARK: - Body
+
     var body: some View {
         VStack(spacing: 12) {
-            AppText("Баланс", style: .caption, color: .secondary)
-            
-            // Применяем .rounded design на уровне view
-            Text(balanceData.balance.formatted(.currency(code: "KZT")))
+            AppText(AppString.balance, style: .caption, color: AppColor.textSecondary)
+
+            Text(balanceData.balance.formatted(.currency(code: AppString.currencyCode)))
                 .font(.app(.balance))
                 .fontDesign(.rounded)
-                .foregroundStyle(.primary)
+                .foregroundStyle(AppColor.textPrimary)
                 .contentTransition(.numericText())
-            
+
             HStack(spacing: 24) {
                 FinancialIndicatorView(
-                    icon: "arrow.down.circle.fill",
-                    color: .green,
+                    icon: AppImage.incomeArrow,
+                    color: AppColor.income,
                     amount: balanceData.totalIncome
                 )
-                
+
                 FinancialIndicatorView(
-                    icon: "arrow.up.circle.fill",
-                    color: .red,
+                    icon: AppImage.expenseArrow,
+                    color: AppColor.expense,
                     amount: balanceData.totalExpenses
                 )
             }
@@ -45,7 +48,7 @@ struct BalanceCardView: View {
 #Preview {
     let mockTransactions: [Transaction] = []
     let balanceData = BalanceData(transactions: mockTransactions)
-    
+
     return BalanceCardView(balanceData: balanceData)
-        .background(Color.appBackground)
+        .background(AppColor.background)
 }

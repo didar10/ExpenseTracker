@@ -9,32 +9,35 @@ import SwiftUI
 import SwiftData
 
 struct AccountFormView: View {
-    
+
+    // MARK: - Properties
+
     @Environment(\.modelContext) private var modelContext
     @Environment(\.dismiss) private var dismiss
-    
+
     @Query(sort: \Account.name) private var accounts: [Account]
-    
+
     @StateObject private var viewModel: AccountFormViewModel
-    
+
     @State private var showingDeleteAlert = false
-    
+
+    // MARK: - Init
+
     init(account: Account? = nil) {
         _viewModel = StateObject(wrappedValue: AccountFormViewModel(account: account))
     }
-    
+
+    // MARK: - Body
+
     var body: some View {
         NavigationStack {
             ZStack {
-                Color.appBackground
+                AppColor.background
                     .ignoresSafeArea()
-                
+
                 ScrollView {
                     VStack(spacing: 20) {
-                        // Превью карточки счета
                         accountPreviewCard
-                        
-                        // Форма
                         formContent
                     }
                     .padding()
@@ -57,102 +60,96 @@ struct AccountFormView: View {
                     }
                 }
             }
-            .alert("Удалить счет?", isPresented: $showingDeleteAlert) {
-                Button("Отмена", role: .cancel) { }
-                Button("Удалить", role: .destructive) {
+            .alert(AppString.deleteAccountConfirm, isPresented: $showingDeleteAlert) {
+                Button(AppString.cancel, role: .cancel) { }
+                Button(AppString.delete, role: .destructive) {
                     viewModel.delete(using: modelContext)
                     dismiss()
                 }
             } message: {
-                Text("Счет и все его транзакции будут удалены. Это действие нельзя отменить.")
+                Text(AppString.deleteAccountMessage)
             }
         }
     }
-    
-    // MARK: - Views
-    
-    private var accountPreviewCard: some View {
+}
+
+// MARK: - Subviews
+private extension AccountFormView {
+
+    var accountPreviewCard: some View {
         HStack(spacing: 12) {
-            // Иконка
             ZStack {
                 RoundedRectangle(cornerRadius: 10, style: .continuous)
                     .fill(Color(named: viewModel.selectedColor).opacity(0.2))
                     .frame(width: 44, height: 44)
-                
+
                 Image(systemName: viewModel.selectedIcon)
                     .font(.system(size: 20))
                     .foregroundStyle(Color(named: viewModel.selectedColor))
             }
-            
-            // Информация
+
             HStack {
-                TextField("Название счета", text: $viewModel.name)
-                    .font(.custom("SFProDisplay-Semibold", size: 16))
-                    .foregroundStyle(viewModel.name.isEmpty ? .secondary : .primary)
-                
+                TextField(AppString.accountName, text: $viewModel.name)
+                    .font(.app(.bodySmaller))
+                    .foregroundStyle(viewModel.name.isEmpty ? AppColor.textSecondary : AppColor.textPrimary)
+
                 if viewModel.isDefault {
-                    Image(systemName: "star.fill")
+                    AppImage.starFill
                         .font(.system(size: 11))
-                        .foregroundStyle(.yellow)
+                        .foregroundStyle(AppColor.highlight)
                 }
             }
-            
+
             Spacer()
         }
         .padding(16)
         .card(cornerRadius: 16)
     }
-    
-    private var formContent: some View {
+
+    var formContent: some View {
         VStack(spacing: 16) {
-            // Начальный баланс
-            FormSection(title: "Начальный баланс (опционально)") {
+            FormSection(title: AppString.initialBalance) {
                 TextField("0", text: $viewModel.initialBalance)
                     .textFieldStyle(.roundedBorder)
                     .keyboardType(.decimalPad)
-                    .font(.custom("SFProDisplay-Regular", size: 16))
+                    .font(.app(.body))
             }
-            
-            // Иконка
-            FormSection(title: "Иконка") {
+
+            FormSection(title: AppString.icon) {
                 IconPickerView(selectedIcon: $viewModel.selectedIcon, onSelect: viewModel.selectIcon)
             }
-            
-            // Цвет
-            FormSection(title: "Цвет") {
+
+            FormSection(title: AppString.color) {
                 ColorPickerView(selectedColor: $viewModel.selectedColor, onSelect: viewModel.selectColor)
             }
-            
-            // По умолчанию
+
             FormSection(title: "") {
                 Toggle(isOn: $viewModel.isDefault) {
                     VStack(alignment: .leading, spacing: 2) {
-                        AppText("Счет по умолчанию", style: .body)
-                            .color(.primary)
-                        AppText("Будет выбран автоматически при создании транзакций", style: .caption)
-                            .color(.secondary)
+                        AppText(AppString.defaultAccount, style: .body)
+                            .color(AppColor.textPrimary)
+                        AppText(AppString.defaultAccountHint, style: .caption)
+                            .color(AppColor.textSecondary)
                     }
                 }
-                .tint(.blue)
+                .tint(AppColor.accent)
             }
-            
-            // Кнопка удаления (только в режиме редактирования)
+
             if viewModel.isEditMode {
                 Button {
                     showingDeleteAlert = true
                 } label: {
                     HStack {
                         Spacer()
-                        
+
                         HStack(spacing: 8) {
-                            Image(systemName: "trash")
+                            AppImage.trash
                                 .font(.system(size: 15, weight: .semibold))
-                            
-                            Text("Удалить счет")
-                                .font(.custom("SFProDisplay-Semibold", size: 16))
+
+                            AppText(AppString.deleteAccount, style: .bodySmaller)
                         }
-                        .foregroundStyle(.red)
-                        
+                        .foregroundStyle(AppColor.expense)
+
                         Spacer()
                     }
                     .padding(16)

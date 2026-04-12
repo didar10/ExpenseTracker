@@ -10,36 +10,38 @@ import SwiftData
 
 struct TransactionRowView: View {
 
+    // MARK: - Properties
+
     let transaction: Transaction
 
     @Environment(\.modelContext) private var context
     @State private var showDeleteConfirmation = false
 
+    // MARK: - Body
+
     var body: some View {
         HStack(spacing: 12) {
-
             iconView
 
             VStack(alignment: .leading, spacing: 4) {
                 HStack(spacing: 6) {
                     AppText(title, style: .bodySmaller)
-                    
+
                     if let note = transaction.note, !note.isEmpty {
-                        Image(systemName: "text.bubble")
+                        AppImage.noteBubble
                             .font(.system(size: 10))
                             .foregroundStyle(.tertiary)
                     }
                 }
 
                 if let note = transaction.note, !note.isEmpty {
-                    AppText(note, style: .microCaption, color: .secondary)
+                    AppText(note, style: .microCaption, color: AppColor.textSecondary)
                         .lineLimit(1)
                 }
             }
 
             Spacer()
-            
-            // Применяем .rounded design на уровне view
+
             Text(amountText)
                 .font(.app(.bodySmaller))
                 .fontDesign(.rounded)
@@ -52,24 +54,24 @@ struct TransactionRowView: View {
             Button {
                 showDeleteConfirmation = true
             } label: {
-                Label("Удалить", systemImage: "trash")
+                Label(AppString.delete, systemImage: "trash")
             }
         }
-        .confirmationDialog("Удалить транзакцию?", isPresented: $showDeleteConfirmation, titleVisibility: .visible) {
-            Button("Удалить", role: .destructive) {
+        .confirmationDialog(AppString.deleteTransaction, isPresented: $showDeleteConfirmation, titleVisibility: .visible) {
+            Button(AppString.delete, role: .destructive) {
                 delete()
             }
-            Button("Отмена", role: .cancel) { }
+            Button(AppString.cancel, role: .cancel) { }
         }
     }
 }
 
-// MARK: - Logic
+// MARK: - Actions
 private extension TransactionRowView {
 
     func delete() {
         UINotificationFeedbackGenerator().notificationOccurred(.warning)
-        
+
         withAnimation {
             context.delete(transaction)
         }
@@ -77,12 +79,12 @@ private extension TransactionRowView {
         do {
             try context.save()
         } catch {
-            print("❌ Failed to delete transaction:", error)
+            print("Failed to delete transaction:", error)
         }
     }
 }
 
-// MARK: - UI helpers
+// MARK: - Subviews
 private extension TransactionRowView {
 
     var iconView: some View {
@@ -91,38 +93,42 @@ private extension TransactionRowView {
                 .fill(iconBackgroundColor.opacity(0.15))
                 .frame(width: 38, height: 38)
 
-            Image(systemName: iconName)
+            transactionIcon
                 .foregroundStyle(iconBackgroundColor)
                 .font(.system(size: 18, weight: .semibold))
                 .symbolRenderingMode(.hierarchical)
         }
         .circleShadow()
     }
+}
+
+// MARK: - Computed Properties
+private extension TransactionRowView {
 
     var title: String {
         transaction.type == .income
-        ? "Доход"
-        : transaction.category?.name ?? "Без категории"
+        ? AppString.income
+        : transaction.category?.name ?? AppString.noCategory
     }
 
-    var iconName: String {
+    var transactionIcon: Image {
         transaction.type == .income
-        ? "arrow.down.circle.fill"
-        : transaction.category?.icon ?? "minus"
+        ? AppImage.incomeArrow
+        : Image(systemName: transaction.category?.icon ?? "minus")
     }
 
     var iconBackgroundColor: Color {
         transaction.type == .income
-        ? .green
+        ? AppColor.income
         : Color(hex: transaction.category?.colorHex ?? "#8E8E93")
     }
 
     var amountText: String {
         let sign = transaction.type == .income ? "+" : "−"
-        return "\(sign) \(transaction.amount.formatted(.currency(code: "KZT")))"
+        return "\(sign) \(transaction.amount.formatted(.currency(code: AppString.currencyCode)))"
     }
 
     var amountColor: Color {
-        transaction.type == .income ? .green : .primary
+        transaction.type == .income ? AppColor.income : AppColor.textPrimary
     }
 }

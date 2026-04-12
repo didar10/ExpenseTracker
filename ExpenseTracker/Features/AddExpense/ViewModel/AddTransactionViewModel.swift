@@ -13,20 +13,23 @@ import UIKit
 final class AddTransactionViewModel: ObservableObject {
 
     // MARK: - Input Data
+
     @Published var amount: String = ""
     @Published var selectedCategory: Category?
     @Published var selectedAccount: Account?
     @Published var note: String = ""
     @Published var date: Date = .now
     @Published var type: TransactionType = .expense
-    
+
     // MARK: - UI State
+
     @Published var showSuccessAnimation = false
     @Published var showAllCategories = false
 
     private(set) var editingTransaction: Transaction?
 
     // MARK: - Init
+
     init(transaction: Transaction? = nil) {
         self.editingTransaction = transaction
 

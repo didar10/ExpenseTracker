@@ -8,21 +8,26 @@
 import SwiftUI
 
 struct SuccessOverlayView: View {
+
+    // MARK: - Properties
+
     let isShowing: Bool
-    
+
+    // MARK: - Body
+
     var body: some View {
         ZStack {
             Color.black.opacity(0.3)
                 .ignoresSafeArea()
-            
+
             VStack(spacing: 16) {
-                Image(systemName: "checkmark.circle.fill")
+                AppImage.checkmarkCircleFill
                     .font(.system(size: 60))
-                    .foregroundStyle(.green)
+                    .foregroundStyle(AppColor.income)
                     .symbolEffect(.bounce, value: isShowing)
-                
-                AppText("Сохранено!", style: .section)
-                    .color(.primary)
+
+                AppText(AppString.saved, style: .section)
+                    .color(AppColor.textPrimary)
             }
             .padding(32)
             .background {

@@ -7,44 +7,45 @@
 
 import SwiftUI
 
-/// Кнопка выбора иконки категории
 struct CategoryIconPickerButtonView: View {
+
+    // MARK: - Properties
+
     let icon: String
     let colorHex: String
     let action: () -> Void
-    
+
+    // MARK: - Body
+
     var body: some View {
         Button(action: action) {
             HStack(spacing: 12) {
-                // Preview текущей иконки
                 ZStack {
                     RoundedRectangle(cornerRadius: 10)
                         .fill(Color(hex: colorHex).opacity(0.15))
                         .frame(width: 50, height: 50)
-                    
+
                     Image(systemName: icon)
                         .font(.system(size: 24, weight: .semibold))
                         .foregroundStyle(Color(hex: colorHex))
                 }
-                
-                Text("Выбрать иконку")
-                    .font(.system(size: 17))
-                    .foregroundStyle(.primary)
-                
+
+                AppText(AppString.selectIcon, style: .body)
+
                 Spacer()
-                
-                Image(systemName: "chevron.right")
+
+                AppImage.chevronRight
                     .font(.system(size: 14, weight: .semibold))
                     .foregroundStyle(.tertiary)
             }
             .padding(16)
             .background(
                 RoundedRectangle(cornerRadius: 16, style: .continuous)
-                    .fill(Color.appCardBackground)
+                    .fill(AppColor.cardBackground)
             )
             .overlay(
                 RoundedRectangle(cornerRadius: 16, style: .continuous)
-                    .strokeBorder(Color.primary.opacity(0.08), lineWidth: 1)
+                    .strokeBorder(AppColor.textPrimary.opacity(0.08), lineWidth: 1)
             )
         }
         .buttonStyle(.plain)
@@ -52,11 +53,7 @@ struct CategoryIconPickerButtonView: View {
 }
 
 #Preview {
-    CategoryIconPickerButtonView(
-        icon: "cart.fill",
-        colorHex: "#FF6B6B",
-        action: {}
-    )
-    .padding()
-    .background(Color.appBackground)
+    CategoryIconPickerButtonView(icon: "cart.fill", colorHex: "#FF6B6B", action: {})
+        .padding()
+        .background(AppColor.background)
 }

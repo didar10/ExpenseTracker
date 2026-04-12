@@ -8,17 +8,21 @@
 import SwiftUI
 
 struct AccountPickerSheet: View {
-    
+
+    // MARK: - Properties
+
     @Environment(\.dismiss) private var dismiss
     @Binding var selectedAccount: Account?
     let accounts: [Account]
-    
+
+    // MARK: - Body
+
     var body: some View {
         NavigationStack {
             ZStack {
-                Color.appBackground
+                AppColor.background
                     .ignoresSafeArea()
-                
+
                 if accounts.isEmpty {
                     emptyStateView
                 } else {
@@ -39,7 +43,7 @@ struct AccountPickerSheet: View {
                     }
                 }
             }
-            .navigationTitle("Выбор счета")
+            .navigationTitle(AppString.selectAccount)
             .navigationBarTitleDisplayMode(.inline)
             .toolbarBackground(.hidden, for: .navigationBar)
             .toolbar {
@@ -51,43 +55,47 @@ struct AccountPickerSheet: View {
             }
         }
     }
-    
-    private func accountRow(_ account: Account) -> some View {
+}
+
+// MARK: - Subviews
+private extension AccountPickerSheet {
+
+    func accountRow(_ account: Account) -> some View {
         HStack(spacing: 12) {
             ZStack {
                 RoundedRectangle(cornerRadius: 10, style: .continuous)
                     .fill(account.swiftUIColor.opacity(0.2))
                     .frame(width: 44, height: 44)
-                
+
                 Image(systemName: account.icon)
                     .font(.system(size: 20, weight: .medium))
                     .foregroundStyle(account.swiftUIColor)
             }
-            
+
             HStack(spacing: 4) {
                 Text(account.name)
-                    .font(.system(size: 15, weight: .medium))
-                    .foregroundStyle(.primary)
-                
+                    .font(.app(.bodySmaller))
+                    .foregroundStyle(AppColor.textPrimary)
+
                 if account.isDefault {
-                    Image(systemName: "star.fill")
+                    AppImage.starFill
                         .font(.system(size: 10))
-                        .foregroundStyle(.yellow)
+                        .foregroundStyle(AppColor.highlight)
                 }
             }
-            
+
             Spacer(minLength: 8)
-            
+
             HStack(spacing: 8) {
-                Text(account.currentBalance.formatted(.currency(code: "KZT")))
-                    .font(.system(size: 14, weight: .semibold))
+                Text(account.currentBalance.formatted(.currency(code: AppString.currencyCode)))
+                    .font(.app(.caption))
                     .fontDesign(.rounded)
-                    .foregroundStyle(.secondary)
-                
+                    .foregroundStyle(AppColor.textSecondary)
+
                 if selectedAccount?.id == account.id {
-                    Image(systemName: "checkmark.circle.fill")
+                    AppImage.checkmarkCircleFill
                         .font(.system(size: 20))
-                        .foregroundStyle(.blue)
+                        .foregroundStyle(AppColor.accent)
                 }
             }
         }
@@ -95,18 +103,18 @@ struct AccountPickerSheet: View {
         .padding(.vertical, 10)
         .cardShadow(cornerRadius: 14)
     }
-    
-    private var emptyStateView: some View {
+
+    var emptyStateView: some View {
         VStack(spacing: 20) {
-            Image(systemName: "creditcard.and.123")
+            AppImage.noAccountsIcon
                 .font(.system(size: 60))
-                .foregroundStyle(.secondary)
-            
-            AppText("Нет счетов", style: .title)
-                .color(.primary)
-            
-            AppText("Создайте счет в разделе \"Счета\"", style: .body)
-                .color(.secondary)
+                .foregroundStyle(AppColor.textSecondary)
+
+            AppText(AppString.noAccounts, style: .title)
+                .color(AppColor.textPrimary)
+
+            AppText(AppString.noAccountsHint, style: .body)
+                .color(AppColor.textSecondary)
                 .multilineTextAlignment(.center)
         }
         .padding()

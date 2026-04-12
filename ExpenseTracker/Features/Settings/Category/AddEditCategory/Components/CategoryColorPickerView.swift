@@ -7,39 +7,41 @@
 
 import SwiftUI
 
-/// Выбор цвета категории с preview
 struct CategoryColorPickerView: View {
+
+    // MARK: - Properties
+
     @Binding var colorHex: String
-    
+
+    // MARK: - Body
+
     var body: some View {
         HStack(spacing: 12) {
-            // Preview текущего цвета
             Circle()
                 .fill(Color(hex: colorHex))
                 .frame(width: 50, height: 50)
                 .overlay(
                     Circle()
-                        .strokeBorder(Color.primary.opacity(0.1), lineWidth: 1)
+                        .strokeBorder(AppColor.textPrimary.opacity(0.1), lineWidth: 1)
                 )
-            
-            // ColorPicker
+
             ColorPicker(
-                "Выбрать цвет",
+                AppString.selectColor,
                 selection: Binding(
                     get: { Color(hex: colorHex) },
                     set: { colorHex = $0.toHex() }
                 )
             )
-            .font(.system(size: 17))
+            .font(.app(.body))
         }
         .padding(16)
         .background(
             RoundedRectangle(cornerRadius: 16, style: .continuous)
-                .fill(Color.appCardBackground)
+                .fill(AppColor.cardBackground)
         )
         .overlay(
             RoundedRectangle(cornerRadius: 16, style: .continuous)
-                .strokeBorder(Color.primary.opacity(0.08), lineWidth: 1)
+                .strokeBorder(AppColor.textPrimary.opacity(0.08), lineWidth: 1)
         )
     }
 }
@@ -47,5 +49,5 @@ struct CategoryColorPickerView: View {
 #Preview {
     CategoryColorPickerView(colorHex: .constant("#FF6B6B"))
         .padding()
-        .background(Color.appBackground)
+        .background(AppColor.background)
 }

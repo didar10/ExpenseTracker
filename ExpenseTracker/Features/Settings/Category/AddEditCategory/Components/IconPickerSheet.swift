@@ -8,26 +8,31 @@
 import SwiftUI
 
 struct IconPickerSheet: View {
+
+    // MARK: - Properties
+
     @Binding var selectedIcon: String
     @Environment(\.dismiss) private var dismiss
-    
+
+    // MARK: - Body
+
     var body: some View {
         ZStack {
-            Color.appBackground
+            AppColor.background
                 .ignoresSafeArea()
-            
+
             IconPicker(selectedIcon: $selectedIcon)
                 .padding()
         }
-        .navigationTitle("Выбрать иконку")
+        .navigationTitle(AppString.selectIcon)
         .navigationBarTitleDisplayMode(.inline)
         .toolbar {
             ToolbarItem(placement: .confirmationAction) {
-                Button("Готово") {
+                Button(AppString.done) {
                     dismiss()
                 }
-                .font(.system(size: 17, weight: .semibold))
-                .foregroundStyle(.green)
+                .font(.app(.section))
+                .foregroundStyle(AppColor.income)
             }
         }
     }

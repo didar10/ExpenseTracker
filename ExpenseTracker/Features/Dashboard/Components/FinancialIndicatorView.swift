@@ -7,39 +7,42 @@
 
 import SwiftUI
 
-/// Компонент для отображения финансового показателя (доход/расход)
 struct FinancialIndicatorView: View {
-    let icon: String
+
+    // MARK: - Properties
+
+    let icon: Image
     let color: Color
     let amount: Decimal
-    
+
+    // MARK: - Body
+
     var body: some View {
         HStack(spacing: 6) {
-            Image(systemName: icon)
+            icon
                 .font(.system(size: 16))
                 .foregroundStyle(color)
-            
-            // Применяем .rounded design на уровне view
-            Text(amount.formatted(.currency(code: "KZT")))
+
+            Text(amount.formatted(.currency(code: AppString.currencyCode)))
                 .font(.app(.bodySmall))
                 .fontDesign(.rounded)
-                .foregroundStyle(.primary)
+                .foregroundStyle(AppColor.textPrimary)
         }
     }
 }
 
 #Preview("Income") {
     FinancialIndicatorView(
-        icon: "arrow.down.circle.fill",
-        color: .green,
+        icon: AppImage.incomeArrow,
+        color: AppColor.income,
         amount: 150000
     )
 }
 
 #Preview("Expense") {
     FinancialIndicatorView(
-        icon: "arrow.up.circle.fill",
-        color: .red,
+        icon: AppImage.expenseArrow,
+        color: AppColor.expense,
         amount: 75000
     )
 }

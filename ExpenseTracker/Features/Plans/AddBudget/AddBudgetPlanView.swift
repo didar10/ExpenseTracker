@@ -9,36 +9,36 @@ import SwiftUI
 import SwiftData
 
 struct AddBudgetPlanView: View {
+
+    // MARK: - Properties
+
     let categories: [Category]
-    
+
     @Environment(\.dismiss) private var dismiss
     @Environment(\.modelContext) private var context
-    
+
     @State private var selectedCategory: Category?
     @State private var amount: String = ""
     @State private var selectedPeriod: BudgetPeriod = .month
-    
+
+    // MARK: - Body
+
     var body: some View {
         NavigationStack {
             ZStack {
-                Color.appBackground
+                AppColor.background
                     .ignoresSafeArea()
-                
+
                 ScrollView {
                     VStack(spacing: 20) {
-                        // Категория
                         categorySection
-                        
-                        // Сумма
                         amountSection
-                        
-                        // Период
                         periodSection
                     }
                     .padding()
                 }
             }
-            .navigationTitle("Новый бюджет")
+            .navigationTitle(AppString.newBudget)
             .navigationBarTitleDisplayMode(.inline)
             .navigationBarBackButtonHidden(true)
             .toolbarBackground(.hidden, for: .navigationBar)
@@ -57,19 +57,17 @@ struct AddBudgetPlanView: View {
             }
         }
     }
-    
-    // MARK: - Sections
-    
-    private var categorySection: some View {
+}
+
+// MARK: - Subviews
+private extension AddBudgetPlanView {
+
+    var categorySection: some View {
         VStack(alignment: .leading, spacing: 12) {
-            Text("Категория")
-                .font(.system(size: 14, weight: .medium))
-                .foregroundStyle(.secondary)
-            
+            AppText(AppString.category, style: .caption, color: AppColor.textSecondary)
+
             if categories.isEmpty {
-                Text("Все категории уже используются")
-                    .font(.system(size: 15))
-                    .foregroundStyle(.secondary)
+                AppText(AppString.allCategoriesUsed, style: .bodySmaller, color: AppColor.textSecondary)
                     .frame(maxWidth: .infinity)
                     .padding()
                     .cardShadow(cornerRadius: 12)
@@ -90,45 +88,39 @@ struct AddBudgetPlanView: View {
             }
         }
     }
-    
-    private var amountSection: some View {
+
+    var amountSection: some View {
         VStack(alignment: .leading, spacing: 12) {
-            Text("Лимит")
-                .font(.system(size: 14, weight: .medium))
-                .foregroundStyle(.secondary)
-            
+            AppText(AppString.limit, style: .caption, color: AppColor.textSecondary)
+
             HStack {
                 TextField("0", text: $amount)
                     .font(.system(size: 28, weight: .bold))
                     .fontDesign(.rounded)
                     .keyboardType(.decimalPad)
-                
-                Text("₸")
-                    .font(.system(size: 28, weight: .bold))
-                    .foregroundStyle(.secondary)
+
+                AppText(AppString.currencySymbol, style: .title, color: AppColor.textSecondary)
             }
             .padding()
             .card(cornerRadius: 12)
         }
     }
-    
-    private var periodSection: some View {
+
+    var periodSection: some View {
         VStack(alignment: .leading, spacing: 12) {
-            Text("Период")
-                .font(.system(size: 14, weight: .medium))
-                .foregroundStyle(.secondary)
-            
+            AppText(AppString.period, style: .caption, color: AppColor.textSecondary)
+
             HStack(spacing: 12) {
                 ForEach(BudgetPeriod.allCases, id: \.self) { period in
                     Button {
                         selectedPeriod = period
                     } label: {
                         Text(period.rawValue)
-                            .font(.system(size: 15, weight: .medium))
-                            .foregroundStyle(selectedPeriod == period ? .white : .primary)
+                            .font(.app(.bodySmaller))
+                            .foregroundStyle(selectedPeriod == period ? AppColor.textWhite : AppColor.textPrimary)
                             .frame(maxWidth: .infinity)
                             .padding(.vertical, 12)
-                            .background(selectedPeriod == period ? Color.blue : Color.appCardBackground)
+                            .background(selectedPeriod == period ? AppColor.accent : AppColor.cardBackground)
                             .clipShape(RoundedRectangle(cornerRadius: 10))
                     }
                     .buttonStyle(.plain)
@@ -137,47 +129,31 @@ struct AddBudgetPlanView: View {
             .card(cornerRadius: 12)
         }
     }
-    
-    // MARK: - Validation & Save
-    
-    private var canSave: Bool {
+}
+
+// MARK: - Actions
+private extension AddBudgetPlanView {
+
+    var canSave: Bool {
         guard selectedCategory != nil else { return false }
-        
         let cleanedAmount = amount.replacingOccurrences(of: ",", with: ".")
-        guard let amountValue = Decimal(string: cleanedAmount), amountValue > 0 else {
-            return false
-        }
-        
+        guard let amountValue = Decimal(string: cleanedAmount), amountValue > 0 else { return false }
         return true
     }
-    
-    private func savePlan() {
-        guard let category = selectedCategory else {
-            print("❌ Category not selected")
-            return
-        }
-        
+
+    func savePlan() {
+        guard let category = selectedCategory else { return }
         let cleanedAmount = amount.replacingOccurrences(of: ",", with: ".")
-        guard let amountValue = Decimal(string: cleanedAmount), amountValue > 0 else {
-            print("❌ Invalid amount: '\(amount)'")
-            return
-        }
-        
+        guard let amountValue = Decimal(string: cleanedAmount), amountValue > 0 else { return }
+
         let plan = BudgetPlan(
             category: category,
             monthlyLimit: amountValue,
             period: selectedPeriod
         )
-        
+
         context.insert(plan)
-        
-        do {
-            try context.save()
-            print("✅ Budget plan saved: \(category.name) - \(amountValue) ₸")
-        } catch {
-            print("❌ Failed to save: \(error)")
-        }
-        
+        try? context.save()
         dismiss()
     }
 }

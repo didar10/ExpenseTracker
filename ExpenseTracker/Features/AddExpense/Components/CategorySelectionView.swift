@@ -8,6 +8,9 @@
 import SwiftUI
 
 struct CategorySelectionView: View {
+
+    // MARK: - Properties
+
     let categories: [Category]
     @Binding var selectedCategory: Category?
 
@@ -19,6 +22,8 @@ struct CategorySelectionView: View {
     private let normalSize: CGFloat = 38
     private let selectedSize: CGFloat = 46
     private let itemWidth: CGFloat = 46
+
+    // MARK: - Body
 
     var body: some View {
         GeometryReader { geometry in
@@ -74,10 +79,12 @@ struct CategorySelectionView: View {
             AddEditCategoryView()
         }
     }
+}
 
-    // MARK: - Category Item
+// MARK: - Subviews
+private extension CategorySelectionView {
 
-    private func categoryItem(_ category: Category, isSelected: Bool) -> some View {
+    func categoryItem(_ category: Category, isSelected: Bool) -> some View {
         let size = isSelected ? selectedSize : normalSize
         let iconSize: CGFloat = isSelected ? 18 : 16
 
@@ -99,15 +106,15 @@ struct CategorySelectionView: View {
 
                 Image(systemName: category.icon)
                     .font(.system(size: iconSize, weight: .semibold))
-                    .foregroundStyle(isSelected ? .white : Color(hex: category.colorHex))
+                    .foregroundStyle(isSelected ? AppColor.textWhite : Color(hex: category.colorHex))
                     .animation(nil, value: isSelected)
             }
             .frame(width: selectedSize * 1.2, height: selectedSize * 1.2)
 
             if isSelected {
                 Text(category.name)
-                    .font(.system(size: 10, weight: .semibold))
-                    .foregroundStyle(.primary)
+                    .font(.app(.microCaption))
+                    .foregroundStyle(AppColor.textPrimary)
                     .lineLimit(1)
                     .fixedSize(horizontal: true, vertical: false)
                     .transition(.opacity.combined(with: .scale(scale: 0.8)))
@@ -123,9 +130,7 @@ struct CategorySelectionView: View {
         }
     }
 
-    // MARK: - No Category Item
-
-    private func noCategoryItem(isSelected: Bool) -> some View {
+    func noCategoryItem(isSelected: Bool) -> some View {
         let size = isSelected ? selectedSize : normalSize
         let iconSize: CGFloat = isSelected ? 18 : 16
 
@@ -145,17 +150,17 @@ struct CategorySelectionView: View {
                         }
                     }
 
-                Image(systemName: "minus")
+                AppImage.noIcon
                     .font(.system(size: iconSize, weight: .semibold))
-                    .foregroundStyle(isSelected ? .white : Color(.systemGray))
+                    .foregroundStyle(isSelected ? AppColor.textWhite : Color(.systemGray))
                     .animation(nil, value: isSelected)
             }
             .frame(width: selectedSize * 1.2, height: selectedSize * 1.2)
 
             if isSelected {
-                Text("Без категории")
-                    .font(.system(size: 10, weight: .semibold))
-                    .foregroundStyle(.primary)
+                Text(AppString.noCategory)
+                    .font(.app(.microCaption))
+                    .foregroundStyle(AppColor.textPrimary)
                     .lineLimit(1)
                     .fixedSize(horizontal: true, vertical: false)
                     .transition(.opacity.combined(with: .scale(scale: 0.8)))
@@ -171,9 +176,7 @@ struct CategorySelectionView: View {
         }
     }
 
-    // MARK: - Add Category Button
-
-    private func addCategoryItem() -> some View {
+    func addCategoryItem() -> some View {
         VStack(spacing: 4) {
             ZStack {
                 Circle()
@@ -183,9 +186,9 @@ struct CategorySelectionView: View {
                     )
                     .frame(width: normalSize, height: normalSize)
 
-                Image(systemName: "plus")
+                AppImage.plus
                     .font(.system(size: 16, weight: .semibold))
-                    .foregroundStyle(.secondary)
+                    .foregroundStyle(AppColor.textSecondary)
             }
             .frame(width: selectedSize * 1.2, height: selectedSize * 1.2)
         }

@@ -8,44 +8,44 @@
 import SwiftUI
 
 struct PlansEmptyStateView: View {
+
+    // MARK: - Properties
+
     let onCreateTap: () -> Void
-    
+
+    // MARK: - Body
+
     var body: some View {
         VStack(spacing: 20) {
             Spacer()
-            
-            Image(systemName: "chart.bar.doc.horizontal")
+
+            AppImage.chartBarDoc
                 .font(.system(size: 70))
-                .foregroundStyle(.blue.opacity(0.7))
+                .foregroundStyle(AppColor.accent.opacity(0.7))
                 .symbolRenderingMode(.hierarchical)
-            
+
             VStack(spacing: 10) {
-                Text("Нет бюджетов")
-                    .font(.system(size: 24, weight: .bold))
-                
-                Text("Создайте бюджет для отслеживания расходов по категориям")
-                    .font(.app(.body))
-                    .foregroundStyle(.secondary)
-                    .multilineTextAlignment(.center)
+                AppText(AppString.noBudgets, style: .title)
+
+                AppText(AppString.noBudgetsHint, style: .body, color: AppColor.textSecondary, alignment: .center)
                     .padding(.horizontal, 40)
             }
-            
+
             Button(action: onCreateTap) {
                 HStack(spacing: 8) {
-                    Image(systemName: "plus.circle.fill")
+                    AppImage.plusCircleFill
                         .font(.system(size: 18))
-                    Text("Создать бюджет")
-                        .font(.system(size: 17, weight: .semibold))
+                    AppText(AppString.createBudget, style: .section)
                 }
-                .foregroundStyle(.white)
+                .foregroundStyle(AppColor.textWhite)
                 .padding(.horizontal, 28)
                 .padding(.vertical, 16)
-                .background(Color.blue)
+                .background(AppColor.accent)
                 .clipShape(Capsule())
-                .shadow(color: .blue.opacity(0.3), radius: 8, y: 4)
+                .shadow(color: AppColor.accent.opacity(0.3), radius: 8, y: 4)
             }
             .padding(.top, 8)
-            
+
             Spacer()
         }
     }
@@ -53,5 +53,5 @@ struct PlansEmptyStateView: View {
 
 #Preview {
     PlansEmptyStateView(onCreateTap: {})
-        .background(Color.appBackground)
+        .background(AppColor.background)
 }

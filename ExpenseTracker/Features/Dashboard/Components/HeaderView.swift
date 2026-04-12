@@ -7,15 +7,19 @@
 
 import SwiftUI
 
-/// Компонент для отображения заголовка
 struct HeaderView: View {
+
+    // MARK: - Properties
+
     let title: String
-    
+
+    // MARK: - Body
+
     var body: some View {
         AppText(title, style: .title)
             .frame(maxWidth: .infinity, alignment: .center)
             .padding(.vertical, 16)
-            .background(Color.appBackground)
+            .background(AppColor.background)
     }
 }
 

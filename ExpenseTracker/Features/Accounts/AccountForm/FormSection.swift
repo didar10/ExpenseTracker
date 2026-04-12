@@ -8,17 +8,22 @@
 import SwiftUI
 
 struct FormSection<Content: View>: View {
+
+    // MARK: - Properties
+
     let title: String
     @ViewBuilder let content: Content
-    
+
+    // MARK: - Body
+
     var body: some View {
         VStack(alignment: .leading, spacing: 8) {
             if !title.isEmpty {
                 AppText(title, style: .caption)
-                    .color(.secondary)
+                    .color(AppColor.textSecondary)
                     .padding(.horizontal, 4)
             }
-            
+
             VStack(spacing: 0) {
                 content
             }

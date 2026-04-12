@@ -9,25 +9,25 @@ import SwiftUI
 import SwiftData
 
 struct CategoriesListView: View {
-    
+
     // MARK: - Properties
-    
+
     @Query(sort: \Category.name)
     private var categories: [Category]
-    
+
     @Environment(\.modelContext) private var context
     @Environment(\.dismiss) private var dismiss
     @Environment(\.tabBarVisibility) private var isTabBarVisible
-    
+
     @State private var viewModel = CategoryListViewModel()
-    
+
     // MARK: - Body
-    
+
     var body: some View {
         ZStack {
-            Color.appBackground
+            AppColor.background
                 .ignoresSafeArea()
-            
+
             ScrollView {
                 VStack(spacing: 16) {
                     if categories.isEmpty {
@@ -40,7 +40,7 @@ struct CategoriesListView: View {
                 .padding(.bottom, 100)
             }
         }
-        .navigationTitle("Категории")
+        .navigationTitle(AppString.categories)
         .navigationBarTitleDisplayMode(.inline)
         .navigationBarBackButtonHidden(true)
         .toolbarBackground(.hidden, for: .navigationBar)
@@ -63,21 +63,23 @@ struct CategoriesListView: View {
         .onAppear {
             isTabBarVisible.wrappedValue = false
         }
-        .alert("Удалить категорию?", isPresented: $viewModel.showDeleteAlert) {
-            Button("Отмена", role: .cancel) {
+        .alert(AppString.deleteCategoryConfirm, isPresented: $viewModel.showDeleteAlert) {
+            Button(AppString.cancel, role: .cancel) {
                 viewModel.cancelDelete()
             }
-            Button("Удалить", role: .destructive) {
+            Button(AppString.delete, role: .destructive) {
                 viewModel.confirmDelete(context: context)
             }
         } message: {
-            Text("Это действие нельзя отменить")
+            Text(AppString.cannotUndo)
         }
     }
-    
-    // MARK: - UI Components
-    
-    private var categoriesList: some View {
+}
+
+// MARK: - Subviews
+private extension CategoriesListView {
+
+    var categoriesList: some View {
         CategoriesCardView {
             VStack(spacing: 0) {
                 ForEach(Array(categories.enumerated()), id: \.element.id) { index, category in
@@ -92,7 +94,7 @@ struct CategoriesListView: View {
                         )
                     }
                     .buttonStyle(.plain)
-                    
+
                     if index < categories.count - 1 {
                         Divider()
                             .padding(.leading, 60)
@@ -103,12 +105,8 @@ struct CategoriesListView: View {
     }
 }
 
-// MARK: - Preview
-
 #Preview {
     NavigationStack {
         CategoriesListView()
     }
 }
-
-

@@ -7,23 +7,31 @@
 
 import SwiftUI
 
-/// Компонент заголовка секции с датой
 struct SectionHeaderView: View {
+
+    // MARK: - Properties
+
     let date: Date
-    
+
+    // MARK: - Body
+
     var body: some View {
         AppText(dateTitle, style: .bodySmaller)
-            .foregroundStyle(.gray)
+            .foregroundStyle(AppColor.textTertiary)
             .padding(.horizontal, 4)
     }
-    
-    private var dateTitle: String {
+}
+
+// MARK: - Private Methods
+private extension SectionHeaderView {
+
+    var dateTitle: String {
         let calendar = Calendar.current
-        
+
         if calendar.isDateInToday(date) {
-            return "Сегодня"
+            return AppString.today
         } else if calendar.isDateInYesterday(date) {
-            return "Вчера"
+            return AppString.yesterday
         } else {
             let formatter = DateFormatter()
             formatter.locale = Locale(identifier: "ru_RU")

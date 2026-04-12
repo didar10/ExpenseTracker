@@ -9,28 +9,28 @@ import SwiftUI
 import SwiftData
 
 struct AddEditCategoryView: View {
-    
+
     // MARK: - Properties
-    
+
     @Environment(\.modelContext) private var context
     @Environment(\.dismiss) private var dismiss
     @Environment(\.tabBarVisibility) private var isTabBarVisible
-    
+
     @State private var viewModel: AddEditCategoryViewModel
-    
-    // MARK: - Initialization
-    
+
+    // MARK: - Init
+
     init(category: Category? = nil) {
         _viewModel = State(initialValue: AddEditCategoryViewModel(category: category))
     }
-    
+
     // MARK: - Body
-    
+
     var body: some View {
         ZStack {
-            Color.appBackground
+            AppColor.background
                 .ignoresSafeArea()
-            
+
             ScrollView {
                 VStack(spacing: 20) {
                     CategoryPreviewCardView(
@@ -38,13 +38,11 @@ struct AddEditCategoryView: View {
                         icon: viewModel.formData.icon,
                         colorHex: viewModel.formData.colorHex
                     )
-                    
+
                     nameSection
-                    
                     iconSection
-                    
                     colorSection
-                    
+
                     CategorySaveButtonView(
                         title: viewModel.saveButtonTitle,
                         isEnabled: viewModel.canSave,
@@ -76,27 +74,29 @@ struct AddEditCategoryView: View {
             }
         }
     }
-    
-    // MARK: - UI Sections
-    
-    private var nameSection: some View {
-        CategoryFormSectionView(title: "Название") {
-            TextField("Введите название", text: $viewModel.formData.name)
-                .font(.system(size: 17))
+}
+
+// MARK: - Subviews
+private extension AddEditCategoryView {
+
+    var nameSection: some View {
+        CategoryFormSectionView(title: AppString.name) {
+            TextField(AppString.enterName, text: $viewModel.formData.name)
+                .font(.app(.body))
                 .padding(16)
                 .background(
                     RoundedRectangle(cornerRadius: 16, style: .continuous)
-                        .fill(Color.appCardBackground)
+                        .fill(AppColor.cardBackground)
                 )
                 .overlay(
                     RoundedRectangle(cornerRadius: 16, style: .continuous)
-                        .strokeBorder(Color.primary.opacity(0.08), lineWidth: 1)
+                        .strokeBorder(AppColor.textPrimary.opacity(0.08), lineWidth: 1)
                 )
         }
     }
-    
-    private var iconSection: some View {
-        CategoryFormSectionView(title: "Иконка") {
+
+    var iconSection: some View {
+        CategoryFormSectionView(title: AppString.icon) {
             CategoryIconPickerButtonView(
                 icon: viewModel.formData.icon,
                 colorHex: viewModel.formData.colorHex,
@@ -104,18 +104,20 @@ struct AddEditCategoryView: View {
             )
         }
     }
-    
-    private var colorSection: some View {
-        CategoryFormSectionView(title: "Цвет") {
+
+    var colorSection: some View {
+        CategoryFormSectionView(title: AppString.color) {
             CategoryColorPickerView(colorHex: $viewModel.formData.colorHex)
         }
     }
-    
-    // MARK: - Actions
-    
-    private func handleSave() {
+}
+
+// MARK: - Actions
+private extension AddEditCategoryView {
+
+    func handleSave() {
         UIImpactFeedbackGenerator(style: .medium).impactOccurred()
-        
+
         withAnimation {
             if viewModel.save(context: context) {
                 isTabBarVisible.wrappedValue = true
@@ -125,23 +127,8 @@ struct AddEditCategoryView: View {
     }
 }
 
-// MARK: - Preview
-
 #Preview("New Category") {
     NavigationStack {
         AddEditCategoryView()
     }
 }
-
-#Preview("Edit Category") {
-    NavigationStack {
-        AddEditCategoryView(
-            category: Category(
-                name: "Продукты",
-                icon: "cart.fill",
-                colorHex: "#FF6B6B"
-            )
-        )
-    }
-}
-

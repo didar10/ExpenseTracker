@@ -8,19 +8,23 @@
 import SwiftUI
 
 struct TransactionAmountView: View {
+
+    // MARK: - Properties
+
     let amount: String
-    
+
+    // MARK: - Body
+
     var body: some View {
         VStack(spacing: 8) {
-            // Сумма
             HStack(spacing: 4) {
                 Text(amount.isEmpty ? "0" : amount)
                     .font(.system(size: 52, weight: .bold, design: .rounded))
-                    .foregroundStyle(.primary)
+                    .foregroundStyle(AppColor.textPrimary)
                     .minimumScaleFactor(0.5)
                     .lineLimit(1)
-                
-                AppText("₸", style: .title, color: .secondary)
+
+                AppText(AppString.currencySymbol, style: .title, color: AppColor.textSecondary)
                     .offset(y: -4)
             }
         }

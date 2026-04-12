@@ -4,7 +4,8 @@
       "Bash(xcodebuild:*)",
       "Bash(ls:*)",
       "Bash(xargs sed:*)",
-      "Bash(echo:*)"
+      "Bash(echo:*)",
+      "Bash(ruby --version)"
     ]
   }
 }

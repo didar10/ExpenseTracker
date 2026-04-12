@@ -7,24 +7,22 @@
 
 import SwiftUI
 
-/// Пустое состояние для списка категорий
 struct EmptyCategoriesView: View {
+
+    // MARK: - Body
+
     var body: some View {
         CategoriesCardView {
             VStack(spacing: 16) {
-                Image(systemName: "folder")
+                AppImage.folder
                     .font(.system(size: 56))
                     .foregroundStyle(.tertiary)
                     .symbolRenderingMode(.hierarchical)
-                
+
                 VStack(spacing: 8) {
-                    Text("Нет категорий")
-                        .font(.system(size: 20, weight: .semibold))
-                    
-                    Text("Нажмите + чтобы добавить категорию")
-                        .font(.system(size: 15))
-                        .foregroundStyle(.secondary)
-                        .multilineTextAlignment(.center)
+                    AppText(AppString.noCategories, style: .section)
+
+                    AppText(AppString.addCategoryHint, style: .bodySmaller, color: AppColor.textSecondary, alignment: .center)
                 }
             }
             .padding(.vertical, 24)
@@ -36,5 +34,5 @@ struct EmptyCategoriesView: View {
 #Preview {
     EmptyCategoriesView()
         .padding()
-        .background(Color.appBackground)
+        .background(AppColor.background)
 }

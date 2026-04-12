@@ -8,15 +8,17 @@
 import SwiftUI
 
 struct TransactionDetailsView: View {
+
+    // MARK: - Properties
+
     @Binding var date: Date
     @Binding var note: String
-    
+
+    // MARK: - Body
+
     var body: some View {
         VStack(spacing: 16) {
-            // Date Picker
             DateSelectionView(date: $date)
-            
-            // Note Field
             NoteInputView(note: $note)
         }
     }
@@ -25,59 +27,66 @@ struct TransactionDetailsView: View {
 // MARK: - Date Selection View
 
 struct DateSelectionView: View {
+
+    // MARK: - Properties
+
     @Binding var date: Date
     @State private var showingDatePicker = false
-    
+
+    // MARK: - Computed Properties
+
     private var dateText: String {
         let calendar = Calendar.current
-        
+
         if calendar.isDateInToday(date) {
-            return "Сегодня"
+            return AppString.today
         } else if calendar.isDateInYesterday(date) {
-            return "Вчера"
+            return AppString.yesterday
         } else {
             let formatter = DateFormatter()
             formatter.dateFormat = "dd.MM.yy"
             return formatter.string(from: date)
         }
     }
-    
+
+    // MARK: - Body
+
     var body: some View {
         Button {
             showingDatePicker = true
         } label: {
             VStack(spacing: 4) {
-                Image(systemName: "calendar")
+                AppImage.calendar
                     .font(.system(size: 18))
-                    .foregroundStyle(.secondary)
-                
+                    .foregroundStyle(AppColor.textSecondary)
+
                 Text(dateText)
-                    .font(.system(size: 13, weight: .medium))
-                    .foregroundStyle(.primary)
+                    .font(.app(.caption))
+                    .foregroundStyle(AppColor.textPrimary)
                     .lineLimit(1)
             }
             .frame(width: 90)
             .frame(height: 60)
             .background {
                 RoundedRectangle(cornerRadius: 12, style: .continuous)
-                    .fill(Color.appCardBackground)
+                    .fill(AppColor.cardBackground)
             }
         }
         .buttonStyle(.plain)
         .sheet(isPresented: $showingDatePicker) {
             NavigationStack {
                 DatePicker(
-                    "Выберите дату",
+                    AppString.selectDate,
                     selection: $date,
                     displayedComponents: .date
                 )
                 .datePickerStyle(.graphical)
                 .padding()
-                .navigationTitle("Дата")
+                .navigationTitle(AppString.date)
                 .navigationBarTitleDisplayMode(.inline)
                 .toolbar {
                     ToolbarItem(placement: .confirmationAction) {
-                        Button("Готово") {
+                        Button(AppString.done) {
                             showingDatePicker = false
                         }
                     }
@@ -91,16 +100,21 @@ struct DateSelectionView: View {
 // MARK: - Note Input View
 
 struct NoteInputView: View {
+
+    // MARK: - Properties
+
     @Binding var note: String
-    
+
+    // MARK: - Body
+
     var body: some View {
         HStack(alignment: .top, spacing: 12) {
-            Image(systemName: "text.alignleft")
-                .foregroundStyle(.secondary)
+            AppImage.textAlign
+                .foregroundStyle(AppColor.textSecondary)
                 .font(.system(size: 18))
                 .padding(.top, 14)
-            
-            TextField("Добавить комментарий...", text: $note, axis: .vertical)
+
+            TextField(AppString.addComment, text: $note, axis: .vertical)
                 .font(.app(.body))
                 .lineLimit(2...4)
                 .padding(.vertical, 14)
@@ -108,7 +122,7 @@ struct NoteInputView: View {
         .padding(.horizontal, 16)
         .background {
             RoundedRectangle(cornerRadius: 16, style: .continuous)
-                .fill(Color.appCardBackground)
+                .fill(AppColor.cardBackground)
         }
     }
 }

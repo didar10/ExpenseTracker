@@ -8,21 +8,24 @@
 import SwiftUI
 
 struct ColorPickerView: View {
+
+    // MARK: - Properties
+
     @Binding var selectedColor: String
     let onSelect: (String) -> Void
-    
-    private struct ColorOption: Identifiable {
+
+    struct ColorOption: Identifiable {
         let id: String
         let name: String
         let color: Color
-        
+
         init(_ name: String, _ color: Color) {
             self.id = name
             self.name = name
             self.color = color
         }
     }
-    
+
     private let colors: [ColorOption] = [
         ColorOption("blue", .blue),
         ColorOption("green", .green),
@@ -31,7 +34,9 @@ struct ColorPickerView: View {
         ColorOption("purple", .purple),
         ColorOption("pink", .pink)
     ]
-    
+
+    // MARK: - Body
+
     var body: some View {
         ScrollView(.horizontal, showsIndicators: false) {
             HStack(spacing: 10) {
@@ -41,8 +46,12 @@ struct ColorPickerView: View {
             }
         }
     }
-    
-    private func colorButton(for colorOption: ColorOption) -> some View {
+}
+
+// MARK: - Subviews
+extension ColorPickerView {
+
+    func colorButton(for colorOption: ColorOption) -> some View {
         Button {
             selectedColor = colorOption.name
             onSelect(colorOption.name)
@@ -51,15 +60,15 @@ struct ColorPickerView: View {
                 Circle()
                     .fill(colorOption.color)
                     .frame(width: 36, height: 36)
-                
+
                 if selectedColor == colorOption.name {
                     Circle()
-                        .strokeBorder(.white, lineWidth: 2.5)
+                        .strokeBorder(AppColor.textWhite, lineWidth: 2.5)
                         .frame(width: 36, height: 36)
-                    
-                    Image(systemName: "checkmark")
+
+                    AppImage.checkmark
                         .font(.system(size: 14, weight: .bold))
-                        .foregroundStyle(.white)
+                        .foregroundStyle(AppColor.textWhite)
                 }
             }
         }
