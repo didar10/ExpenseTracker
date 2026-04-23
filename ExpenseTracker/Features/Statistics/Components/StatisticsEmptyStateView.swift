@@ -9,25 +9,33 @@ import SwiftUI
 
 /// Пустое состояние для экрана статистики
 struct StatisticsEmptyStateView: View {
+
+    // MARK: - Body
+
     var body: some View {
-        VStack(spacing: 12) {
-            Image(systemName: "chart.pie")
-                .font(.system(size: 48))
-                .foregroundStyle(.tertiary)
+        VStack(spacing: AppSpacing.medium) {
+            AppImage.chartPie
+                .font(.system(size: AppSize.glyphEmptyState))
+                .foregroundStyle(AppColor.textTertiary)
                 .symbolRenderingMode(.hierarchical)
-            
-            VStack(spacing: 6) {
-                AppText("Нет данных", style: .section)
-                
-                AppText("Добавьте расходы за выбранный период", style: .sectionHeader, color: .secondary, alignment: .center)
+
+            VStack(spacing: AppSpacing.smaller) {
+                AppText(AppString.noData, style: .section)
+
+                AppText(
+                    AppString.noDataHint,
+                    style: .sectionHeader,
+                    color: AppColor.textSecondary,
+                    alignment: .center
+                )
             }
         }
-        .padding(.vertical, 32)
+        .padding(.vertical, AppSpacing.xxxLarge)
     }
 }
 
 #Preview {
     StatisticsEmptyStateView()
-        .padding()
-        .background(Color.appBackground)
+        .padding(AppSpacing.large)
+        .background(AppColor.background)
 }

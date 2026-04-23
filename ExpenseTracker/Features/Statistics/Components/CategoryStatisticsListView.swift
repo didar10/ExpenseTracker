@@ -9,13 +9,18 @@ import SwiftUI
 
 /// Список категорий со статистикой
 struct CategoryStatisticsListView: View {
+
+    // MARK: - Properties
+
     let statistics: [CategoryStatistic]
     let totalExpenses: Decimal
     let selectedPeriod: StatisticsPeriod
     let onCategoryTap: (CategoryStatistic) -> Void
-    
+
+    // MARK: - Body
+
     var body: some View {
-        VStack(spacing: 8) {
+        VStack(spacing: AppSpacing.small) {
             ForEach(statistics) { stat in
                 Button {
                     onCategoryTap(stat)
@@ -24,11 +29,11 @@ struct CategoryStatisticsListView: View {
                         statistic: stat,
                         totalExpenses: totalExpenses
                     )
-                    .padding(.horizontal, 16)
-                    .padding(.vertical, 12)
+                    .padding(.horizontal, AppSpacing.large)
+                    .padding(.vertical, AppSpacing.medium)
                 }
                 .buttonStyle(.plain)
-                .cardShadow(cornerRadius: 16)
+                .cardShadow(cornerRadius: AppRadius.card)
             }
         }
     }
@@ -52,6 +57,6 @@ struct CategoryStatisticsListView: View {
         selectedPeriod: .month,
         onCategoryTap: { _ in }
     )
-    .padding()
-    .background(Color.appBackground)
+    .padding(AppSpacing.large)
+    .background(AppColor.background)
 }

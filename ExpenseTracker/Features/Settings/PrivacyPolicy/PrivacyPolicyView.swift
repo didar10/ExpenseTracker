@@ -8,123 +8,34 @@
 import SwiftUI
 
 struct PrivacyPolicyView: View {
-    
+
+    // MARK: - Properties
+
     @Environment(\.dismiss) private var dismiss
     @Environment(\.tabBarVisibility) private var isTabBarVisible
-    
+
+    // MARK: - Body
+
     var body: some View {
         ZStack {
-            Color.appBackground
+            AppColor.background
                 .ignoresSafeArea()
-            
+
             ScrollView {
-                VStack(alignment: .leading, spacing: 24) {
-                    // Введение
-                    VStack(alignment: .leading, spacing: 12) {
-                        Text("Политика конфиденциальности")
-                            .font(.system(size: 28, weight: .bold))
-                        
-                        Text("Последнее обновление: 27 января 2026")
-                            .font(.system(size: 14))
-                            .foregroundStyle(.secondary)
-                    }
-                    
+                VStack(alignment: .leading, spacing: AppSpacing.xxLarge) {
+                    headerSection
+
                     Divider()
-                    
-                    // Раздел 1
-                    PolicySectionView(
-                        title: "1. Сбор информации",
-                        content: """
-                        ExpenseTracker собирает только ту информацию, которую вы добавляете вручную в приложение:
-                        
-                        • Финансовые транзакции (расходы и доходы)
-                        • Названия категорий и счетов
-                        • Суммы и даты операций
-                        • Заметки к транзакциям
-                        
-                        Мы НЕ собираем:
-                        • Персональные данные (имя, email, телефон)
-                        • Данные банковских карт
-                        • Информацию об устройстве
-                        • Геолокацию
-                        """
-                    )
-                    
-                    // Раздел 2
-                    PolicySectionView(
-                        title: "2. Хранение данных",
-                        content: """
-                        Все ваши данные хранятся локально на вашем устройстве и не передаются на внешние серверы.
-                        
-                        • Данные сохраняются в защищенной базе данных устройства
-                        • Доступ к данным имеете только вы
-                        • Синхронизация через iCloud (опционально)
-                        • Автоматическое резервное копирование в iCloud
-                        """
-                    )
-                    
-                    // Раздел 3
-                    PolicySectionView(
-                        title: "3. Использование данных",
-                        content: """
-                        Ваши данные используются исключительно для:
-                        
-                        • Отображения статистики расходов и доходов
-                        • Создания отчетов и графиков
-                        • Управления бюджетом
-                        • Категоризации транзакций
-                        
-                        Мы никогда не:
-                        • Продаем ваши данные третьим лицам
-                        • Используем данные в маркетинговых целях
-                        • Передаем информацию рекламодателям
-                        """
-                    )
-                    
-                    // Раздел 4
-                    PolicySectionView(
-                        title: "4. Безопасность",
-                        content: """
-                        Мы серьезно относимся к безопасности ваших данных:
-                        
-                        • Шифрование данных на устройстве
-                        • Защита биометрией (Face ID / Touch ID)
-                        • Безопасное резервное копирование
-                        • Регулярные обновления безопасности
-                        """
-                    )
-                    
-                    // Раздел 5
-                    PolicySectionView(
-                        title: "5. Ваши права",
-                        content: """
-                        Вы имеете полный контроль над своими данными:
-                        
-                        • Экспорт всех данных в любое время
-                        • Удаление аккаунта и всех данных
-                        • Отключение синхронизации iCloud
-                        • Очистка истории транзакций
-                        """
-                    )
-                    
-                    // Раздел 6
-                    PolicySectionView(
-                        title: "6. Контакты",
-                        content: """
-                        Если у вас есть вопросы о политике конфиденциальности, свяжитесь с нами:
-                        
-                        Email: support@expensetracker.app
-                        Веб-сайт: www.expensetracker.app
-                        
-                        Мы ответим в течение 24 часов.
-                        """
-                    )
+
+                    ForEach(PrivacyPolicySection.all) { section in
+                        PolicySectionView(title: section.title, content: section.content)
+                    }
                 }
-                .padding()
-                .padding(.bottom, 32)
+                .padding(AppSpacing.large)
+                .padding(.bottom, AppSpacing.xxxLarge)
             }
         }
-        .navigationTitle("Конфиденциальность")
+        .navigationTitle(AppString.privacyPolicyShort)
         .navigationBarTitleDisplayMode(.inline)
         .navigationBarBackButtonHidden(true)
         .toolbarBackground(.hidden, for: .navigationBar)
@@ -142,21 +53,52 @@ struct PrivacyPolicyView: View {
     }
 }
 
-// MARK: - Policy Section View
-struct PolicySectionView: View {
+// MARK: - Subviews
+
+private extension PrivacyPolicyView {
+
+    var headerSection: some View {
+        VStack(alignment: .leading, spacing: AppSpacing.medium) {
+            AppText(AppString.privacyPolicy, style: .largeTitle)
+
+            AppText(AppString.lastUpdated, style: .caption, color: AppColor.textSecondary)
+        }
+    }
+}
+
+// MARK: - Privacy Policy Section
+
+struct PrivacyPolicySection: Identifiable {
+    let id = UUID()
     let title: String
     let content: String
-    
+
+    static let all: [PrivacyPolicySection] = [
+        PrivacyPolicySection(title: AppString.privacySection1Title, content: AppString.privacySection1Content),
+        PrivacyPolicySection(title: AppString.privacySection2Title, content: AppString.privacySection2Content),
+        PrivacyPolicySection(title: AppString.privacySection3Title, content: AppString.privacySection3Content),
+        PrivacyPolicySection(title: AppString.privacySection4Title, content: AppString.privacySection4Content),
+        PrivacyPolicySection(title: AppString.privacySection5Title, content: AppString.privacySection5Content),
+        PrivacyPolicySection(title: AppString.privacySection6Title, content: AppString.privacySection6Content)
+    ]
+}
+
+// MARK: - Policy Section View
+
+struct PolicySectionView: View {
+
+    // MARK: - Properties
+
+    let title: String
+    let content: String
+
+    // MARK: - Body
+
     var body: some View {
-        VStack(alignment: .leading, spacing: 12) {
-            Text(title)
-                .font(.system(size: 20, weight: .semibold))
-                .foregroundStyle(.primary)
-            
-            Text(content)
-                .font(.system(size: 15))
-                .foregroundStyle(.secondary)
-                .lineSpacing(4)
+        VStack(alignment: .leading, spacing: AppSpacing.medium) {
+            AppText(title, style: .title)
+
+            AppText(content, style: .body, color: AppColor.textSecondary)
         }
     }
 }

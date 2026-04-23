@@ -13,19 +13,19 @@ struct EmptyCategoriesView: View {
 
     var body: some View {
         CategoriesCardView {
-            VStack(spacing: 16) {
+            VStack(spacing: AppSpacing.large) {
                 AppImage.folder
-                    .font(.system(size: 56))
+                    .font(.system(size: AppSize.iconXXLarge))
                     .foregroundStyle(.tertiary)
                     .symbolRenderingMode(.hierarchical)
 
-                VStack(spacing: 8) {
+                VStack(spacing: AppSpacing.small) {
                     AppText(AppString.noCategories, style: .section)
 
                     AppText(AppString.addCategoryHint, style: .bodySmaller, color: AppColor.textSecondary, alignment: .center)
                 }
             }
-            .padding(.vertical, 24)
+            .padding(.vertical, AppSpacing.xxLarge)
             .frame(maxWidth: .infinity)
         }
     }
@@ -33,6 +33,6 @@ struct EmptyCategoriesView: View {
 
 #Preview {
     EmptyCategoriesView()
-        .padding()
+        .padding(AppSpacing.large)
         .background(AppColor.background)
 }

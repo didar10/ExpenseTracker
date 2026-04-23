@@ -17,15 +17,15 @@ struct CategoryRowView: View {
     // MARK: - Body
 
     var body: some View {
-        HStack(spacing: 12) {
+        HStack(spacing: AppSpacing.medium) {
             ZStack {
-                RoundedRectangle(cornerRadius: 8)
+                RoundedRectangle(cornerRadius: AppRadius.small)
                     .fill(Color(hex: category.colorHex).opacity(0.15))
-                    .frame(width: 44, height: 44)
+                    .frame(width: AppSize.iconLarge, height: AppSize.iconLarge)
 
                 Image(systemName: category.icon)
                     .foregroundStyle(Color(hex: category.colorHex))
-                    .font(.system(size: 20, weight: .semibold))
+                    .font(.system(size: AppSize.glyphXLarge, weight: .semibold))
             }
 
             Text(category.name)
@@ -34,20 +34,20 @@ struct CategoryRowView: View {
 
             Spacer()
 
-            HStack(spacing: 16) {
+            HStack(spacing: AppSpacing.large) {
                 Button(action: onDelete) {
                     AppImage.trashFill
-                        .font(.system(size: 16))
+                        .font(.system(size: AppSize.glyphLarge))
                         .foregroundStyle(AppColor.expense.opacity(0.8))
                 }
                 .buttonStyle(.plain)
 
                 AppImage.chevronRight
-                    .font(.system(size: 13, weight: .semibold))
+                    .font(.system(size: AppSize.glyphMedium, weight: .semibold))
                     .foregroundStyle(.tertiary)
             }
         }
-        .padding(.vertical, 8)
+        .padding(.vertical, AppSpacing.small)
         .contentShape(Rectangle())
     }
 }
@@ -57,5 +57,5 @@ struct CategoryRowView: View {
         category: Category(name: "Продукты", icon: "cart.fill", colorHex: "#FF6B6B"),
         onDelete: {}
     )
-    .padding()
+    .padding(AppSpacing.large)
 }

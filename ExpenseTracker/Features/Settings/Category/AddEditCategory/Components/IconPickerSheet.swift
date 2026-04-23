@@ -22,7 +22,7 @@ struct IconPickerSheet: View {
                 .ignoresSafeArea()
 
             IconPicker(selectedIcon: $selectedIcon)
-                .padding()
+                .padding(AppSpacing.large)
         }
         .navigationTitle(AppString.selectIcon)
         .navigationBarTitleDisplayMode(.inline)

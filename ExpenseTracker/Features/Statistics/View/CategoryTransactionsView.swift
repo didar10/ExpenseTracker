@@ -9,19 +9,23 @@ import SwiftUI
 import SwiftData
 
 struct CategoryTransactionsView: View {
-    
+
+    // MARK: - Properties
+
     let category: Category
     let period: StatisticsPeriod
     let transactions: [Transaction]
-    
+
     @Environment(\.dismiss) private var dismiss
     @Environment(\.tabBarVisibility) private var isTabBarVisible
-    
+
+    // MARK: - Body
+
     var body: some View {
         ZStack {
-            Color.appBackground
+            AppColor.background
                 .ignoresSafeArea()
-            
+
             if transactions.isEmpty {
                 emptyState
             } else {
@@ -34,17 +38,13 @@ struct CategoryTransactionsView: View {
         .toolbarBackground(.hidden, for: .navigationBar)
         .toolbar {
             ToolbarItem(placement: .principal) {
-                VStack(spacing: 2) {
-                    Text(category.name)
-                        .font(.system(size: 17, weight: .semibold))
-                        .foregroundStyle(.primary)
-                    
-                    Text(period.rawValue)
-                        .font(.system(size: 13, weight: .regular))
-                        .foregroundStyle(.secondary)
+                VStack(spacing: AppSpacing.xxSmall) {
+                    AppText(category.name, style: .bodySmall)
+
+                    AppText(period.displayName, style: .caption, color: AppColor.textSecondary)
                 }
             }
-            
+
             ToolbarItem(placement: .navigationBarLeading) {
                 ToolbarIconButton(icon: "chevron.left") {
                     isTabBarVisible.wrappedValue = true
@@ -58,106 +58,109 @@ struct CategoryTransactionsView: View {
     }
 }
 
-// MARK: - UI Components
+// MARK: - Subviews
+
 private extension CategoryTransactionsView {
-    
+
     var transactionsList: some View {
         ScrollView {
             VStack(spacing: 0) {
-                // Header card with total
                 totalCard
-                    .padding(.horizontal, 16)
-                    .padding(.top, 16)
-                
-                // Transactions grouped by date
+                    .padding(.horizontal, AppSpacing.large)
+                    .padding(.top, AppSpacing.large)
+
                 VStack(spacing: 0) {
                     ForEach(groupedTransactions, id: \.date) { group in
-                        VStack(alignment: .leading, spacing: 8) {
-                            // Date header - отдельно от карточек
+                        VStack(alignment: .leading, spacing: AppSpacing.small) {
                             SectionHeaderView(date: group.date)
-                                .padding(.bottom, 4)
-                            
-                            // Transactions for this date - каждая отдельной карточкой
+                                .padding(.bottom, AppSpacing.xSmall)
+
                             ForEach(group.transactions) { transaction in
                                 TransactionRowView(transaction: transaction)
-                                    .padding(.horizontal, 10)
-                                    .padding(.vertical, 4)
-                                    .cardShadow(cornerRadius: 12)
+                                    .padding(.horizontal, AppSpacing.mediumSmall)
+                                    .padding(.vertical, AppSpacing.xSmall)
+                                    .cardShadow(cornerRadius: AppRadius.large)
                             }
                         }
-                        .padding(.horizontal, 16)
-                        .padding(.bottom, 12)
+                        .padding(.horizontal, AppSpacing.large)
+                        .padding(.bottom, AppSpacing.medium)
                     }
                 }
-                .padding(.top, 16)
+                .padding(.top, AppSpacing.large)
             }
-            .padding(.bottom, 32)
+            .padding(.bottom, AppSpacing.xxxLarge)
         }
     }
-    
+
     var totalCard: some View {
-        HStack(spacing: 16) {
+        HStack(spacing: AppSpacing.large) {
             ZStack {
-                RoundedRectangle(cornerRadius: 12, style: .continuous)
+                RoundedRectangle(cornerRadius: AppRadius.large, style: .continuous)
                     .fill(Color(hex: category.colorHex).opacity(0.15))
-                    .frame(width: 56, height: 56)
-                
+                    .frame(width: AppSize.iconXXLarge, height: AppSize.iconXXLarge)
+
                 Image(systemName: category.icon)
                     .foregroundStyle(Color(hex: category.colorHex))
-                    .font(.system(size: 26, weight: .semibold))
+                    .font(.system(size: AppSize.glyphBig, weight: .semibold))
             }
-            
-            VStack(alignment: .leading, spacing: 4) {
-                AppText("Всего за период", style: .sectionHeader, color: .secondary)
-                
-                Text(totalAmount.formatted(.currency(code: "KZT")))
-                    .font(.system(size: 22, weight: .bold))
+
+            VStack(alignment: .leading, spacing: AppSpacing.xSmall) {
+                AppText(AppString.totalForPeriod, style: .sectionHeader, color: AppColor.textSecondary)
+
+                Text(totalAmount.formatted(.currency(code: AppString.currencyCode)))
+                    .font(.app(.title))
                     .fontDesign(.rounded)
-                    .foregroundStyle(.primary)
+                    .foregroundStyle(AppColor.textPrimary)
             }
-            
+
             Spacer()
         }
-        .padding(16)
-        .cardShadow(cornerRadius: 16)
+        .padding(AppSpacing.large)
+        .cardShadow(cornerRadius: AppRadius.card)
     }
-    
+
     var emptyState: some View {
-        VStack(spacing: 12) {
+        VStack(spacing: AppSpacing.medium) {
             Image(systemName: category.icon)
-                .font(.system(size: 48))
+                .font(.system(size: AppSize.glyphEmptyState))
                 .foregroundStyle(Color(hex: category.colorHex).opacity(0.5))
                 .symbolRenderingMode(.hierarchical)
-            
-            VStack(spacing: 6) {
-                AppText("Нет транзакций", style: .section)
-                
-                AppText("За выбранный период нет транзакций в категории «\(category.name)»", style: .sectionHeader, color: .secondary, alignment: .center)
-                    .padding(.horizontal, 32)
+
+            VStack(spacing: AppSpacing.smaller) {
+                AppText(AppString.noTransactions, style: .section)
+
+                AppText(
+                    AppString.noTransactionsForPeriod(category: category.name),
+                    style: .sectionHeader,
+                    color: AppColor.textSecondary,
+                    alignment: .center
+                )
+                .padding(.horizontal, AppSpacing.xxxLarge)
             }
         }
     }
 }
 
 // MARK: - Data Processing
+
 private extension CategoryTransactionsView {
-    
+
     struct TransactionGroup {
         let date: Date
         let transactions: [Transaction]
         let total: Decimal
     }
-    
+
     var totalAmount: Decimal {
         transactions.reduce(0) { $0 + $1.amount }
     }
-    
+
     var groupedTransactions: [TransactionGroup] {
         let calendar = Calendar.current
         let grouped = Dictionary(grouping: transactions) { transaction in
             calendar.startOfDay(for: transaction.date)
         }
-        
+
         return grouped.map { date, transactions in
             let sorted = transactions.sorted { $0.date > $1.date }
             let total = transactions.reduce(0) { $0 + $1.amount }

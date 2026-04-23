@@ -97,6 +97,54 @@ Image(systemName: "gearshape.fill")
 
 ---
 
+## Отступы и размеры: только через константы
+
+- Все отступы, интервалы между элементами и геометрические значения во View хранятся в **константах** и переиспользуются во всех экранах.
+- Запрещено использовать литеральные числовые значения в `padding(...)`, `spacing:`, `frame(width:height:)`, `cornerRadius:`, `offset(...)` и т.п.
+- Для отступов используется `AppSpacing`, для скруглений — `AppRadius`, для фиксированных размеров — `AppSize`.
+- Если необходимого значения нет в константах — сначала добавь его в соответствующий enum, затем используй в коде.
+
+### Константы отступов
+
+```swift
+enum AppSpacing {
+    // Базовая шкала
+    static let xxSmall: CGFloat = 2
+    static let xSmall: CGFloat = 4
+    static let smaller: CGFloat = 6
+    static let small: CGFloat = 8
+    static let mediumSmall: CGFloat = 10
+    static let medium: CGFloat = 12
+    static let large: CGFloat = 16     // стандартный padding
+    static let xLarge: CGFloat = 20
+    static let xxLarge: CGFloat = 24
+    static let xxxLarge: CGFloat = 32
+    static let huge: CGFloat = 40
+
+    // Семантические
+    static let listDividerIndent: CGFloat = 60
+    static let tabBarBottomInset: CGFloat = 100
+}
+```
+
+### Использование
+
+```swift
+// Правильно
+VStack(spacing: AppSpacing.large) { ... }
+.padding(.horizontal, AppSpacing.medium)
+.frame(width: AppSize.iconMedium, height: AppSize.iconMedium)
+RoundedRectangle(cornerRadius: AppRadius.card)
+
+// Неправильно
+VStack(spacing: 16) { ... }
+.padding(.horizontal, 12)
+.frame(width: 38, height: 38)
+RoundedRectangle(cornerRadius: 16)
+```
+
+---
+
 ## Локализация: все тексты в ресурсах
 
 - Все строки UI хранятся в **Localizable.strings** (или String Catalog).

@@ -18,6 +18,7 @@ enum AppImage {
     static let chevronLeft = Image(systemName: "chevron.left")
     static let chevronRight = Image(systemName: "chevron.right")
     static let chevronDown = Image(systemName: "chevron.down")
+    static let chevronUp = Image(systemName: "chevron.up")
     static let trash = Image(systemName: "trash")
     static let trashFill = Image(systemName: "trash.fill")
     static let pencil = Image(systemName: "pencil")
@@ -64,8 +65,12 @@ enum AppImage {
     // MARK: - Settings
 
     static let helpCircle = Image(systemName: "questionmark.circle.fill")
+    static let questionmarkCircle = Image(systemName: "questionmark.circle")
     static let envelope = Image(systemName: "envelope.fill")
     static let globe = Image(systemName: "globe")
     static let message = Image(systemName: "message.fill")
     static let arrowUpRight = Image(systemName: "arrow.up.right")
+    static let handRaised = Image(systemName: "hand.raised.fill")
+    static let docText = Image(systemName: "doc.text")
+    static let dollarsignCircle = Image(systemName: "dollarsign.circle")
 }

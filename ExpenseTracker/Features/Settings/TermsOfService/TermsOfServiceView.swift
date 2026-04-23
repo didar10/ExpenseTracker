@@ -8,199 +8,34 @@
 import SwiftUI
 
 struct TermsOfServiceView: View {
-    
+
+    // MARK: - Properties
+
     @Environment(\.dismiss) private var dismiss
     @Environment(\.tabBarVisibility) private var isTabBarVisible
-    
+
+    // MARK: - Body
+
     var body: some View {
         ZStack {
-            Color.appBackground
+            AppColor.background
                 .ignoresSafeArea()
-            
+
             ScrollView {
-                VStack(alignment: .leading, spacing: 24) {
-                    // Введение
-                    VStack(alignment: .leading, spacing: 12) {
-                        Text("Условия использования")
-                            .font(.system(size: 28, weight: .bold))
-                        
-                        Text("Последнее обновление: 27 января 2026")
-                            .font(.system(size: 14))
-                            .foregroundStyle(.secondary)
-                        
-                        Text("Используя ExpenseTracker, вы соглашаетесь с данными условиями использования.")
-                            .font(.system(size: 15))
-                            .foregroundStyle(.secondary)
-                            .lineSpacing(4)
-                    }
-                    
+                VStack(alignment: .leading, spacing: AppSpacing.xxLarge) {
+                    headerSection
+
                     Divider()
-                    
-                    // Раздел 1
-                    TermsSectionView(
-                        title: "1. Принятие условий",
-                        content: """
-                        Используя приложение ExpenseTracker ("Приложение"), вы принимаете и соглашаетесь соблюдать настоящие Условия использования.
-                        
-                        Если вы не согласны с какими-либо условиями, пожалуйста, не используйте Приложение.
-                        
-                        Мы оставляем за собой право изменять эти условия в любое время. Продолжая использовать Приложение после внесения изменений, вы автоматически соглашаетесь с новыми условиями.
-                        """
-                    )
-                    
-                    // Раздел 2
-                    TermsSectionView(
-                        title: "2. Использование приложения",
-                        content: """
-                        Приложение предназначено для:
-                        
-                        • Личного учета финансов
-                        • Управления расходами и доходами
-                        • Анализа финансовой статистики
-                        • Планирования бюджета
-                        
-                        Вы обязуетесь:
-                        
-                        • Использовать Приложение законно
-                        • Не пытаться взломать или модифицировать Приложение
-                        • Не использовать Приложение для мошеннических целей
-                        • Не распространять вредоносный контент
-                        """
-                    )
-                    
-                    // Раздел 3
-                    TermsSectionView(
-                        title: "3. Интеллектуальная собственность",
-                        content: """
-                        Все права на Приложение принадлежат разработчикам ExpenseTracker.
-                        
-                        Защищено авторским правом:
-                        
-                        • Дизайн интерфейса
-                        • Исходный код
-                        • Логотип и бренд
-                        • Графические элементы
-                        • Документация
-                        
-                        Запрещено без письменного разрешения:
-                        
-                        • Копировать или клонировать Приложение
-                        • Использовать элементы дизайна
-                        • Декомпилировать код
-                        • Создавать производные работы
-                        """
-                    )
-                    
-                    // Раздел 4
-                    TermsSectionView(
-                        title: "4. Ваши данные",
-                        content: """
-                        Вы сохраняете полные права на все данные, которые вводите в Приложение.
-                        
-                        Мы гарантируем:
-                        
-                        • Ваши данные принадлежат только вам
-                        • Данные хранятся локально на вашем устройстве
-                        • Мы не имеем доступа к вашим данным
-                        • Вы можете экспортировать или удалить данные в любое время
-                        
-                        Ваша ответственность:
-                        
-                        • Создавать резервные копии важных данных
-                        • Обеспечивать безопасность своего устройства
-                        • Не хранить конфиденциальные пароли в заметках
-                        """
-                    )
-                    
-                    // Раздел 5
-                    TermsSectionView(
-                        title: "5. Ограничение ответственности",
-                        content: """
-                        Приложение предоставляется "как есть" без каких-либо гарантий.
-                        
-                        Мы не несем ответственности за:
-                        
-                        • Потерю данных из-за сбоя устройства
-                        • Неточности в расчетах (хотя мы стремимся к максимальной точности)
-                        • Финансовые решения, принятые на основе данных Приложения
-                        • Несовместимость с определенными устройствами
-                        • Временную недоступность функций
-                        
-                        Рекомендации:
-                        
-                        • Регулярно создавайте резервные копии
-                        • Проверяйте важные расчеты
-                        • Консультируйтесь с финансовым советником для серьезных решений
-                        """
-                    )
-                    
-                    // Раздел 6
-                    TermsSectionView(
-                        title: "6. Подписки и платежи",
-                        content: """
-                        Базовая версия Приложения бесплатна.
-                        
-                        Премиум-функции:
-                        
-                        • Неограниченные категории
-                        • Расширенная статистика
-                        • Экспорт в различные форматы
-                        • Синхронизация между устройствами
-                        • Приоритетная поддержка
-                        
-                        Условия подписки:
-                        
-                        • Оплата через App Store
-                        • Автоматическое продление
-                        • Отмена в любое время
-                        • Возврат средств согласно политике App Store
-                        """
-                    )
-                    
-                    // Раздел 7
-                    TermsSectionView(
-                        title: "7. Прекращение использования",
-                        content: """
-                        Вы можете прекратить использование Приложения в любое время, удалив его с устройства.
-                        
-                        Мы можем приостановить доступ к премиум-функциям в случае:
-                        
-                        • Нарушения условий использования
-                        • Мошеннической активности
-                        • Неоплаты подписки
-                        
-                        При удалении Приложения:
-                        
-                        • Все локальные данные будут удалены
-                        • Резервные копии в iCloud сохранятся
-                        • Подписка останется активной до окончания периода
-                        """
-                    )
-                    
-                    // Раздел 8
-                    TermsSectionView(
-                        title: "8. Контакты и споры",
-                        content: """
-                        По всем вопросам обращайтесь:
-                        
-                        Email: legal@expensetracker.app
-                        Веб-сайт: www.expensetracker.app/legal
-                        
-                        Разрешение споров:
-                        
-                        • Сначала попытка мирного урегулирования
-                        • Медиация при необходимости
-                        • Применимое право: законодательство РК
-                        
-                        Мы стремимся разрешить все вопросы дружественно и оперативно.
-                        """
-                    )
+
+                    ForEach(TermsOfServiceSection.all) { section in
+                        TermsSectionView(title: section.title, content: section.content)
+                    }
                 }
-                .padding()
-                .padding(.bottom, 32)
+                .padding(AppSpacing.large)
+                .padding(.bottom, AppSpacing.xxxLarge)
             }
         }
-        .navigationTitle("Условия использования")
+        .navigationTitle(AppString.termsOfService)
         .navigationBarTitleDisplayMode(.inline)
         .navigationBarBackButtonHidden(true)
         .toolbarBackground(.hidden, for: .navigationBar)
@@ -218,21 +53,56 @@ struct TermsOfServiceView: View {
     }
 }
 
-// MARK: - Terms Section View
-struct TermsSectionView: View {
+// MARK: - Subviews
+
+private extension TermsOfServiceView {
+
+    var headerSection: some View {
+        VStack(alignment: .leading, spacing: AppSpacing.medium) {
+            AppText(AppString.termsOfService, style: .largeTitle)
+
+            AppText(AppString.lastUpdated, style: .caption, color: AppColor.textSecondary)
+
+            AppText(AppString.termsIntro, style: .body, color: AppColor.textSecondary)
+        }
+    }
+}
+
+// MARK: - Terms of Service Section
+
+struct TermsOfServiceSection: Identifiable {
+    let id = UUID()
     let title: String
     let content: String
-    
+
+    static let all: [TermsOfServiceSection] = [
+        TermsOfServiceSection(title: AppString.termsSection1Title, content: AppString.termsSection1Content),
+        TermsOfServiceSection(title: AppString.termsSection2Title, content: AppString.termsSection2Content),
+        TermsOfServiceSection(title: AppString.termsSection3Title, content: AppString.termsSection3Content),
+        TermsOfServiceSection(title: AppString.termsSection4Title, content: AppString.termsSection4Content),
+        TermsOfServiceSection(title: AppString.termsSection5Title, content: AppString.termsSection5Content),
+        TermsOfServiceSection(title: AppString.termsSection6Title, content: AppString.termsSection6Content),
+        TermsOfServiceSection(title: AppString.termsSection7Title, content: AppString.termsSection7Content),
+        TermsOfServiceSection(title: AppString.termsSection8Title, content: AppString.termsSection8Content)
+    ]
+}
+
+// MARK: - Terms Section View
+
+struct TermsSectionView: View {
+
+    // MARK: - Properties
+
+    let title: String
+    let content: String
+
+    // MARK: - Body
+
     var body: some View {
-        VStack(alignment: .leading, spacing: 12) {
-            Text(title)
-                .font(.system(size: 20, weight: .semibold))
-                .foregroundStyle(.primary)
-            
-            Text(content)
-                .font(.system(size: 15))
-                .foregroundStyle(.secondary)
-                .lineSpacing(4)
+        VStack(alignment: .leading, spacing: AppSpacing.medium) {
+            AppText(title, style: .title)
+
+            AppText(content, style: .body, color: AppColor.textSecondary)
         }
     }
 }

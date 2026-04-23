@@ -21,34 +21,34 @@ struct CategorySaveButtonView: View {
         Button(action: action) {
             HStack {
                 AppImage.checkmarkCircleFill
-                    .font(.system(size: 20))
+                    .font(.system(size: AppSize.glyphXLarge))
 
                 AppText(title, style: .section)
             }
             .foregroundStyle(AppColor.textWhite)
             .frame(maxWidth: .infinity)
-            .padding(.vertical, 16)
+            .padding(.vertical, AppSpacing.large)
             .background(
-                RoundedRectangle(cornerRadius: 16, style: .continuous)
+                RoundedRectangle(cornerRadius: AppRadius.card, style: .continuous)
                     .fill(isEnabled ? AppColor.income : AppColor.textTertiary)
             )
             .shadow(
                 color: isEnabled ? AppColor.income.opacity(0.3) : Color.clear,
-                radius: 8,
-                y: 4
+                radius: AppSpacing.small,
+                y: AppSpacing.xSmall
             )
         }
         .disabled(!isEnabled)
         .buttonStyle(.plain)
-        .padding(.top, 8)
+        .padding(.top, AppSpacing.small)
     }
 }
 
 #Preview {
-    VStack(spacing: 16) {
+    VStack(spacing: AppSpacing.large) {
         CategorySaveButtonView(title: AppString.createCategory, isEnabled: true, action: {})
         CategorySaveButtonView(title: AppString.createCategory, isEnabled: false, action: {})
     }
-    .padding()
+    .padding(AppSpacing.large)
     .background(AppColor.background)
 }

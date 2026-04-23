@@ -19,14 +19,14 @@ struct CategoryIconPickerButtonView: View {
 
     var body: some View {
         Button(action: action) {
-            HStack(spacing: 12) {
+            HStack(spacing: AppSpacing.medium) {
                 ZStack {
-                    RoundedRectangle(cornerRadius: 10)
+                    RoundedRectangle(cornerRadius: AppRadius.medium)
                         .fill(Color(hex: colorHex).opacity(0.15))
-                        .frame(width: 50, height: 50)
+                        .frame(width: AppSize.iconXLarge, height: AppSize.iconXLarge)
 
                     Image(systemName: icon)
-                        .font(.system(size: 24, weight: .semibold))
+                        .font(.system(size: AppSize.glyphXXLarge, weight: .semibold))
                         .foregroundStyle(Color(hex: colorHex))
                 }
 
@@ -35,16 +35,16 @@ struct CategoryIconPickerButtonView: View {
                 Spacer()
 
                 AppImage.chevronRight
-                    .font(.system(size: 14, weight: .semibold))
+                    .font(.system(size: AppSize.glyphMedium, weight: .semibold))
                     .foregroundStyle(.tertiary)
             }
-            .padding(16)
+            .padding(AppSpacing.large)
             .background(
-                RoundedRectangle(cornerRadius: 16, style: .continuous)
+                RoundedRectangle(cornerRadius: AppRadius.card, style: .continuous)
                     .fill(AppColor.cardBackground)
             )
             .overlay(
-                RoundedRectangle(cornerRadius: 16, style: .continuous)
+                RoundedRectangle(cornerRadius: AppRadius.card, style: .continuous)
                     .strokeBorder(AppColor.textPrimary.opacity(0.08), lineWidth: 1)
             )
         }
@@ -54,6 +54,6 @@ struct CategoryIconPickerButtonView: View {
 
 #Preview {
     CategoryIconPickerButtonView(icon: "cart.fill", colorHex: "#FF6B6B", action: {})
-        .padding()
+        .padding(AppSpacing.large)
         .background(AppColor.background)
 }

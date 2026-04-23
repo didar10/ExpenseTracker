@@ -42,13 +42,13 @@ struct IconPicker: View {
         ScrollView {
             LazyVGrid(
                 columns: Array(repeating: .init(.flexible()), count: 6),
-                spacing: 16
+                spacing: AppSpacing.large
             ) {
                 ForEach(icons, id: \.self) { icon in
                     iconCell(icon)
                 }
             }
-            .padding(.vertical)
+            .padding(.vertical, AppSpacing.large)
         }
     }
 }
@@ -59,15 +59,15 @@ private extension IconPicker {
     func iconCell(_ icon: String) -> some View {
         Image(systemName: icon)
             .font(.title2)
-            .frame(width: 44, height: 44)
+            .frame(width: AppSize.iconLarge, height: AppSize.iconLarge)
             .background(
                 selectedIcon == icon
                 ? AppColor.income.opacity(0.25)
                 : AppColor.textSecondary.opacity(0.1)
             )
-            .clipShape(RoundedRectangle(cornerRadius: 10))
+            .clipShape(RoundedRectangle(cornerRadius: AppRadius.medium))
             .overlay(
-                RoundedRectangle(cornerRadius: 10)
+                RoundedRectangle(cornerRadius: AppRadius.medium)
                     .stroke(
                         selectedIcon == icon ? AppColor.income : Color.clear,
                         lineWidth: 2

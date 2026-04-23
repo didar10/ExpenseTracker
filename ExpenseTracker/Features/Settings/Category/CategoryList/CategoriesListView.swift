@@ -29,15 +29,15 @@ struct CategoriesListView: View {
                 .ignoresSafeArea()
 
             ScrollView {
-                VStack(spacing: 16) {
+                VStack(spacing: AppSpacing.large) {
                     if categories.isEmpty {
                         EmptyCategoriesView()
                     } else {
                         categoriesList
                     }
                 }
-                .padding()
-                .padding(.bottom, 100)
+                .padding(AppSpacing.large)
+                .padding(.bottom, AppSpacing.tabBarBottomInset)
             }
         }
         .navigationTitle(AppString.categories)
@@ -97,7 +97,7 @@ private extension CategoriesListView {
 
                     if index < categories.count - 1 {
                         Divider()
-                            .padding(.leading, 60)
+                            .padding(.leading, AppSpacing.listDividerIndent)
                     }
                 }
             }

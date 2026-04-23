@@ -32,7 +32,7 @@ struct AddEditCategoryView: View {
                 .ignoresSafeArea()
 
             ScrollView {
-                VStack(spacing: 20) {
+                VStack(spacing: AppSpacing.xLarge) {
                     CategoryPreviewCardView(
                         name: viewModel.formData.name,
                         icon: viewModel.formData.icon,
@@ -49,8 +49,8 @@ struct AddEditCategoryView: View {
                         action: handleSave
                     )
                 }
-                .padding()
-                .padding(.bottom, 40)
+                .padding(AppSpacing.large)
+                .padding(.bottom, AppSpacing.huge)
             }
         }
         .navigationTitle(viewModel.title)
@@ -83,13 +83,13 @@ private extension AddEditCategoryView {
         CategoryFormSectionView(title: AppString.name) {
             TextField(AppString.enterName, text: $viewModel.formData.name)
                 .font(.app(.body))
-                .padding(16)
+                .padding(AppSpacing.large)
                 .background(
-                    RoundedRectangle(cornerRadius: 16, style: .continuous)
+                    RoundedRectangle(cornerRadius: AppRadius.card, style: .continuous)
                         .fill(AppColor.cardBackground)
                 )
                 .overlay(
-                    RoundedRectangle(cornerRadius: 16, style: .continuous)
+                    RoundedRectangle(cornerRadius: AppRadius.card, style: .continuous)
                         .strokeBorder(AppColor.textPrimary.opacity(0.08), lineWidth: 1)
                 )
         }

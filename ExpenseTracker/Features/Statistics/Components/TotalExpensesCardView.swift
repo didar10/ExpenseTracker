@@ -9,21 +9,25 @@ import SwiftUI
 
 /// Карточка с общей суммой расходов
 struct TotalExpensesCardView: View {
+
+    // MARK: - Properties
+
     let amount: Decimal
-    
+
+    // MARK: - Body
+
     var body: some View {
-        VStack(spacing: 8) {
-            AppText("Всего расходов", style: .caption, color: .secondary)
-            
-            // Используем .rounded для сумм
-            Text(amount.formatted(.currency(code: "KZT")))
+        VStack(spacing: AppSpacing.small) {
+            AppText(AppString.totalExpenses, style: .caption, color: AppColor.textSecondary)
+
+            Text(amount.formatted(.currency(code: AppString.currencyCode)))
                 .font(.app(.largeTitle))
                 .fontDesign(.rounded)
-                .foregroundStyle(.primary)
+                .foregroundStyle(AppColor.textPrimary)
                 .contentTransition(.numericText())
         }
         .frame(maxWidth: .infinity)
-        .padding(.vertical, 16)
+        .padding(.vertical, AppSpacing.large)
     }
 }
 
@@ -32,5 +36,5 @@ struct TotalExpensesCardView: View {
         TotalExpensesCardView(amount: 450000)
         TotalExpensesCardView(amount: 0)
     }
-    .background(Color.appBackground)
+    .background(AppColor.background)
 }

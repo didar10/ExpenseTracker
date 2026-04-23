@@ -17,8 +17,8 @@ struct CategoriesCardView<Content: View>: View {
     
     var body: some View {
         content
-            .padding(16)
-            .card(cornerRadius: 20)
+            .padding(AppSpacing.large)
+            .card(cornerRadius: AppRadius.xLarge)
     }
 }
 
@@ -26,6 +26,6 @@ struct CategoriesCardView<Content: View>: View {
     CategoriesCardView {
         Text("Content")
     }
-    .padding()
+    .padding(AppSpacing.large)
     .background(Color.appBackground)
 }

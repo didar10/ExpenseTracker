@@ -22,6 +22,7 @@ enum AppColor {
     static let accent = Color.blue
     static let warning = Color.orange
     static let highlight = Color.yellow
+    static let decorativePurple = Color.purple
 
     // MARK: - Text
 

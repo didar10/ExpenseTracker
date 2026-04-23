@@ -10,6 +10,7 @@ import SwiftUI
 import SwiftData
 
 /// ViewModel для экрана статистики
+@MainActor
 @Observable
 final class StatisticsViewModel {
     

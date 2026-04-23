@@ -22,9 +22,9 @@ struct CategoryFormSectionView<Content: View>: View {
     // MARK: - Body
 
     var body: some View {
-        VStack(alignment: .leading, spacing: 12) {
+        VStack(alignment: .leading, spacing: AppSpacing.medium) {
             AppText(title, style: .bodySmall, color: AppColor.textSecondary)
-                .padding(.horizontal, 4)
+                .padding(.horizontal, AppSpacing.xSmall)
 
             content
         }
@@ -34,12 +34,12 @@ struct CategoryFormSectionView<Content: View>: View {
 #Preview {
     CategoryFormSectionView(title: AppString.name) {
         TextField(AppString.enterName, text: .constant(""))
-            .padding(16)
+            .padding(AppSpacing.large)
             .background(
-                RoundedRectangle(cornerRadius: 16)
+                RoundedRectangle(cornerRadius: AppRadius.card)
                     .fill(AppColor.cardBackground)
             )
     }
-    .padding()
+    .padding(AppSpacing.large)
     .background(AppColor.background)
 }

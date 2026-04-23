@@ -10,45 +10,51 @@ import Charts
 
 /// Круговая диаграмма расходов по категориям
 struct ExpensesPieChartView: View {
+
+    // MARK: - Properties
+
     let statistics: [CategoryStatistic]
     let totalExpenses: Decimal
-    
+
+    // MARK: - Body
+
     var body: some View {
-        VStack(spacing: 16) {
+        VStack(spacing: AppSpacing.large) {
             Chart {
                 ForEach(statistics) { stat in
                     SectorMark(
-                        angle: .value("Сумма", stat.amount),
+                        angle: .value(AppString.amount, stat.amount),
                         innerRadius: .ratio(0.6),
-                        angularInset: 2
+                        angularInset: AppSpacing.xxSmall
                     )
                     .foregroundStyle(Color(hex: stat.category.colorHex).gradient)
                     .annotation(position: .overlay) {
                         if shouldShowAnnotation(for: stat) {
                             Image(systemName: stat.category.icon)
-                                .font(.system(size: 20, weight: .semibold))
-                                .foregroundStyle(.white)
-                                .shadow(radius: 2)
+                                .font(.system(size: AppSize.glyphXLarge, weight: .semibold))
+                                .foregroundStyle(AppColor.textWhite)
+                                .shadow(radius: AppSpacing.xxSmall)
                         }
                     }
                 }
             }
-            .frame(height: 300)
+            .frame(height: AppSize.chartHeight)
             .chartBackground { _ in
-                VStack(spacing: 4) {
-                    AppText("Расходы", style: .microCaption, color: .secondary)
-                    
-                    // Используем .rounded для сумм
-                    Text(totalExpenses.formatted(.currency(code: "KZT")))
-                        .font(.system(size: 20, weight: .semibold))
+                VStack(spacing: AppSpacing.xSmall) {
+                    AppText(AppString.expenses, style: .microCaption, color: AppColor.textSecondary)
+
+                    Text(totalExpenses.formatted(.currency(code: AppString.currencyCode)))
+                        .font(.app(.title))
                         .fontDesign(.rounded)
-                        .foregroundStyle(.primary)
+                        .foregroundStyle(AppColor.textPrimary)
                 }
             }
         }
-        .padding(.vertical, 8)
+        .padding(.vertical, AppSpacing.small)
     }
-    
+
+    // MARK: - Private Methods
+
     private func shouldShowAnnotation(for stat: CategoryStatistic) -> Bool {
         stat.percentage(of: totalExpenses) > 0.12
     }
@@ -59,6 +65,6 @@ struct ExpensesPieChartView: View {
         statistics: [],
         totalExpenses: 450000
     )
-    .padding()
-    .background(Color.appBackground)
+    .padding(AppSpacing.large)
+    .background(AppColor.background)
 }

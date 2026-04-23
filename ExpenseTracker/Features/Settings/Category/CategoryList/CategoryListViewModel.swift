@@ -9,6 +9,7 @@ import Foundation
 import SwiftData
 
 /// ViewModel для списка категорий
+@MainActor
 @Observable
 final class CategoryListViewModel {
     

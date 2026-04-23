@@ -16,10 +16,10 @@ struct CategoryColorPickerView: View {
     // MARK: - Body
 
     var body: some View {
-        HStack(spacing: 12) {
+        HStack(spacing: AppSpacing.medium) {
             Circle()
                 .fill(Color(hex: colorHex))
-                .frame(width: 50, height: 50)
+                .frame(width: AppSize.iconXLarge, height: AppSize.iconXLarge)
                 .overlay(
                     Circle()
                         .strokeBorder(AppColor.textPrimary.opacity(0.1), lineWidth: 1)
@@ -34,13 +34,13 @@ struct CategoryColorPickerView: View {
             )
             .font(.app(.body))
         }
-        .padding(16)
+        .padding(AppSpacing.large)
         .background(
-            RoundedRectangle(cornerRadius: 16, style: .continuous)
+            RoundedRectangle(cornerRadius: AppRadius.card, style: .continuous)
                 .fill(AppColor.cardBackground)
         )
         .overlay(
-            RoundedRectangle(cornerRadius: 16, style: .continuous)
+            RoundedRectangle(cornerRadius: AppRadius.card, style: .continuous)
                 .strokeBorder(AppColor.textPrimary.opacity(0.08), lineWidth: 1)
         )
     }
@@ -48,6 +48,6 @@ struct CategoryColorPickerView: View {
 
 #Preview {
     CategoryColorPickerView(colorHex: .constant("#FF6B6B"))
-        .padding()
+        .padding(AppSpacing.large)
         .background(AppColor.background)
 }

@@ -9,102 +9,91 @@ import SwiftUI
 
 /// Переиспользуемая кнопка для выбора счета
 struct AccountPickerButton: View {
-    
+
     // MARK: - Properties
-    
+
     let selectedAccount: Account?
     let totalBalance: Decimal
     let action: () -> Void
-    
+
     // MARK: - Body
-    
+
     var body: some View {
         Button {
             UIImpactFeedbackGenerator(style: .light).impactOccurred()
             action()
         } label: {
-            HStack(spacing: 6) {
-                if let selectedAccount = selectedAccount {
-                    // Выбран конкретный счет
+            HStack(spacing: AppSpacing.smaller) {
+                if let selectedAccount {
                     accountIcon(selectedAccount)
                     accountInfo(selectedAccount)
                 } else {
-                    // Показываем все счета
                     allAccountsIcon
                     allAccountsInfo
                 }
-                
+
                 chevronIcon
             }
-            .padding(.horizontal, 12)
-            .padding(.vertical, 8)
+            .padding(.horizontal, AppSpacing.medium)
+            .padding(.vertical, AppSpacing.small)
             .background {
                 Capsule()
-                    .fill(Color.appCardBackground)
-                    .shadow(color: Color.primary.opacity(0.04), radius: 4, y: 1)
+                    .fill(AppColor.cardBackground)
+                    .shadow(color: AppColor.textPrimary.opacity(0.04), radius: AppSpacing.xSmall, y: 1)
             }
         }
         .buttonStyle(.plain)
     }
 }
 
-// MARK: - UI Components
+// MARK: - Subviews
 
 private extension AccountPickerButton {
-    
-    /// Иконка выбранного счета
+
     func accountIcon(_ account: Account) -> some View {
         ZStack {
             Circle()
                 .fill(account.swiftUIColor.opacity(0.2))
-                .frame(width: 24, height: 24)
-            
+                .frame(width: AppSize.iconSmall, height: AppSize.iconSmall)
+
             Image(systemName: account.icon)
-                .font(.system(size: 12, weight: .medium))
+                .font(.system(size: AppSize.glyphSmall, weight: .medium))
                 .foregroundStyle(account.swiftUIColor)
         }
     }
-    
-    /// Информация о выбранном счете
+
     func accountInfo(_ account: Account) -> some View {
-        VStack(alignment: .leading, spacing: 1) {
-            Text(account.name)
-                .font(.system(size: 13, weight: .medium))
-                .foregroundStyle(.primary)
-            
-            Text(account.currentBalance.formatted(.currency(code: "KZT")))
-                .font(.system(size: 11, weight: .regular))
+        VStack(alignment: .leading, spacing: AppSpacing.hairline) {
+            AppText(account.name, style: .caption)
+
+            Text(account.currentBalance.formatted(.currency(code: AppString.currencyCode)))
+                .font(.app(.microCaption))
                 .fontDesign(.rounded)
-                .foregroundStyle(.secondary)
+                .foregroundStyle(AppColor.textSecondary)
         }
     }
-    
-    /// Иконка для всех счетов
+
     var allAccountsIcon: some View {
-        Image(systemName: "square.stack.3d.up.fill")
-            .font(.system(size: 16, weight: .medium))
-            .foregroundStyle(.primary)
+        AppImage.allAccounts
+            .font(.system(size: AppSize.glyphLarge, weight: .medium))
+            .foregroundStyle(AppColor.textPrimary)
     }
-    
-    /// Информация о всех счетах
+
     var allAccountsInfo: some View {
-        VStack(alignment: .leading, spacing: 1) {
-            Text("Все счета")
-                .font(.system(size: 13, weight: .medium))
-                .foregroundStyle(.primary)
-            
-            Text(totalBalance.formatted(.currency(code: "KZT")))
-                .font(.system(size: 11, weight: .regular))
+        VStack(alignment: .leading, spacing: AppSpacing.hairline) {
+            AppText(AppString.allAccounts, style: .caption)
+
+            Text(totalBalance.formatted(.currency(code: AppString.currencyCode)))
+                .font(.app(.microCaption))
                 .fontDesign(.rounded)
-                .foregroundStyle(.secondary)
+                .foregroundStyle(AppColor.textSecondary)
         }
     }
-    
-    /// Иконка шеврона
+
     var chevronIcon: some View {
-        Image(systemName: "chevron.down")
-            .font(.system(size: 10, weight: .semibold))
-            .foregroundStyle(.secondary)
+        AppImage.chevronDown
+            .font(.system(size: AppSize.glyphTiny, weight: .semibold))
+            .foregroundStyle(AppColor.textSecondary)
     }
 }
 
@@ -117,13 +106,13 @@ private extension AccountPickerButton {
         color: "blue",
         initialBalance: 150000
     )
-    
+
     return AccountPickerButton(
         selectedAccount: account,
         totalBalance: 150000,
         action: {}
     )
-    .padding()
+    .padding(AppSpacing.large)
 }
 
 #Preview("All Accounts") {
@@ -132,5 +121,5 @@ private extension AccountPickerButton {
         totalBalance: 350000,
         action: {}
     )
-    .padding()
+    .padding(AppSpacing.large)
 }

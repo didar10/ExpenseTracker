@@ -9,55 +9,68 @@ import SwiftUI
 
 /// Строка со статистикой категории
 struct CategoryStatisticRowView: View {
+
+    // MARK: - Properties
+
     let statistic: CategoryStatistic
     let totalExpenses: Decimal
-    
+
+    // MARK: - Body
+
     var body: some View {
-        HStack(spacing: 12) {
+        HStack(spacing: AppSpacing.medium) {
             categoryIcon
-            
+
             categoryInfo
-            
+
             Spacer()
-            
+
             amountInfo
         }
-        .padding(.vertical, 6)
+        .padding(.vertical, AppSpacing.smaller)
         .contentShape(Rectangle())
     }
-    
-    private var categoryIcon: some View {
+}
+
+// MARK: - Subviews
+
+private extension CategoryStatisticRowView {
+
+    var categoryIcon: some View {
         ZStack {
             Circle()
                 .fill(Color(hex: statistic.category.colorHex).opacity(0.15))
-                .frame(width: 38, height: 38)
-            
+                .frame(width: AppSize.iconMedium, height: AppSize.iconMedium)
+
             Image(systemName: statistic.category.icon)
                 .foregroundStyle(Color(hex: statistic.category.colorHex))
-                .font(.system(size: 18, weight: .semibold))
+                .font(.system(size: AppSize.glyphXLarge, weight: .semibold))
         }
         .circleShadow()
     }
-    
-    private var categoryInfo: some View {
-        VStack(alignment: .leading, spacing: 3) {
+
+    var categoryInfo: some View {
+        VStack(alignment: .leading, spacing: AppSpacing.xxSmall) {
             AppText(statistic.category.name, style: .bodySmaller)
-            
-            AppText(statistic.percentageString(of: totalExpenses), style: .microCaption, color: .secondary)
+
+            AppText(
+                statistic.percentageString(of: totalExpenses),
+                style: .microCaption,
+                color: AppColor.textSecondary
+            )
         }
     }
-    
-    private var amountInfo: some View {
-        HStack(spacing: 8) {
-            // Используем .rounded для сумм
-            Text(statistic.amount.formatted(.currency(code: "KZT")))
+
+    var amountInfo: some View {
+        HStack(spacing: AppSpacing.small) {
+            Text(statistic.amount.formatted(.currency(code: AppString.currencyCode)))
                 .font(.app(.bodySmaller))
                 .fontDesign(.rounded)
-                .foregroundStyle(.primary)
-            
-            Image(systemName: "chevron.right")
-                .font(.system(size: 12, weight: .semibold))
-                .foregroundStyle(.tertiary)
+                .foregroundStyle(AppColor.textPrimary)
+
+            AppImage.chevronRight
+                .font(.system(size: AppSize.glyphSmall, weight: .semibold))
+                .foregroundStyle(AppColor.textTertiary)
         }
     }
 }
@@ -71,5 +84,5 @@ struct CategoryStatisticRowView: View {
         ),
         totalExpenses: 450000
     )
-    .padding()
+    .padding(AppSpacing.large)
 }

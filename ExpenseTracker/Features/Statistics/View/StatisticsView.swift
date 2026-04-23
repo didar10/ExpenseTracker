@@ -9,51 +9,47 @@ import SwiftUI
 import SwiftData
 
 struct StatisticsView: View {
-    
+
     // MARK: - Properties
-    
+
     @Bindable var viewModel: StatisticsViewModel
     @State private var scrollOffset: CGFloat = 0
     @State private var navigationPath = NavigationPath()
     @State private var showingAccountsView = false
-    
-    // Для триггера обновления при изменениях в базе данных
+
     @Query(sort: \Transaction.date, order: .reverse)
     private var transactionsTrigger: [Transaction]
-    
+
     @Query(sort: \Account.createdAt, order: .forward)
     private var accountsTrigger: [Account]
-    
+
     @Environment(\.modelContext) private var modelContext
     @Environment(\.tabBarVisibility) private var isTabBarVisible
-    
+
     // MARK: - Body
-    
+
     var body: some View {
         NavigationStack(path: $navigationPath) {
             VStack(spacing: 0) {
-                // Шапка с выбором счета и месяца
                 headerView
-                
+
                 ScrollView {
-                    VStack(spacing: 16) {
+                    VStack(spacing: AppSpacing.large) {
                         if viewModel.isEmpty {
-                            // Выбор периода для пустого состояния
                             periodPickerButton
                                 .frame(maxWidth: .infinity, alignment: .center)
-                                .padding(.top, 8)
-                            
+                                .padding(.top, AppSpacing.small)
+
                             StatisticsEmptyStateView()
                         } else {
                             ExpensesPieChartView(
                                 statistics: viewModel.statistics,
                                 totalExpenses: viewModel.totalExpenses
                             )
-                            
-                            // Выбор периода по центру
+
                             periodPickerButton
                                 .frame(maxWidth: .infinity, alignment: .center)
-                            
+
                             CategoryStatisticsListView(
                                 statistics: viewModel.statistics,
                                 totalExpenses: viewModel.totalExpenses,
@@ -62,11 +58,11 @@ struct StatisticsView: View {
                             )
                         }
                     }
-                    .padding()
-                    .padding(.bottom, 100)
+                    .padding(AppSpacing.large)
+                    .padding(.bottom, AppSpacing.tabBarBottomInset)
                 }
             }
-            .background(Color.appBackground)
+            .background(AppColor.background)
             .navigationBarHidden(true)
             .navigationDestination(for: CategoryStatistic.self) { statistic in
                 CategoryTransactionsView(
@@ -90,40 +86,36 @@ struct StatisticsView: View {
                     }
                 )
             }
-            .onChange(of: transactionsTrigger) { oldValue, newValue in
-                // Обновляем данные при изменении транзакций
+            .onChange(of: transactionsTrigger) { _, _ in
                 viewModel.fetchData()
             }
-            .onChange(of: accountsTrigger) { oldValue, newValue in
-                // Обновляем данные при изменении счетов
+            .onChange(of: accountsTrigger) { _, _ in
                 viewModel.fetchData()
             }
-            .onChange(of: viewModel.selectedAccount) { oldValue, newValue in
-                // Пересчет статистики при изменении счета
+            .onChange(of: viewModel.selectedAccount) { _, newValue in
                 viewModel.changeAccount(newValue)
             }
             .onAppear {
-                // Инициализируем ModelContext только если еще не инициализирован
                 if viewModel.modelContext == nil {
                     viewModel.setup(with: modelContext)
                 }
             }
         }
     }
-    
+
     // MARK: - Actions
-    
+
     private func handleCategoryTap(_ statistic: CategoryStatistic) {
         navigationPath.append(statistic)
     }
 }
 
-// MARK: - Header View
+// MARK: - Subviews
 
 private extension StatisticsView {
-    
+
     var headerView: some View {
-        HStack(spacing: 12) {
+        HStack(spacing: AppSpacing.medium) {
             AccountPickerButton(
                 selectedAccount: viewModel.selectedAccount,
                 totalBalance: viewModel.totalBalance,
@@ -133,11 +125,11 @@ private extension StatisticsView {
             )
             Spacer()
         }
-        .padding(.horizontal, 16)
-        .padding(.vertical, 8)
-        .background(Color.appBackground)
+        .padding(.horizontal, AppSpacing.large)
+        .padding(.vertical, AppSpacing.small)
+        .background(AppColor.background)
     }
-    
+
     var periodPickerButton: some View {
         Menu {
             ForEach(StatisticsPeriod.allCases) { period in
@@ -146,34 +138,32 @@ private extension StatisticsView {
                     viewModel.changePeriod(period)
                 } label: {
                     Label {
-                        Text(period.rawValue)
+                        Text(period.displayName)
                     } icon: {
                         if viewModel.selectedPeriod == period {
-                            Image(systemName: "checkmark")
+                            AppImage.checkmark
                         }
                     }
                 }
             }
         } label: {
-            HStack(spacing: 6) {
-                Image(systemName: "calendar")
-                    .font(.system(size: 14, weight: .medium))
-                    .foregroundStyle(.primary)
-                
-                Text(viewModel.selectedPeriod.rawValue)
-                    .font(.system(size: 13, weight: .medium))
-                    .foregroundStyle(.primary)
-                
-                Image(systemName: "chevron.down")
-                    .font(.system(size: 10, weight: .semibold))
-                    .foregroundStyle(.secondary)
+            HStack(spacing: AppSpacing.smaller) {
+                AppImage.calendar
+                    .font(.system(size: AppSize.glyphMedium, weight: .medium))
+                    .foregroundStyle(AppColor.textPrimary)
+
+                AppText(viewModel.selectedPeriod.displayName, style: .caption)
+
+                AppImage.chevronDown
+                    .font(.system(size: AppSize.glyphTiny, weight: .semibold))
+                    .foregroundStyle(AppColor.textSecondary)
             }
-            .padding(.horizontal, 12)
-            .padding(.vertical, 8)
+            .padding(.horizontal, AppSpacing.medium)
+            .padding(.vertical, AppSpacing.small)
             .background {
                 Capsule()
-                    .fill(Color.appCardBackground)
-                    .shadow(color: Color.primary.opacity(0.04), radius: 4, y: 1)
+                    .fill(AppColor.cardBackground)
+                    .shadow(color: AppColor.textPrimary.opacity(0.04), radius: AppSpacing.xSmall, y: 1)
             }
         }
         .buttonStyle(.plain)
@@ -186,9 +176,8 @@ extension CategoryStatistic: Hashable {
     static func == (lhs: CategoryStatistic, rhs: CategoryStatistic) -> Bool {
         lhs.id == rhs.id
     }
-    
+
     func hash(into hasher: inout Hasher) {
         hasher.combine(id)
     }
 }
-
