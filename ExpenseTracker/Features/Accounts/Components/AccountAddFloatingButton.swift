@@ -1,13 +1,13 @@
 //
-//  CategoryAddFloatingButton.swift
+//  AccountAddFloatingButton.swift
 //  ExpenseTracker
 //
-//  Created by Didar on 24.04.2026.
+//  Created by Didar on 25.04.2026.
 //
 
 import SwiftUI
 
-struct CategoryAddFloatingButton: View {
+struct AccountAddFloatingButton: View {
 
     // MARK: - Body
 
@@ -36,7 +36,7 @@ struct CategoryAddFloatingButton: View {
 #Preview {
     ZStack(alignment: .bottomTrailing) {
         AppColor.background.ignoresSafeArea()
-        CategoryAddFloatingButton()
+        AccountAddFloatingButton()
             .padding(AppSpacing.large)
     }
 }

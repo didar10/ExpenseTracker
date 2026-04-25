@@ -53,6 +53,13 @@ final class AccountFormViewModel: ObservableObject {
         isEditMode ? AppString.editAccount : AppString.newAccount
     }
 
+    var saveButtonTitle: String {
+        if !isValid {
+            return AppString.enterName
+        }
+        return isEditMode ? AppString.saveChanges : AppString.newAccount
+    }
+
     var previewName: String {
         name.isEmpty ? AppString.accountName : name
     }

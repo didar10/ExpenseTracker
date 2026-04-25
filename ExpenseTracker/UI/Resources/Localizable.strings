@@ -78,6 +78,9 @@
 "limit" = "Лимит";
 "period" = "Период";
 "all_categories_used" = "Все категории уже используются";
+"select_category" = "Выберите категорию";
+"search_category" = "Поиск категории";
+"choose_category" = "Выбрать категорию";
 
 /* Statistics */
 "expenses" = "Расходы";

@@ -97,6 +97,9 @@ enum AppString {
     static let limit = String(localized: "limit")
     static let period = String(localized: "period")
     static let allCategoriesUsed = String(localized: "all_categories_used")
+    static let selectCategory = String(localized: "select_category")
+    static let searchCategory = String(localized: "search_category")
+    static let chooseCategory = String(localized: "choose_category")
 
     // MARK: - Statistics
 

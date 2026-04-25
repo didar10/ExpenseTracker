@@ -18,10 +18,12 @@ struct AccountPickerSheet: View {
     // MARK: - Body
 
     var body: some View {
-        NavigationStack {
-            ZStack {
-                AppColor.background
-                    .ignoresSafeArea()
+        ZStack {
+            AppColor.background
+                .ignoresSafeArea()
+
+            VStack(spacing: 0) {
+                header
 
                 if accounts.isEmpty {
                     emptyStateView
@@ -43,22 +45,28 @@ struct AccountPickerSheet: View {
                     }
                 }
             }
-            .navigationTitle(AppString.selectAccount)
-            .navigationBarTitleDisplayMode(.inline)
-            .toolbarBackground(.hidden, for: .navigationBar)
-            .toolbar {
-                ToolbarItem(placement: .navigationBarLeading) {
-                    ToolbarIconButton(icon: "xmark") {
-                        dismiss()
-                    }
-                }
-            }
         }
     }
 }
 
 // MARK: - Subviews
 private extension AccountPickerSheet {
+
+    var header: some View {
+        ZStack {
+            AppText(AppString.selectAccount, style: .section)
+
+            HStack {
+                ToolbarIconButton(icon: "xmark", isOutlined: true) {
+                    dismiss()
+                }
+
+                Spacer()
+            }
+        }
+        .padding(.horizontal, AppSpacing.large)
+        .padding(.vertical, AppSpacing.small)
+    }
 
     func accountRow(_ account: Account) -> some View {
         HStack(spacing: 12) {

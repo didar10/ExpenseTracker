@@ -30,45 +30,42 @@ struct AccountFormView: View {
     // MARK: - Body
 
     var body: some View {
-        NavigationStack {
-            ZStack {
-                AppColor.background
-                    .ignoresSafeArea()
+        ZStack(alignment: .bottom) {
+            AppColor.background
+                .ignoresSafeArea()
+
+            VStack(spacing: 0) {
+                header
 
                 ScrollView {
-                    VStack(spacing: 20) {
+                    VStack(spacing: AppSpacing.xLarge) {
                         accountPreviewCard
-                        formContent
-                    }
-                    .padding()
-                }
-            }
-            .navigationTitle(viewModel.navigationTitle)
-            .navigationBarTitleDisplayMode(.inline)
-            .toolbarBackground(.hidden, for: .navigationBar)
-            .toolbar {
-                ToolbarItem(placement: .navigationBarLeading) {
-                    ToolbarIconButton(icon: "xmark") {
-                        dismiss()
-                    }
-                }
 
-                ToolbarItem(placement: .navigationBarTrailing) {
-                    ToolbarIconButton(icon: "checkmark", isEnabled: viewModel.isValid) {
-                        viewModel.save(accounts: accounts, using: modelContext)
-                        dismiss()
+                        nameSection
+                        balanceSection
+                        iconSection
+                        colorSection
+                        defaultSection
+
+                        if viewModel.isEditMode {
+                            deleteSection
+                        }
                     }
+                    .padding(AppSpacing.large)
+                    .padding(.bottom, AppSpacing.huge + AppSpacing.xxxLarge)
                 }
             }
-            .alert(AppString.deleteAccountConfirm, isPresented: $showingDeleteAlert) {
-                Button(AppString.cancel, role: .cancel) { }
-                Button(AppString.delete, role: .destructive) {
-                    viewModel.delete(using: modelContext)
-                    dismiss()
-                }
-            } message: {
-                Text(AppString.deleteAccountMessage)
+
+            saveBar
+        }
+        .alert(AppString.deleteAccountConfirm, isPresented: $showingDeleteAlert) {
+            Button(AppString.cancel, role: .cancel) { }
+            Button(AppString.delete, role: .destructive) {
+                viewModel.delete(using: modelContext)
+                dismiss()
             }
+        } message: {
+            Text(AppString.cannotUndo)
         }
     }
 }
@@ -76,86 +73,188 @@ struct AccountFormView: View {
 // MARK: - Subviews
 private extension AccountFormView {
 
-    var accountPreviewCard: some View {
-        HStack(spacing: 12) {
-            ZStack {
-                RoundedRectangle(cornerRadius: 10, style: .continuous)
-                    .fill(Color(named: viewModel.selectedColor).opacity(0.2))
-                    .frame(width: 44, height: 44)
-
-                Image(systemName: viewModel.selectedIcon)
-                    .font(.system(size: 20))
-                    .foregroundStyle(Color(named: viewModel.selectedColor))
-            }
+    var header: some View {
+        ZStack {
+            AppText(viewModel.navigationTitle, style: .section)
 
             HStack {
-                TextField(AppString.accountName, text: $viewModel.name)
-                    .font(.app(.bodySmaller))
-                    .foregroundStyle(viewModel.name.isEmpty ? AppColor.textSecondary : AppColor.textPrimary)
+                ToolbarIconButton(icon: "xmark", isOutlined: true) {
+                    dismiss()
+                }
+
+                Spacer()
+            }
+        }
+        .padding(.horizontal, AppSpacing.large)
+        .padding(.vertical, AppSpacing.small)
+    }
+
+    var accountPreviewCard: some View {
+        VStack(spacing: AppSpacing.large) {
+            AppText(
+                AppString.preview.uppercased(),
+                style: .microCaption,
+                color: AppColor.textSecondary
+            )
+            .tracking(AppSpacing.hairline)
+
+            HStack(spacing: AppSpacing.small) {
+                ZStack {
+                    RoundedRectangle(cornerRadius: AppRadius.medium, style: .continuous)
+                        .fill(Color(named: viewModel.selectedColor).opacity(0.2))
+                        .frame(width: AppSize.iconLarge, height: AppSize.iconLarge)
+
+                    Image(systemName: viewModel.selectedIcon)
+                        .font(.system(size: AppSize.glyphLarge, weight: .semibold))
+                        .foregroundStyle(Color(named: viewModel.selectedColor))
+                }
+
+                VStack(alignment: .leading, spacing: 2) {
+                    AppText(
+                        viewModel.previewName,
+                        style: .bodySmall,
+                        color: viewModel.previewNameColor
+                    )
+
+                    if let balance = viewModel.previewBalance {
+                        Text(balance)
+                            .font(.app(.caption))
+                            .fontDesign(.rounded)
+                            .foregroundStyle(AppColor.textSecondary)
+                    }
+                }
 
                 if viewModel.isDefault {
                     AppImage.starFill
-                        .font(.system(size: 11))
+                        .font(.system(size: 10))
                         .foregroundStyle(AppColor.highlight)
                 }
-            }
 
-            Spacer()
+                Spacer()
+            }
+            .padding(AppSpacing.large)
+            .background(
+                RoundedRectangle(cornerRadius: AppRadius.card, style: .continuous)
+                    .fill(AppColor.cardBackground)
+            )
         }
-        .padding(16)
-        .card(cornerRadius: 16)
+        .frame(maxWidth: .infinity)
+        .padding(.vertical, AppSpacing.xLarge)
+        .padding(.horizontal, AppSpacing.large)
+        .card(cornerRadius: AppRadius.xLarge)
     }
 
-    var formContent: some View {
-        VStack(spacing: 16) {
-            FormSection(title: AppString.initialBalance) {
-                TextField("0", text: $viewModel.initialBalance)
-                    .textFieldStyle(.roundedBorder)
-                    .keyboardType(.decimalPad)
-                    .font(.app(.body))
-            }
+    var nameSection: some View {
+        CategoryFormSectionView(title: AppString.name.uppercased()) {
+            TextField(AppString.accountName, text: $viewModel.name)
+                .font(.app(.body))
+                .padding(AppSpacing.large)
+                .background(
+                    RoundedRectangle(cornerRadius: AppRadius.card, style: .continuous)
+                        .fill(AppColor.cardBackground)
+                )
+                .overlay(
+                    RoundedRectangle(cornerRadius: AppRadius.card, style: .continuous)
+                        .strokeBorder(
+                            AppColor.textPrimary.opacity(0.15),
+                            lineWidth: AppSpacing.hairline
+                        )
+                )
+        }
+    }
 
-            FormSection(title: AppString.icon) {
-                IconPickerView(selectedIcon: $viewModel.selectedIcon, onSelect: viewModel.selectIcon)
-            }
+    var balanceSection: some View {
+        CategoryFormSectionView(title: AppString.initialBalance.uppercased()) {
+            TextField("0", text: $viewModel.initialBalance)
+                .keyboardType(.decimalPad)
+                .font(.app(.body))
+                .padding(AppSpacing.large)
+                .background(
+                    RoundedRectangle(cornerRadius: AppRadius.card, style: .continuous)
+                        .fill(AppColor.cardBackground)
+                )
+                .overlay(
+                    RoundedRectangle(cornerRadius: AppRadius.card, style: .continuous)
+                        .strokeBorder(
+                            AppColor.textPrimary.opacity(0.15),
+                            lineWidth: AppSpacing.hairline
+                        )
+                )
+        }
+    }
 
-            FormSection(title: AppString.color) {
-                ColorPickerView(selectedColor: $viewModel.selectedColor, onSelect: viewModel.selectColor)
-            }
+    var iconSection: some View {
+        CategoryFormSectionView(title: AppString.icon.uppercased()) {
+            IconPickerView(selectedIcon: $viewModel.selectedIcon, onSelect: viewModel.selectIcon)
+        }
+    }
 
-            FormSection(title: "") {
-                Toggle(isOn: $viewModel.isDefault) {
-                    VStack(alignment: .leading, spacing: 2) {
-                        AppText(AppString.defaultAccount, style: .body)
-                            .color(AppColor.textPrimary)
-                        AppText(AppString.defaultAccountHint, style: .caption)
-                            .color(AppColor.textSecondary)
-                    }
+    var colorSection: some View {
+        CategoryFormSectionView(title: AppString.color.uppercased()) {
+            ColorPickerView(selectedColor: $viewModel.selectedColor, onSelect: viewModel.selectColor)
+        }
+    }
+
+    var defaultSection: some View {
+        Toggle(isOn: $viewModel.isDefault) {
+            VStack(alignment: .leading, spacing: 2) {
+                AppText(AppString.defaultAccount, style: .bodySmall)
+                AppText(AppString.defaultAccountHint, style: .caption, color: AppColor.textSecondary)
+            }
+        }
+        .tint(AppColor.accent)
+        .padding(AppSpacing.large)
+        .card(cornerRadius: AppRadius.card)
+    }
+
+    var deleteSection: some View {
+        Button {
+            showingDeleteAlert = true
+        } label: {
+            HStack {
+                Spacer()
+
+                HStack(spacing: AppSpacing.small) {
+                    AppImage.trash
+                        .font(.system(size: AppSize.glyphLarge, weight: .semibold))
+
+                    AppText(AppString.deleteAccount, style: .bodySmall)
                 }
-                .tint(AppColor.accent)
+                .foregroundStyle(AppColor.expense)
+
+                Spacer()
             }
+            .padding(AppSpacing.large)
+            .card(cornerRadius: AppRadius.card)
+        }
+        .buttonStyle(.plain)
+    }
 
-            if viewModel.isEditMode {
-                Button {
-                    showingDeleteAlert = true
-                } label: {
-                    HStack {
-                        Spacer()
+    var saveBar: some View {
+        CategorySaveButtonView(
+            title: viewModel.saveButtonTitle,
+            isEnabled: viewModel.isValid,
+            action: handleSave
+        )
+        .padding(.horizontal, AppSpacing.large)
+        .padding(.top, AppSpacing.medium)
+        .padding(.bottom, AppSpacing.large)
+        .background(
+            AppColor.background
+                .ignoresSafeArea(edges: .bottom)
+        )
+    }
+}
 
-                        HStack(spacing: 8) {
-                            AppImage.trash
-                                .font(.system(size: 15, weight: .semibold))
+// MARK: - Actions
+private extension AccountFormView {
 
-                            AppText(AppString.deleteAccount, style: .bodySmaller)
-                        }
-                        .foregroundStyle(AppColor.expense)
+    func handleSave() {
+        UIImpactFeedbackGenerator(style: .medium).impactOccurred()
 
-                        Spacer()
-                    }
-                    .padding(16)
-                    .cardShadow(cornerRadius: 12)
-                }
-            }
+        withAnimation {
+            viewModel.save(accounts: accounts, using: modelContext)
+            dismiss()
         }
     }
 }

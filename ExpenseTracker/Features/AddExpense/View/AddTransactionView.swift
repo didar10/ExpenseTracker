@@ -152,18 +152,9 @@ private extension AddTransactionView {
     }
 
     var closeButton: some View {
-        Button {
+        ToolbarIconButton(icon: "xmark", isOutlined: true) {
             UIImpactFeedbackGenerator(style: .light).impactOccurred()
             dismiss()
-        } label: {
-            ZStack {
-                Circle()
-                    .fill(AppColor.secondaryBackground)
-                    .frame(width: 34, height: 34)
-                AppImage.close
-                    .font(.system(size: 16, weight: .semibold))
-                    .foregroundStyle(AppColor.textPrimary)
-            }
         }
         .padding(.leading, 12)
         .fixedSize()

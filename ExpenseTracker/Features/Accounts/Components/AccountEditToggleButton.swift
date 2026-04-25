@@ -1,13 +1,13 @@
 //
-//  CategoryEditToggleButton.swift
+//  AccountEditToggleButton.swift
 //  ExpenseTracker
 //
-//  Created by Didar on 24.04.2026.
+//  Created by Didar on 25.04.2026.
 //
 
 import SwiftUI
 
-struct CategoryEditToggleButton: View {
+struct AccountEditToggleButton: View {
 
     // MARK: - Properties
 
@@ -43,8 +43,8 @@ struct CategoryEditToggleButton: View {
 
 #Preview {
     VStack(spacing: AppSpacing.large) {
-        CategoryEditToggleButton(isEditing: false, action: {})
-        CategoryEditToggleButton(isEditing: true, action: {})
+        AccountEditToggleButton(isEditing: false, action: {})
+        AccountEditToggleButton(isEditing: true, action: {})
     }
     .padding(AppSpacing.large)
     .background(AppColor.background)

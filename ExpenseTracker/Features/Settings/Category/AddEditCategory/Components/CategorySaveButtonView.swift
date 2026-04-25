@@ -22,7 +22,7 @@ struct CategorySaveButtonView: View {
             AppText(
                 title,
                 style: .section,
-                color: isEnabled ? AppColor.textWhite : AppColor.textSecondary
+                color: isEnabled ? AppColor.background : AppColor.textSecondary
             )
             .frame(maxWidth: .infinity)
             .padding(.vertical, AppSpacing.large)
