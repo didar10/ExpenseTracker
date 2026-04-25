@@ -12,6 +12,7 @@ struct IconPicker: View {
     // MARK: - Properties
 
     @Binding var selectedIcon: String
+    let colorHex: String
 
     private let icons: [String] = [
         "cart", "cart.fill", "bag", "bag.fill",
@@ -36,20 +37,25 @@ struct IconPicker: View {
         "star", "star.fill"
     ]
 
+    private let columns = Array(repeating: GridItem(.flexible(), spacing: AppSpacing.small), count: 6)
+
     // MARK: - Body
 
     var body: some View {
-        ScrollView {
-            LazyVGrid(
-                columns: Array(repeating: .init(.flexible()), count: 6),
-                spacing: AppSpacing.large
-            ) {
-                ForEach(icons, id: \.self) { icon in
-                    iconCell(icon)
-                }
+        LazyVGrid(columns: columns, spacing: AppSpacing.small) {
+            ForEach(icons, id: \.self) { icon in
+                iconCell(icon)
             }
-            .padding(.vertical, AppSpacing.large)
         }
+        .padding(AppSpacing.medium)
+        .background(
+            RoundedRectangle(cornerRadius: AppRadius.card, style: .continuous)
+                .fill(AppColor.cardBackground)
+        )
+        .overlay(
+            RoundedRectangle(cornerRadius: AppRadius.card, style: .continuous)
+                .strokeBorder(AppColor.textPrimary.opacity(0.15), lineWidth: AppSpacing.hairline)
+        )
     }
 }
 
@@ -57,24 +63,27 @@ struct IconPicker: View {
 private extension IconPicker {
 
     func iconCell(_ icon: String) -> some View {
-        Image(systemName: icon)
-            .font(.title2)
-            .frame(width: AppSize.iconLarge, height: AppSize.iconLarge)
+        let color = Color(hex: colorHex)
+        let isSelected = selectedIcon == icon
+
+        return Image(systemName: icon)
+            .font(.system(size: AppSize.glyphLarge, weight: .semibold))
+            .foregroundStyle(AppColor.textPrimary)
+            .frame(maxWidth: .infinity)
+            .frame(height: AppSize.iconLarge)
             .background(
-                selectedIcon == icon
-                ? AppColor.income.opacity(0.25)
-                : AppColor.textSecondary.opacity(0.1)
+                RoundedRectangle(cornerRadius: AppRadius.medium, style: .continuous)
+                    .fill(isSelected ? color : color.opacity(0.2))
             )
-            .clipShape(RoundedRectangle(cornerRadius: AppRadius.medium))
-            .overlay(
-                RoundedRectangle(cornerRadius: AppRadius.medium)
-                    .stroke(
-                        selectedIcon == icon ? AppColor.income : Color.clear,
-                        lineWidth: 2
-                    )
-            )
+            .contentShape(Rectangle())
             .onTapGesture {
                 selectedIcon = icon
             }
     }
+}
+
+#Preview {
+    IconPicker(selectedIcon: .constant("cart"), colorHex: "#F5A623")
+        .padding(AppSpacing.large)
+        .background(AppColor.background)
 }

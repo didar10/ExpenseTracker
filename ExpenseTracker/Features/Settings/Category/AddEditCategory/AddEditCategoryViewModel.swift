@@ -16,7 +16,6 @@ final class AddEditCategoryViewModel {
     // MARK: - Properties
 
     var formData: CategoryFormData
-    var showIconPicker = false
 
     private let category: Category?
 
@@ -35,7 +34,10 @@ final class AddEditCategoryViewModel {
     }
 
     var saveButtonTitle: String {
-        isEditMode ? AppString.saveChanges : AppString.createCategory
+        if !canSave {
+            return AppString.enterName
+        }
+        return isEditMode ? AppString.saveChanges : AppString.createCategory
     }
 
     // MARK: - Init
@@ -51,10 +53,6 @@ final class AddEditCategoryViewModel {
     }
 
     // MARK: - Actions
-
-    func toggleIconPicker() {
-        showIconPicker.toggle()
-    }
 
     func save(context: ModelContext) -> Bool {
         guard canSave else { return false }

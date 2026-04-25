@@ -19,29 +19,56 @@ struct CategoryPreviewCardView: View {
 
     var body: some View {
         VStack(spacing: AppSpacing.large) {
-            ZStack {
-                Circle()
-                    .fill(Color(hex: colorHex).opacity(0.15))
-                    .frame(width: AppSize.iconHuge, height: AppSize.iconHuge)
+            AppText(
+                AppString.preview.uppercased(),
+                style: .microCaption,
+                color: AppColor.textSecondary
+            )
+            .tracking(AppSpacing.hairline)
 
-                Image(systemName: icon)
-                    .font(.system(size: AppSize.iconLarge, weight: .semibold))
-                    .foregroundStyle(Color(hex: colorHex))
-            }
-
-            Text(name.isEmpty ? AppString.categoryName : name)
-                .font(.app(.title))
-                .foregroundStyle(name.isEmpty ? AppColor.textSecondary : AppColor.textPrimary)
+            previewPill
         }
         .frame(maxWidth: .infinity)
-        .padding(.vertical, AppSpacing.xxxLarge)
+        .padding(.vertical, AppSpacing.xLarge)
+        .padding(.horizontal, AppSpacing.large)
         .card(cornerRadius: AppRadius.xLarge)
     }
 }
 
+// MARK: - Subviews
+private extension CategoryPreviewCardView {
+
+    var previewPill: some View {
+        HStack(spacing: AppSpacing.small) {
+            ZStack {
+                Circle()
+                    .fill(AppColor.cardBackground.opacity(0.4))
+                    .frame(width: AppSize.iconMedium, height: AppSize.iconMedium)
+
+                Image(systemName: icon)
+                    .font(.system(size: AppSize.glyphLarge, weight: .semibold))
+                    .foregroundStyle(AppColor.textPrimary)
+            }
+
+            AppText(
+                name.isEmpty ? AppString.categoryName : name,
+                style: .bodySmall,
+                color: AppColor.textPrimary
+            )
+        }
+        .padding(.leading, AppSpacing.xSmall)
+        .padding(.trailing, AppSpacing.xLarge)
+        .padding(.vertical, AppSpacing.xSmall)
+        .background(
+            Capsule(style: .continuous)
+                .fill(Color(hex: colorHex))
+        )
+    }
+}
+
 #Preview {
-    VStack {
-        CategoryPreviewCardView(name: "Продукты", icon: "cart.fill", colorHex: "#FF6B6B")
+    VStack(spacing: AppSpacing.large) {
+        CategoryPreviewCardView(name: "Продукты", icon: "cart.fill", colorHex: "#F5A623")
         CategoryPreviewCardView(name: "", icon: "cart.fill", colorHex: "#34C759")
     }
     .padding(AppSpacing.large)

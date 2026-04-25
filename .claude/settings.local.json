@@ -5,7 +5,8 @@
       "Bash(ls:*)",
       "Bash(xargs sed:*)",
       "Bash(echo:*)",
-      "Bash(ruby --version)"
+      "Bash(ruby --version)",
+      "Bash(git rm *)"
     ]
   }
 }

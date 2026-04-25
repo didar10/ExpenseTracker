@@ -76,6 +76,10 @@ enum AppString {
     static let saveChanges = String(localized: "save_changes")
     static let addCategoryHint = String(localized: "add_category_hint")
     static let name = String(localized: "name")
+    static let edit = String(localized: "edit")
+    static let addNew = String(localized: "add_new")
+    static let preview = String(localized: "preview")
+    static let categoryNameExample = String(localized: "category_name_example")
 
     // MARK: - Plans
 

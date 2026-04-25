@@ -58,6 +58,10 @@
 "save_changes" = "Сохранить изменения";
 "add_category_hint" = "Нажмите + чтобы добавить категорию";
 "name" = "Название";
+"edit" = "Изменить";
+"add_new" = "Новая";
+"preview" = "Превью";
+"category_name_example" = "Например, Кофе";
 
 /* Plans */
 "budgets" = "Бюджеты";

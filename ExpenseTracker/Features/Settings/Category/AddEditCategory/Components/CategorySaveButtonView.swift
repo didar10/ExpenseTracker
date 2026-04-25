@@ -19,35 +19,27 @@ struct CategorySaveButtonView: View {
 
     var body: some View {
         Button(action: action) {
-            HStack {
-                AppImage.checkmarkCircleFill
-                    .font(.system(size: AppSize.glyphXLarge))
-
-                AppText(title, style: .section)
-            }
-            .foregroundStyle(AppColor.textWhite)
+            AppText(
+                title,
+                style: .section,
+                color: isEnabled ? AppColor.textWhite : AppColor.textSecondary
+            )
             .frame(maxWidth: .infinity)
             .padding(.vertical, AppSpacing.large)
             .background(
-                RoundedRectangle(cornerRadius: AppRadius.card, style: .continuous)
-                    .fill(isEnabled ? AppColor.income : AppColor.textTertiary)
-            )
-            .shadow(
-                color: isEnabled ? AppColor.income.opacity(0.3) : Color.clear,
-                radius: AppSpacing.small,
-                y: AppSpacing.xSmall
+                Capsule(style: .continuous)
+                    .fill(isEnabled ? AppColor.textPrimary : AppColor.secondaryBackground)
             )
         }
         .disabled(!isEnabled)
         .buttonStyle(.plain)
-        .padding(.top, AppSpacing.small)
     }
 }
 
 #Preview {
     VStack(spacing: AppSpacing.large) {
         CategorySaveButtonView(title: AppString.createCategory, isEnabled: true, action: {})
-        CategorySaveButtonView(title: AppString.createCategory, isEnabled: false, action: {})
+        CategorySaveButtonView(title: AppString.enterName, isEnabled: false, action: {})
     }
     .padding(AppSpacing.large)
     .background(AppColor.background)

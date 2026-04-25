@@ -20,46 +20,43 @@ struct CategoriesListView: View {
     @Environment(\.tabBarVisibility) private var isTabBarVisible
 
     @State private var viewModel = CategoryListViewModel()
+    @State private var isEditing = false
 
     // MARK: - Body
 
     var body: some View {
-        ZStack {
+        ZStack(alignment: .bottomTrailing) {
             AppColor.background
                 .ignoresSafeArea()
 
-            ScrollView {
-                VStack(spacing: AppSpacing.large) {
-                    if categories.isEmpty {
-                        EmptyCategoriesView()
-                    } else {
-                        categoriesList
+            VStack(spacing: 0) {
+                header
+
+                ScrollView {
+                    VStack(spacing: AppSpacing.large) {
+                        if categories.isEmpty {
+                            EmptyCategoriesView()
+                        } else {
+                            categoriesList
+                        }
                     }
-                }
-                .padding(AppSpacing.large)
-                .padding(.bottom, AppSpacing.tabBarBottomInset)
-            }
-        }
-        .navigationTitle(AppString.categories)
-        .navigationBarTitleDisplayMode(.inline)
-        .navigationBarBackButtonHidden(true)
-        .toolbarBackground(.hidden, for: .navigationBar)
-        .toolbar {
-            ToolbarItem(placement: .navigationBarLeading) {
-                ToolbarIconButton(icon: "chevron.left") {
-                    isTabBarVisible.wrappedValue = true
-                    dismiss()
+                    .padding(AppSpacing.large)
+                    .padding(.bottom, AppSpacing.tabBarBottomInset)
                 }
             }
 
-            ToolbarItem(placement: .navigationBarTrailing) {
+            if !isEditing {
                 NavigationLink {
                     AddEditCategoryView()
                 } label: {
-                    ToolbarIconButtonLabel(icon: "plus")
+                    CategoryAddFloatingButton()
                 }
+                .padding(.trailing, AppSpacing.large)
+                .padding(.bottom, AppSpacing.xxxLarge)
             }
         }
+        .toolbar(.hidden, for: .navigationBar)
+        .navigationBarBackButtonHidden(true)
         .onAppear {
             isTabBarVisible.wrappedValue = false
         }
@@ -79,21 +76,36 @@ struct CategoriesListView: View {
 // MARK: - Subviews
 private extension CategoriesListView {
 
+    var header: some View {
+        ZStack {
+            AppText(AppString.categories, style: .section)
+
+            HStack {
+                ToolbarIconButton(icon: "chevron.left", isOutlined: true) {
+                    isTabBarVisible.wrappedValue = true
+                    dismiss()
+                }
+
+                Spacer()
+
+                if !categories.isEmpty {
+                    CategoryEditToggleButton(isEditing: isEditing) {
+                        withAnimation(.easeInOut(duration: 0.2)) {
+                            isEditing.toggle()
+                        }
+                    }
+                }
+            }
+        }
+        .padding(.horizontal, AppSpacing.large)
+        .padding(.vertical, AppSpacing.small)
+    }
+
     var categoriesList: some View {
         CategoriesCardView {
             VStack(spacing: 0) {
                 ForEach(Array(categories.enumerated()), id: \.element.id) { index, category in
-                    NavigationLink {
-                        AddEditCategoryView(category: category)
-                    } label: {
-                        CategoryRowView(
-                            category: category,
-                            onDelete: {
-                                viewModel.prepareDelete(category)
-                            }
-                        )
-                    }
-                    .buttonStyle(.plain)
+                    rowContent(for: category)
 
                     if index < categories.count - 1 {
                         Divider()
@@ -101,6 +113,32 @@ private extension CategoriesListView {
                     }
                 }
             }
+        }
+    }
+
+    @ViewBuilder
+    func rowContent(for category: Category) -> some View {
+        if isEditing {
+            CategoryRowView(
+                category: category,
+                isEditing: true,
+                onDelete: {
+                    viewModel.prepareDelete(category)
+                }
+            )
+        } else {
+            NavigationLink {
+                AddEditCategoryView(category: category)
+            } label: {
+                CategoryRowView(
+                    category: category,
+                    isEditing: false,
+                    onDelete: {
+                        viewModel.prepareDelete(category)
+                    }
+                )
+            }
+            .buttonStyle(.plain)
         }
     }
 }

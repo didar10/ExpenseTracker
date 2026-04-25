@@ -27,51 +27,36 @@ struct AddEditCategoryView: View {
     // MARK: - Body
 
     var body: some View {
-        ZStack {
+        ZStack(alignment: .bottom) {
             AppColor.background
                 .ignoresSafeArea()
 
-            ScrollView {
-                VStack(spacing: AppSpacing.xLarge) {
-                    CategoryPreviewCardView(
-                        name: viewModel.formData.name,
-                        icon: viewModel.formData.icon,
-                        colorHex: viewModel.formData.colorHex
-                    )
+            VStack(spacing: 0) {
+                header
 
-                    nameSection
-                    iconSection
-                    colorSection
+                ScrollView {
+                    VStack(spacing: AppSpacing.xLarge) {
+                        CategoryPreviewCardView(
+                            name: viewModel.formData.name,
+                            icon: viewModel.formData.icon,
+                            colorHex: viewModel.formData.colorHex
+                        )
 
-                    CategorySaveButtonView(
-                        title: viewModel.saveButtonTitle,
-                        isEnabled: viewModel.canSave,
-                        action: handleSave
-                    )
+                        nameSection
+                        iconSection
+                        colorSection
+                    }
+                    .padding(AppSpacing.large)
+                    .padding(.bottom, AppSpacing.huge + AppSpacing.xxxLarge)
                 }
-                .padding(AppSpacing.large)
-                .padding(.bottom, AppSpacing.huge)
             }
+
+            saveBar
         }
-        .navigationTitle(viewModel.title)
-        .navigationBarTitleDisplayMode(.inline)
+        .toolbar(.hidden, for: .navigationBar)
         .navigationBarBackButtonHidden(true)
-        .toolbarBackground(.hidden, for: .navigationBar)
-        .toolbar {
-            ToolbarItem(placement: .navigationBarLeading) {
-                ToolbarIconButton(icon: "chevron.left") {
-                    isTabBarVisible.wrappedValue = true
-                    dismiss()
-                }
-            }
-        }
         .onAppear {
             isTabBarVisible.wrappedValue = false
-        }
-        .sheet(isPresented: $viewModel.showIconPicker) {
-            NavigationStack {
-                IconPickerSheet(selectedIcon: $viewModel.formData.icon)
-            }
         }
     }
 }
@@ -79,9 +64,26 @@ struct AddEditCategoryView: View {
 // MARK: - Subviews
 private extension AddEditCategoryView {
 
+    var header: some View {
+        ZStack {
+            AppText(viewModel.title, style: .section)
+
+            HStack {
+                ToolbarIconButton(icon: "chevron.left", isOutlined: true) {
+                    isTabBarVisible.wrappedValue = true
+                    dismiss()
+                }
+
+                Spacer()
+            }
+        }
+        .padding(.horizontal, AppSpacing.large)
+        .padding(.vertical, AppSpacing.small)
+    }
+
     var nameSection: some View {
-        CategoryFormSectionView(title: AppString.name) {
-            TextField(AppString.enterName, text: $viewModel.formData.name)
+        CategoryFormSectionView(title: AppString.name.uppercased()) {
+            TextField(AppString.categoryNameExample, text: $viewModel.formData.name)
                 .font(.app(.body))
                 .padding(AppSpacing.large)
                 .background(
@@ -90,25 +92,42 @@ private extension AddEditCategoryView {
                 )
                 .overlay(
                     RoundedRectangle(cornerRadius: AppRadius.card, style: .continuous)
-                        .strokeBorder(AppColor.textPrimary.opacity(0.08), lineWidth: 1)
+                        .strokeBorder(
+                            AppColor.textPrimary.opacity(0.15),
+                            lineWidth: AppSpacing.hairline
+                        )
                 )
         }
     }
 
     var iconSection: some View {
-        CategoryFormSectionView(title: AppString.icon) {
-            CategoryIconPickerButtonView(
-                icon: viewModel.formData.icon,
-                colorHex: viewModel.formData.colorHex,
-                action: viewModel.toggleIconPicker
+        CategoryFormSectionView(title: AppString.icon.uppercased()) {
+            IconPicker(
+                selectedIcon: $viewModel.formData.icon,
+                colorHex: viewModel.formData.colorHex
             )
         }
     }
 
     var colorSection: some View {
-        CategoryFormSectionView(title: AppString.color) {
+        CategoryFormSectionView(title: AppString.color.uppercased()) {
             CategoryColorPickerView(colorHex: $viewModel.formData.colorHex)
         }
+    }
+
+    var saveBar: some View {
+        CategorySaveButtonView(
+            title: viewModel.saveButtonTitle,
+            isEnabled: viewModel.canSave,
+            action: handleSave
+        )
+        .padding(.horizontal, AppSpacing.large)
+        .padding(.top, AppSpacing.medium)
+        .padding(.bottom, AppSpacing.large)
+        .background(
+            AppColor.background
+                .ignoresSafeArea(edges: .bottom)
+        )
     }
 }
 
