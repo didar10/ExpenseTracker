@@ -28,7 +28,7 @@ struct CategoryPickerSheet: View {
             VStack(spacing: 0) {
                 header
                 searchBar
-                categoryGrid
+                categoryList
             }
         }
     }
@@ -86,13 +86,27 @@ private extension CategoryPickerSheet {
         }
     }
 
-    var categoryGrid: some View {
+    var showsAllCategoriesCard: Bool {
+        searchText.isEmpty ||
+        AppString.allCategories.localizedCaseInsensitiveContains(searchText)
+    }
+
+    var categoryList: some View {
         ScrollView {
-            FlowLayout(spacing: AppSpacing.small) {
-                noCategoryPill
+            VStack(spacing: AppSpacing.small) {
+                if showsAllCategoriesCard {
+                    allCategoriesCard
+
+                    if !filteredCategories.isEmpty {
+                        Rectangle()
+                            .fill(AppColor.textPrimary.opacity(0.08))
+                            .frame(height: AppSpacing.hairline)
+                            .padding(.vertical, AppSpacing.xSmall)
+                    }
+                }
 
                 ForEach(filteredCategories) { category in
-                    categoryPill(category)
+                    categoryCard(category)
                 }
             }
             .padding(.horizontal, AppSpacing.large)
@@ -100,7 +114,7 @@ private extension CategoryPickerSheet {
         }
     }
 
-    var noCategoryPill: some View {
+    var allCategoriesCard: some View {
         let isSelected = selectedCategory == nil
 
         return Button {
@@ -108,81 +122,81 @@ private extension CategoryPickerSheet {
             onSelect(nil)
             dismiss()
         } label: {
-            HStack(spacing: AppSpacing.small) {
-                ZStack {
-                    Circle()
-                        .fill(Color(.systemGray4).opacity(0.2))
-                        .frame(width: 32, height: 32)
+            cardContent(
+                iconView: AnyView(
+                    ZStack {
+                        RoundedRectangle(cornerRadius: AppRadius.small, style: .continuous)
+                            .fill(AppColor.textPrimary.opacity(0.08))
+                            .frame(width: AppSize.iconMedium, height: AppSize.iconMedium)
 
-                    Image(systemName: "minus")
-                        .font(.system(size: 12, weight: .semibold))
-                        .foregroundStyle(isSelected ? Color(.systemBackground) : AppColor.textSecondary)
-                }
-
-                AppText(
-                    AppString.noCategory,
-                    style: .bodySmall,
-                    color: isSelected ? Color(.systemBackground) : AppColor.textPrimary
-                )
-            }
-            .padding(.leading, AppSpacing.xSmall)
-            .padding(.trailing, AppSpacing.large)
-            .padding(.vertical, AppSpacing.xSmall)
-            .background(
-                Capsule(style: .continuous)
-                    .fill(isSelected ? AppColor.textPrimary : AppColor.cardBackground)
-            )
-            .overlay(
-                Capsule(style: .continuous)
-                    .strokeBorder(
-                        AppColor.textPrimary,
-                        lineWidth: AppSpacing.hairline
-                    )
+                        Image(systemName: "square.grid.2x2.fill")
+                            .font(.system(size: AppSize.glyphLarge, weight: .semibold))
+                            .foregroundStyle(AppColor.textPrimary)
+                    }
+                ),
+                title: AppString.allCategories,
+                isSelected: isSelected
             )
         }
         .buttonStyle(.plain)
     }
 
-    func categoryPill(_ category: Category) -> some View {
+    func categoryCard(_ category: Category) -> some View {
         let isSelected = selectedCategory?.persistentModelID == category.persistentModelID
+        let tint = Color(hex: category.colorHex)
 
         return Button {
             UIImpactFeedbackGenerator(style: .light).impactOccurred()
             onSelect(category)
             dismiss()
         } label: {
-            HStack(spacing: AppSpacing.small) {
-                ZStack {
-                    Circle()
-                        .fill(Color(hex: category.colorHex).opacity(0.2))
-                        .frame(width: 32, height: 32)
+            cardContent(
+                iconView: AnyView(
+                    ZStack {
+                        RoundedRectangle(cornerRadius: AppRadius.small, style: .continuous)
+                            .fill(tint.opacity(0.18))
+                            .frame(width: AppSize.iconMedium, height: AppSize.iconMedium)
 
-                    Image(systemName: category.icon)
-                        .font(.system(size: 12, weight: .semibold))
-                        .foregroundStyle(isSelected ? Color(.systemBackground) : Color(hex: category.colorHex))
-                }
-
-                AppText(
-                    category.name,
-                    style: .bodySmall,
-                    color: isSelected ? Color(.systemBackground) : AppColor.textPrimary
-                )
-            }
-            .padding(.leading, AppSpacing.xSmall)
-            .padding(.trailing, AppSpacing.large)
-            .padding(.vertical, AppSpacing.xSmall)
-            .background(
-                Capsule(style: .continuous)
-                    .fill(isSelected ? AppColor.textPrimary : AppColor.cardBackground)
-            )
-            .overlay(
-                Capsule(style: .continuous)
-                    .strokeBorder(
-                        AppColor.textPrimary,
-                        lineWidth: AppSpacing.hairline
-                    )
+                        Image(systemName: category.icon)
+                            .font(.system(size: AppSize.glyphLarge, weight: .semibold))
+                            .foregroundStyle(tint)
+                    }
+                ),
+                title: category.name,
+                isSelected: isSelected
             )
         }
         .buttonStyle(.plain)
+    }
+
+    func cardContent(iconView: AnyView, title: String, isSelected: Bool) -> some View {
+        HStack(spacing: AppSpacing.medium) {
+            iconView
+
+            AppText(title, style: .body)
+
+            Spacer()
+
+            if isSelected {
+                Image(systemName: "checkmark.circle.fill")
+                    .font(.system(size: AppSize.glyphXLarge, weight: .semibold))
+                    .foregroundStyle(AppColor.textPrimary)
+            }
+        }
+        .padding(AppSpacing.medium)
+        .frame(maxWidth: .infinity, alignment: .leading)
+        .background(
+            RoundedRectangle(cornerRadius: AppRadius.card, style: .continuous)
+                .fill(AppColor.cardBackground)
+        )
+        .overlay(
+            RoundedRectangle(cornerRadius: AppRadius.card, style: .continuous)
+                .strokeBorder(
+                    isSelected
+                        ? AppColor.textPrimary
+                        : AppColor.textPrimary.opacity(0.1),
+                    lineWidth: isSelected ? AppSpacing.hairline + 0.5 : AppSpacing.hairline
+                )
+        )
     }
 }

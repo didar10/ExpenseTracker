@@ -54,7 +54,8 @@ struct AddBudgetPlanView: View {
                     selectedCategory = category
                 }
             )
-            .presentationDetents([.medium, .large])
+            .presentationDetents([.large])
+            .presentationDragIndicator(.hidden)
         }
     }
 }
