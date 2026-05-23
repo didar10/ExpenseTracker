@@ -11,27 +11,15 @@ struct CategoryPreviewCardView: View {
 
     // MARK: - Properties
 
-    let name: String
+    @Binding var name: String
     let icon: String
     let colorHex: String
 
     // MARK: - Body
 
     var body: some View {
-        VStack(spacing: AppSpacing.large) {
-            AppText(
-                AppString.preview.uppercased(),
-                style: .microCaption,
-                color: AppColor.textSecondary
-            )
-            .tracking(AppSpacing.hairline)
-
-            previewPill
-        }
-        .frame(maxWidth: .infinity)
-        .padding(.vertical, AppSpacing.xLarge)
-        .padding(.horizontal, AppSpacing.large)
-        .card(cornerRadius: AppRadius.xLarge)
+        previewPill
+            .frame(maxWidth: .infinity)
     }
 }
 
@@ -50,11 +38,16 @@ private extension CategoryPreviewCardView {
                     .foregroundStyle(AppColor.textPrimary)
             }
 
-            AppText(
-                name.isEmpty ? AppString.categoryName : name,
-                style: .bodySmall,
-                color: AppColor.textPrimary
+            TextField(
+                "",
+                text: $name,
+                prompt: Text(AppString.categoryName)
+                    .font(.app(.bodySmall))
+                    .foregroundColor(AppColor.textPrimary.opacity(0.6))
             )
+            .font(.app(.bodySmall))
+            .foregroundStyle(AppColor.textPrimary)
+            .tint(AppColor.textPrimary)
         }
         .padding(.leading, AppSpacing.xSmall)
         .padding(.trailing, AppSpacing.xLarge)
@@ -63,13 +56,14 @@ private extension CategoryPreviewCardView {
             Capsule(style: .continuous)
                 .fill(Color(hex: colorHex))
         )
+        .fixedSize(horizontal: true, vertical: false)
     }
 }
 
 #Preview {
     VStack(spacing: AppSpacing.large) {
-        CategoryPreviewCardView(name: "Продукты", icon: "cart.fill", colorHex: "#F5A623")
-        CategoryPreviewCardView(name: "", icon: "cart.fill", colorHex: "#34C759")
+        CategoryPreviewCardView(name: .constant("Продукты"), icon: "cart.fill", colorHex: "#F5A623")
+        CategoryPreviewCardView(name: .constant(""), icon: "cart.fill", colorHex: "#34C759")
     }
     .padding(AppSpacing.large)
     .background(AppColor.background)

@@ -37,14 +37,13 @@ struct AddEditCategoryView: View {
                 ScrollView {
                     VStack(spacing: AppSpacing.xLarge) {
                         CategoryPreviewCardView(
-                            name: viewModel.formData.name,
+                            name: $viewModel.formData.name,
                             icon: viewModel.formData.icon,
                             colorHex: viewModel.formData.colorHex
                         )
 
-                        nameSection
-                        iconSection
                         colorSection
+                        iconSection
                     }
                     .padding(AppSpacing.large)
                     .padding(.bottom, AppSpacing.huge + AppSpacing.xxxLarge)
@@ -79,25 +78,6 @@ private extension AddEditCategoryView {
         }
         .padding(.horizontal, AppSpacing.large)
         .padding(.vertical, AppSpacing.small)
-    }
-
-    var nameSection: some View {
-        CategoryFormSectionView(title: AppString.name.uppercased()) {
-            TextField(AppString.categoryNameExample, text: $viewModel.formData.name)
-                .font(.app(.body))
-                .padding(AppSpacing.large)
-                .background(
-                    RoundedRectangle(cornerRadius: AppRadius.card, style: .continuous)
-                        .fill(AppColor.cardBackground)
-                )
-                .overlay(
-                    RoundedRectangle(cornerRadius: AppRadius.card, style: .continuous)
-                        .strokeBorder(
-                            AppColor.textPrimary.opacity(0.15),
-                            lineWidth: AppSpacing.hairline
-                        )
-                )
-        }
     }
 
     var iconSection: some View {
