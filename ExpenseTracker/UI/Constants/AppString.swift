@@ -23,6 +23,7 @@ enum AppString {
     static let expense = String(localized: "expense")
     static let noCategory = String(localized: "no_category")
     static let cannotUndo = String(localized: "cannot_undo")
+    static let more = String(localized: "more")
 
     // MARK: - Dashboard
 

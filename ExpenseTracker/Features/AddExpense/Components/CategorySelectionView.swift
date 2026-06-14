@@ -6,6 +6,7 @@
 //
 
 import SwiftUI
+import SwiftData
 
 struct CategorySelectionView: View {
 
@@ -14,69 +15,98 @@ struct CategorySelectionView: View {
     let categories: [Category]
     @Binding var selectedCategory: Category?
 
-    @State private var scrolledID: UUID?
-    @State private var showAddCategory = false
+    @Query private var transactions: [Transaction]
 
-    private let addButtonID = UUID(uuidString: "00000000-0000-0000-0000-000000000000")!
-    private let noCategoryID = UUID(uuidString: "00000000-0000-0000-0000-000000000001")!
-    private let normalSize: CGFloat = 38
-    private let selectedSize: CGFloat = 46
-    private let itemWidth: CGFloat = 46
+    @State private var pinnedCategoryID: UUID?
+    @State private var showingPicker = false
+
+    private let frequentCount = 4
+
+    // MARK: - Computed Properties
+
+    private var usageCounts: [UUID: Int] {
+        var counts: [UUID: Int] = [:]
+        for transaction in transactions where transaction.type == .expense {
+            guard let id = transaction.category?.id else { continue }
+            counts[id, default: 0] += 1
+        }
+        return counts
+    }
+
+    private var frequentCategories: [Category] {
+        categories.sorted { lhs, rhs in
+            let lhsCount = usageCounts[lhs.id] ?? 0
+            let rhsCount = usageCounts[rhs.id] ?? 0
+            if lhsCount != rhsCount { return lhsCount > rhsCount }
+            return lhs.name.localizedCaseInsensitiveCompare(rhs.name) == .orderedAscending
+        }
+    }
+
+    private var displayCategories: [Category] {
+        var result: [Category] = []
+
+        if let pinnedID = pinnedCategoryID,
+           let pinned = categories.first(where: { $0.id == pinnedID }) {
+            result.append(pinned)
+        }
+
+        for category in frequentCategories {
+            if result.count >= frequentCount { break }
+            if !result.contains(where: { $0.id == category.id }) {
+                result.append(category)
+            }
+        }
+
+        return result
+    }
+
+    private var hasMoreCategories: Bool {
+        categories.count > displayCategories.count
+    }
 
     // MARK: - Body
 
     var body: some View {
-        GeometryReader { geometry in
-            ScrollView(.horizontal, showsIndicators: false) {
-                HStack(spacing: 2) {
-                    addCategoryItem()
-                        .id(addButtonID)
-
-                    noCategoryItem(isSelected: scrolledID == noCategoryID)
-                        .id(noCategoryID)
-
-                    ForEach(categories) { category in
-                        let isSelected = category.id == scrolledID
-                        categoryItem(category, isSelected: isSelected)
-                            .id(category.id)
-                    }
-                }
-                .scrollTargetLayout()
+        HStack(alignment: .top, spacing: AppSpacing.small) {
+            ForEach(displayCategories) { category in
+                categoryItem(category)
+                    .frame(maxWidth: .infinity)
             }
-            .scrollTargetBehavior(.viewAligned)
-            .scrollPosition(id: $scrolledID, anchor: .center)
-            .contentMargins(
-                .horizontal,
-                (geometry.size.width - itemWidth) / 2,
-                for: .scrollContent
+
+            if hasMoreCategories || categories.isEmpty {
+                moreButton
+                    .frame(maxWidth: .infinity)
+            }
+        }
+        .padding(.horizontal, AppSpacing.xSmall)
+        .padding(.vertical, AppSpacing.small)
+        .animation(.spring(response: 0.3, dampingFraction: 0.8), value: displayCategories.map(\.id))
+        .sheet(isPresented: $showingPicker) {
+            TransactionCategoryPickerSheet(
+                categories: categories,
+                selectedCategory: selectedCategory,
+                onSelect: handleSheetSelection
             )
+            .presentationDetents([.medium, .large])
+            .presentationDragIndicator(.visible)
         }
-        .frame(height: selectedSize * 1.2 + 20)
-        .onChange(of: scrolledID) { _, newID in
-            guard let newID else { return }
-            if newID == addButtonID {
-                showAddCategory = true
-                DispatchQueue.main.asyncAfter(deadline: .now() + 0.3) {
-                    withAnimation(.spring(response: 0.3, dampingFraction: 0.75)) {
-                        scrolledID = selectedCategory?.id ?? noCategoryID
-                    }
-                }
-                return
-            }
-            if newID == noCategoryID {
-                selectedCategory = nil
-                UIImpactFeedbackGenerator(style: .light).impactOccurred()
-                return
-            }
-            guard let category = categories.first(where: { $0.id == newID }) else { return }
+    }
+
+    // MARK: - Actions
+
+    private func handleSheetSelection(_ category: Category) {
+        UIImpactFeedbackGenerator(style: .light).impactOccurred()
+        pinnedCategoryID = category.id
+        selectedCategory = category
+        showingPicker = false
+    }
+
+    private func handleCategoryTap(_ category: Category) {
+        UIImpactFeedbackGenerator(style: .light).impactOccurred()
+        if selectedCategory?.id == category.id {
+            selectedCategory = nil
+        } else {
             selectedCategory = category
-            UIImpactFeedbackGenerator(style: .light).impactOccurred()
-        }
-        .onAppear {
-            scrolledID = selectedCategory?.id ?? noCategoryID
-        }
-        .navigationDestination(isPresented: $showAddCategory) {
-            AddEditCategoryView()
         }
     }
 }
@@ -84,115 +114,63 @@ struct CategorySelectionView: View {
 // MARK: - Subviews
 private extension CategorySelectionView {
 
-    func categoryItem(_ category: Category, isSelected: Bool) -> some View {
-        let size = isSelected ? selectedSize : normalSize
-        let iconSize: CGFloat = isSelected ? 18 : 16
+    func categoryItem(_ category: Category) -> some View {
+        let isSelected = selectedCategory?.id == category.id
+        let color = Color(hex: category.colorHex)
 
-        return VStack(spacing: 4) {
-            ZStack {
-                Circle()
-                    .fill(Color(hex: category.colorHex).opacity(isSelected ? 1.0 : 0.15))
-                    .frame(width: size, height: size)
-                    .overlay {
-                        if isSelected {
+        return Button {
+            handleCategoryTap(category)
+        } label: {
+            VStack(spacing: AppSpacing.small) {
+                ZStack {
+                    Circle()
+                        .fill(isSelected ? color : Color.clear)
+                        .frame(width: AppSize.iconXXLarge, height: AppSize.iconXXLarge)
+                        .overlay {
                             Circle()
-                                .strokeBorder(
-                                    Color(hex: category.colorHex).opacity(0.3),
-                                    lineWidth: 2.5
-                                )
-                                .scaleEffect(1.15)
+                                .strokeBorder(color, lineWidth: 1.5)
                         }
-                    }
 
-                Image(systemName: category.icon)
-                    .font(.system(size: iconSize, weight: .semibold))
-                    .foregroundStyle(isSelected ? AppColor.textWhite : Color(hex: category.colorHex))
-                    .animation(nil, value: isSelected)
-            }
-            .frame(width: selectedSize * 1.2, height: selectedSize * 1.2)
+                    Image(systemName: category.icon)
+                        .font(.system(size: AppSize.glyphXXLarge, weight: .regular))
+                        .foregroundStyle(isSelected ? AppColor.textWhite : color)
+                }
 
-            if isSelected {
                 Text(category.name)
-                    .font(.app(.microCaption))
-                    .foregroundStyle(AppColor.textPrimary)
-                    .lineLimit(1)
-                    .fixedSize(horizontal: true, vertical: false)
-                    .transition(.opacity.combined(with: .scale(scale: 0.8)))
-            }
-        }
-        .frame(width: itemWidth)
-        .opacity(isSelected ? 1.0 : 0.6)
-        .animation(.spring(response: 0.3, dampingFraction: 0.75), value: isSelected)
-        .onTapGesture {
-            withAnimation(.spring(response: 0.3, dampingFraction: 0.75)) {
-                scrolledID = category.id
-            }
-        }
-    }
-
-    func noCategoryItem(isSelected: Bool) -> some View {
-        let size = isSelected ? selectedSize : normalSize
-        let iconSize: CGFloat = isSelected ? 18 : 16
-
-        return VStack(spacing: 4) {
-            ZStack {
-                Circle()
-                    .fill(Color(.systemGray4).opacity(isSelected ? 1.0 : 0.15))
-                    .frame(width: size, height: size)
-                    .overlay {
-                        if isSelected {
-                            Circle()
-                                .strokeBorder(
-                                    Color(.systemGray4).opacity(0.3),
-                                    lineWidth: 2.5
-                                )
-                                .scaleEffect(1.15)
-                        }
-                    }
-
-                AppImage.noIcon
-                    .font(.system(size: iconSize, weight: .semibold))
-                    .foregroundStyle(isSelected ? AppColor.textWhite : Color(.systemGray))
-                    .animation(nil, value: isSelected)
-            }
-            .frame(width: selectedSize * 1.2, height: selectedSize * 1.2)
-
-            if isSelected {
-                Text(AppString.noCategory)
-                    .font(.app(.microCaption))
-                    .foregroundStyle(AppColor.textPrimary)
-                    .lineLimit(1)
-                    .fixedSize(horizontal: true, vertical: false)
-                    .transition(.opacity.combined(with: .scale(scale: 0.8)))
-            }
-        }
-        .frame(width: itemWidth)
-        .opacity(isSelected ? 1.0 : 0.6)
-        .animation(.spring(response: 0.3, dampingFraction: 0.75), value: isSelected)
-        .onTapGesture {
-            withAnimation(.spring(response: 0.3, dampingFraction: 0.75)) {
-                scrolledID = noCategoryID
-            }
-        }
-    }
-
-    func addCategoryItem() -> some View {
-        VStack(spacing: 4) {
-            ZStack {
-                Circle()
-                    .strokeBorder(
-                        Color(.tertiaryLabel),
-                        style: StrokeStyle(lineWidth: 1.5, dash: [4, 3])
-                    )
-                    .frame(width: normalSize, height: normalSize)
-
-                AppImage.plus
-                    .font(.system(size: 16, weight: .semibold))
+                    .font(.app(.caption))
                     .foregroundStyle(AppColor.textSecondary)
+                    .lineLimit(2)
+                    .multilineTextAlignment(.center)
+                    .minimumScaleFactor(0.85)
+                    .frame(maxWidth: .infinity)
             }
-            .frame(width: selectedSize * 1.2, height: selectedSize * 1.2)
         }
-        .frame(width: itemWidth)
-        .opacity(0.5)
+        .buttonStyle(.plain)
+    }
+
+    var moreButton: some View {
+        Button {
+            UIImpactFeedbackGenerator(style: .light).impactOccurred()
+            showingPicker = true
+        } label: {
+            VStack(spacing: AppSpacing.small) {
+                ZStack {
+                    Circle()
+                        .fill(Color(.systemGray5))
+                        .frame(width: AppSize.iconXXLarge, height: AppSize.iconXXLarge)
+
+                    Image(systemName: "ellipsis")
+                        .font(.system(size: AppSize.glyphXXLarge, weight: .regular))
+                        .foregroundStyle(AppColor.textSecondary)
+                }
+
+                Text(AppString.more)
+                    .font(.app(.caption))
+                    .foregroundStyle(AppColor.textSecondary)
+                    .lineLimit(1)
+                    .frame(maxWidth: .infinity)
+            }
+        }
+        .buttonStyle(.plain)
     }
 }

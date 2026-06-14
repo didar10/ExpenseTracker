@@ -9,6 +9,7 @@
 "expense" = "Расход";
 "no_category" = "Без категории";
 "cannot_undo" = "Это действие нельзя отменить";
+"more" = "Ещё";
 
 /* Dashboard */
 "balance" = "Баланс";
