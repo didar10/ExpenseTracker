@@ -12,15 +12,27 @@ struct CategoriesListView: View {
 
     // MARK: - Properties
 
+    /// Когда задан — экран работает в режиме выбора: тап по категории выбирает её, а не открывает редактирование.
+    var onSelect: ((Category) -> Void)? = nil
+    var initialType: TransactionType = .expense
+
     @Query(sort: \Category.name)
     private var categories: [Category]
 
     @Environment(\.modelContext) private var context
     @Environment(\.dismiss) private var dismiss
-    @Environment(\.tabBarVisibility) private var isTabBarVisible
 
     @State private var viewModel = CategoryListViewModel()
     @State private var isEditing = false
+    @State private var showingAddCategory = false
+    @State private var editingCategory: Category?
+    @State private var selectedType: TransactionType = .expense
+
+    // MARK: - Computed Properties
+
+    private var filteredCategories: [Category] {
+        categories.filter { $0.type == selectedType }
+    }
 
     // MARK: - Body
 
@@ -34,20 +46,23 @@ struct CategoriesListView: View {
 
                 ScrollView {
                     VStack(spacing: AppSpacing.large) {
-                        if categories.isEmpty {
+                        TransactionTypePickerView(selectedType: $selectedType)
+
+                        if filteredCategories.isEmpty {
                             EmptyCategoriesView()
                         } else {
                             categoriesList
                         }
                     }
                     .padding(AppSpacing.large)
-                    .padding(.bottom, AppSpacing.tabBarBottomInset)
+                    .padding(.bottom, AppSpacing.xxxLarge)
                 }
             }
 
             if !isEditing {
-                NavigationLink {
-                    AddEditCategoryView()
+                Button {
+                    UIImpactFeedbackGenerator(style: .light).impactOccurred()
+                    showingAddCategory = true
                 } label: {
                     CategoryAddFloatingButton()
                 }
@@ -55,10 +70,17 @@ struct CategoriesListView: View {
                 .padding(.bottom, AppSpacing.xxxLarge)
             }
         }
-        .toolbar(.hidden, for: .navigationBar)
-        .navigationBarBackButtonHidden(true)
         .onAppear {
-            isTabBarVisible.wrappedValue = false
+            selectedType = initialType
+        }
+        .onChange(of: selectedType) {
+            isEditing = false
+        }
+        .sheet(isPresented: $showingAddCategory) {
+            AddEditCategoryView()
+        }
+        .sheet(item: $editingCategory) { category in
+            AddEditCategoryView(category: category)
         }
         .alert(AppString.deleteCategoryConfirm, isPresented: $viewModel.showDeleteAlert) {
             Button(AppString.cancel, role: .cancel) {
@@ -78,17 +100,16 @@ private extension CategoriesListView {
 
     var header: some View {
         ZStack {
-            AppText(AppString.categories, style: .section)
+            AppText(AppString.categories, style: .bodySmall)
 
             HStack {
-                ToolbarIconButton(icon: "chevron.left", isOutlined: true) {
-                    isTabBarVisible.wrappedValue = true
+                ToolbarIconButton(icon: "xmark", isOutlined: true) {
                     dismiss()
                 }
 
                 Spacer()
 
-                if !categories.isEmpty {
+                if !filteredCategories.isEmpty {
                     CategoryEditToggleButton(isEditing: isEditing) {
                         withAnimation(.easeInOut(duration: 0.2)) {
                             isEditing.toggle()
@@ -99,15 +120,16 @@ private extension CategoriesListView {
         }
         .padding(.horizontal, AppSpacing.large)
         .padding(.vertical, AppSpacing.small)
+        .padding(.top, AppSpacing.medium)
     }
 
     var categoriesList: some View {
         CategoriesCardView {
             VStack(spacing: 0) {
-                ForEach(Array(categories.enumerated()), id: \.element.id) { index, category in
+                ForEach(Array(filteredCategories.enumerated()), id: \.element.id) { index, category in
                     rowContent(for: category)
 
-                    if index < categories.count - 1 {
+                    if index < filteredCategories.count - 1 {
                         Divider()
                             .padding(.leading, AppSpacing.listDividerIndent)
                     }
@@ -127,8 +149,14 @@ private extension CategoriesListView {
                 }
             )
         } else {
-            NavigationLink {
-                AddEditCategoryView(category: category)
+            Button {
+                UIImpactFeedbackGenerator(style: .light).impactOccurred()
+                if let onSelect {
+                    onSelect(category)
+                    dismiss()
+                } else {
+                    editingCategory = category
+                }
             } label: {
                 CategoryRowView(
                     category: category,

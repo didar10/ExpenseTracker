@@ -39,12 +39,15 @@ struct AccountFormView: View {
 
                 ScrollView {
                     VStack(spacing: AppSpacing.xLarge) {
-                        accountPreviewCard
+                        AccountPreviewCardView(
+                            name: $viewModel.name,
+                            icon: viewModel.selectedIcon,
+                            colorName: viewModel.selectedColor
+                        )
 
-                        nameSection
-                        balanceSection
-                        iconSection
                         colorSection
+                        iconSection
+                        balanceSection
                         defaultSection
 
                         if viewModel.isEditMode {
@@ -75,7 +78,7 @@ private extension AccountFormView {
 
     var header: some View {
         ZStack {
-            AppText(viewModel.navigationTitle, style: .section)
+            AppText(viewModel.navigationTitle, style: .bodySmall)
 
             HStack {
                 ToolbarIconButton(icon: "xmark", isOutlined: true) {
@@ -87,80 +90,7 @@ private extension AccountFormView {
         }
         .padding(.horizontal, AppSpacing.large)
         .padding(.vertical, AppSpacing.small)
-    }
-
-    var accountPreviewCard: some View {
-        VStack(spacing: AppSpacing.large) {
-            AppText(
-                AppString.preview.uppercased(),
-                style: .microCaption,
-                color: AppColor.textSecondary
-            )
-            .tracking(AppSpacing.hairline)
-
-            HStack(spacing: AppSpacing.small) {
-                ZStack {
-                    RoundedRectangle(cornerRadius: AppRadius.medium, style: .continuous)
-                        .fill(Color(named: viewModel.selectedColor).opacity(0.2))
-                        .frame(width: AppSize.iconLarge, height: AppSize.iconLarge)
-
-                    Image(systemName: viewModel.selectedIcon)
-                        .font(.system(size: AppSize.glyphLarge, weight: .semibold))
-                        .foregroundStyle(Color(named: viewModel.selectedColor))
-                }
-
-                VStack(alignment: .leading, spacing: 2) {
-                    AppText(
-                        viewModel.previewName,
-                        style: .bodySmall,
-                        color: viewModel.previewNameColor
-                    )
-
-                    if let balance = viewModel.previewBalance {
-                        Text(balance)
-                            .font(.app(.caption))
-                            .fontDesign(.rounded)
-                            .foregroundStyle(AppColor.textSecondary)
-                    }
-                }
-
-                if viewModel.isDefault {
-                    AppImage.starFill
-                        .font(.system(size: 10))
-                        .foregroundStyle(AppColor.highlight)
-                }
-
-                Spacer()
-            }
-            .padding(AppSpacing.large)
-            .background(
-                RoundedRectangle(cornerRadius: AppRadius.card, style: .continuous)
-                    .fill(AppColor.cardBackground)
-            )
-        }
-        .frame(maxWidth: .infinity)
-        .padding(.vertical, AppSpacing.xLarge)
-        .padding(.horizontal, AppSpacing.large)
-        .card(cornerRadius: AppRadius.xLarge)
-    }
-
-    var nameSection: some View {
-        CategoryFormSectionView(title: AppString.name.uppercased()) {
-            TextField(AppString.accountName, text: $viewModel.name)
-                .font(.app(.body))
-                .padding(AppSpacing.large)
-                .background(
-                    RoundedRectangle(cornerRadius: AppRadius.card, style: .continuous)
-                        .fill(AppColor.cardBackground)
-                )
-                .overlay(
-                    RoundedRectangle(cornerRadius: AppRadius.card, style: .continuous)
-                        .strokeBorder(
-                            AppColor.textPrimary.opacity(0.15),
-                            lineWidth: AppSpacing.hairline
-                        )
-                )
-        }
+        .padding(.top, AppSpacing.medium)
     }
 
     var balanceSection: some View {
@@ -185,7 +115,11 @@ private extension AccountFormView {
 
     var iconSection: some View {
         CategoryFormSectionView(title: AppString.icon.uppercased()) {
-            IconPickerView(selectedIcon: $viewModel.selectedIcon, onSelect: viewModel.selectIcon)
+            IconPickerView(
+                selectedIcon: $viewModel.selectedIcon,
+                color: Color(named: viewModel.selectedColor),
+                onSelect: viewModel.selectIcon
+            )
         }
     }
 

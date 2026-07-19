@@ -86,7 +86,7 @@ final class AddTransactionViewModel: ObservableObject {
 
         if let transaction = editingTransaction {
             transaction.amount = value
-            transaction.category = type == .expense ? selectedCategory : nil
+            transaction.category = selectedCategory
             transaction.account = selectedAccount
             transaction.note = note.isEmpty ? nil : note
             transaction.date = date
@@ -97,7 +97,7 @@ final class AddTransactionViewModel: ObservableObject {
                 date: date,
                 note: note.isEmpty ? nil : note,
                 type: type,
-                category: type == .expense ? selectedCategory : nil,
+                category: selectedCategory,
                 account: selectedAccount
             )
             context.insert(newTransaction)

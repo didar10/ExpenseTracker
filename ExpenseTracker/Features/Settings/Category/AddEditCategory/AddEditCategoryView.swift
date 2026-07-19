@@ -14,7 +14,6 @@ struct AddEditCategoryView: View {
 
     @Environment(\.modelContext) private var context
     @Environment(\.dismiss) private var dismiss
-    @Environment(\.tabBarVisibility) private var isTabBarVisible
 
     @State private var viewModel: AddEditCategoryViewModel
 
@@ -42,6 +41,8 @@ struct AddEditCategoryView: View {
                             colorHex: viewModel.formData.colorHex
                         )
 
+                        TransactionTypePickerView(selectedType: $viewModel.formData.type)
+
                         colorSection
                         iconSection
                     }
@@ -54,9 +55,6 @@ struct AddEditCategoryView: View {
         }
         .toolbar(.hidden, for: .navigationBar)
         .navigationBarBackButtonHidden(true)
-        .onAppear {
-            isTabBarVisible.wrappedValue = false
-        }
     }
 }
 
@@ -65,11 +63,10 @@ private extension AddEditCategoryView {
 
     var header: some View {
         ZStack {
-            AppText(viewModel.title, style: .section)
+            AppText(viewModel.title, style: .bodySmall)
 
             HStack {
-                ToolbarIconButton(icon: "chevron.left", isOutlined: true) {
-                    isTabBarVisible.wrappedValue = true
+                ToolbarIconButton(icon: "xmark", isOutlined: true) {
                     dismiss()
                 }
 
@@ -78,6 +75,7 @@ private extension AddEditCategoryView {
         }
         .padding(.horizontal, AppSpacing.large)
         .padding(.vertical, AppSpacing.small)
+        .padding(.top, AppSpacing.medium)
     }
 
     var iconSection: some View {
@@ -119,7 +117,6 @@ private extension AddEditCategoryView {
 
         withAnimation {
             if viewModel.save(context: context) {
-                isTabBarVisible.wrappedValue = true
                 dismiss()
             }
         }

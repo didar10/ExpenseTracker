@@ -13,6 +13,7 @@ struct CategorySelectionView: View {
     // MARK: - Properties
 
     let categories: [Category]
+    let type: TransactionType
     @Binding var selectedCategory: Category?
 
     @Query private var transactions: [Transaction]
@@ -26,7 +27,7 @@ struct CategorySelectionView: View {
 
     private var usageCounts: [UUID: Int] {
         var counts: [UUID: Int] = [:]
-        for transaction in transactions where transaction.type == .expense {
+        for transaction in transactions where transaction.type == type {
             guard let id = transaction.category?.id else { continue }
             counts[id, default: 0] += 1
         }
@@ -60,10 +61,6 @@ struct CategorySelectionView: View {
         return result
     }
 
-    private var hasMoreCategories: Bool {
-        categories.count > displayCategories.count
-    }
-
     // MARK: - Body
 
     var body: some View {
@@ -73,32 +70,22 @@ struct CategorySelectionView: View {
                     .frame(maxWidth: .infinity)
             }
 
-            if hasMoreCategories || categories.isEmpty {
-                moreButton
-                    .frame(maxWidth: .infinity)
-            }
+            moreButton
+                .frame(maxWidth: .infinity)
         }
         .padding(.horizontal, AppSpacing.xSmall)
         .padding(.vertical, AppSpacing.small)
         .animation(.spring(response: 0.3, dampingFraction: 0.8), value: displayCategories.map(\.id))
         .sheet(isPresented: $showingPicker) {
-            TransactionCategoryPickerSheet(
-                categories: categories,
-                selectedCategory: selectedCategory,
-                onSelect: handleSheetSelection
-            )
-            .presentationDetents([.medium, .large])
-            .presentationDragIndicator(.visible)
+            CategoriesListView(onSelect: handleSheetSelection, initialType: type)
         }
     }
 
     // MARK: - Actions
 
     private func handleSheetSelection(_ category: Category) {
-        UIImpactFeedbackGenerator(style: .light).impactOccurred()
         pinnedCategoryID = category.id
         selectedCategory = category
-        showingPicker = false
     }
 
     private func handleCategoryTap(_ category: Category) {
@@ -124,20 +111,16 @@ private extension CategorySelectionView {
             VStack(spacing: AppSpacing.small) {
                 ZStack {
                     Circle()
-                        .fill(isSelected ? color : Color.clear)
-                        .frame(width: AppSize.iconXXLarge, height: AppSize.iconXXLarge)
-                        .overlay {
-                            Circle()
-                                .strokeBorder(color, lineWidth: 1.5)
-                        }
+                        .fill(isSelected ? color : color.opacity(0.2))
+                        .frame(width: AppSize.iconLarge, height: AppSize.iconLarge)
 
                     Image(systemName: category.icon)
-                        .font(.system(size: AppSize.glyphXXLarge, weight: .regular))
-                        .foregroundStyle(isSelected ? AppColor.textWhite : color)
+                        .font(.system(size: AppSize.glyphXLarge, weight: .regular))
+                        .foregroundStyle(AppColor.textPrimary)
                 }
 
                 Text(category.name)
-                    .font(.app(.caption))
+                    .font(.app(.microCaption))
                     .foregroundStyle(AppColor.textSecondary)
                     .lineLimit(2)
                     .multilineTextAlignment(.center)
@@ -157,15 +140,15 @@ private extension CategorySelectionView {
                 ZStack {
                     Circle()
                         .fill(Color(.systemGray5))
-                        .frame(width: AppSize.iconXXLarge, height: AppSize.iconXXLarge)
+                        .frame(width: AppSize.iconLarge, height: AppSize.iconLarge)
 
                     Image(systemName: "ellipsis")
-                        .font(.system(size: AppSize.glyphXXLarge, weight: .regular))
+                        .font(.system(size: AppSize.glyphXLarge, weight: .regular))
                         .foregroundStyle(AppColor.textSecondary)
                 }
 
                 Text(AppString.more)
-                    .font(.app(.caption))
+                    .font(.app(.microCaption))
                     .foregroundStyle(AppColor.textSecondary)
                     .lineLimit(1)
                     .frame(maxWidth: .infinity)

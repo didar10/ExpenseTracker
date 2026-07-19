@@ -9,6 +9,10 @@ import SwiftUI
 
 struct SettingsView: View {
 
+    // MARK: - Properties
+
+    @State private var showingCategories = false
+
     // MARK: - Body
 
     var body: some View {
@@ -31,6 +35,9 @@ struct SettingsView: View {
             }
             .background(AppColor.background)
             .navigationBarHidden(true)
+            .sheet(isPresented: $showingCategories) {
+                CategoriesListView()
+            }
         }
     }
 }
@@ -46,12 +53,13 @@ private extension SettingsView {
                 .padding(.horizontal, AppSpacing.xSmall)
 
             VStack(spacing: 0) {
-                SettingsRowView(
+                SettingsActionRowView(
                     icon: AppImage.categoriesGrid,
                     iconColor: AppColor.accent,
-                    title: AppString.categories,
-                    destination: CategoriesListView()
-                )
+                    title: AppString.categories
+                ) {
+                    showingCategories = true
+                }
 
                 Divider()
                     .padding(.leading, AppSpacing.listDividerIndent)
@@ -116,6 +124,39 @@ private extension SettingsView {
 
 // MARK: - Settings Row View
 
+struct SettingsRowLabel: View {
+
+    let icon: Image
+    let iconColor: Color
+    let title: String
+
+    var body: some View {
+        HStack(spacing: AppSpacing.large) {
+            ZStack {
+                Circle()
+                    .fill(iconColor.opacity(0.15))
+                    .frame(width: AppSize.iconMedium, height: AppSize.iconMedium)
+
+                icon
+                    .font(.system(size: AppSize.glyphLarge, weight: .semibold))
+                    .foregroundStyle(iconColor)
+            }
+            .circleShadow()
+
+            AppText(title, style: .bodySmaller)
+
+            Spacer()
+
+            AppImage.chevronRight
+                .font(.system(size: AppSize.glyphMedium, weight: .semibold))
+                .foregroundStyle(AppColor.textTertiary)
+        }
+        .padding(.horizontal, AppSpacing.large)
+        .padding(.vertical, AppSpacing.medium)
+        .contentShape(Rectangle())
+    }
+}
+
 struct SettingsRowView<Destination: View>: View {
 
     // MARK: - Properties
@@ -131,29 +172,26 @@ struct SettingsRowView<Destination: View>: View {
         NavigationLink {
             destination
         } label: {
-            HStack(spacing: AppSpacing.large) {
-                ZStack {
-                    Circle()
-                        .fill(iconColor.opacity(0.15))
-                        .frame(width: AppSize.iconMedium, height: AppSize.iconMedium)
+            SettingsRowLabel(icon: icon, iconColor: iconColor, title: title)
+        }
+        .buttonStyle(SettingsButtonStyle())
+    }
+}
 
-                    icon
-                        .font(.system(size: AppSize.glyphLarge, weight: .semibold))
-                        .foregroundStyle(iconColor)
-                }
-                .circleShadow()
+struct SettingsActionRowView: View {
 
-                AppText(title, style: .bodySmaller)
+    // MARK: - Properties
 
-                Spacer()
+    let icon: Image
+    let iconColor: Color
+    let title: String
+    let action: () -> Void
 
-                AppImage.chevronRight
-                    .font(.system(size: AppSize.glyphMedium, weight: .semibold))
-                    .foregroundStyle(AppColor.textTertiary)
-            }
-            .padding(.horizontal, AppSpacing.large)
-            .padding(.vertical, AppSpacing.medium)
-            .contentShape(Rectangle())
+    // MARK: - Body
+
+    var body: some View {
+        Button(action: action) {
+            SettingsRowLabel(icon: icon, iconColor: iconColor, title: title)
         }
         .buttonStyle(SettingsButtonStyle())
     }

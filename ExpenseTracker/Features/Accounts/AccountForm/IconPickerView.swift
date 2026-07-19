@@ -12,6 +12,7 @@ struct IconPickerView: View {
     // MARK: - Properties
 
     @Binding var selectedIcon: String
+    let color: Color
     let onSelect: (String) -> Void
 
     private let icons = [
@@ -23,28 +24,53 @@ struct IconPickerView: View {
         "briefcase.fill"
     ]
 
+    private let columns = Array(repeating: GridItem(.flexible(), spacing: AppSpacing.small), count: 6)
+
     // MARK: - Body
 
     var body: some View {
-        ScrollView(.horizontal, showsIndicators: false) {
-            HStack(spacing: 10) {
-                ForEach(icons, id: \.self) { icon in
-                    Button {
-                        selectedIcon = icon
-                        onSelect(icon)
-                    } label: {
-                        ZStack {
-                            RoundedRectangle(cornerRadius: 10, style: .continuous)
-                                .fill(selectedIcon == icon ? AppColor.accent.opacity(0.2) : AppColor.secondaryBackground)
-                                .frame(width: 44, height: 44)
-
-                            Image(systemName: icon)
-                                .font(.system(size: 20))
-                                .foregroundStyle(selectedIcon == icon ? AppColor.accent : AppColor.textSecondary)
-                        }
-                    }
-                }
+        LazyVGrid(columns: columns, spacing: AppSpacing.small) {
+            ForEach(icons, id: \.self) { icon in
+                iconCell(icon)
             }
         }
+        .padding(AppSpacing.medium)
+        .background(
+            RoundedRectangle(cornerRadius: AppRadius.card, style: .continuous)
+                .fill(AppColor.cardBackground)
+        )
+        .overlay(
+            RoundedRectangle(cornerRadius: AppRadius.card, style: .continuous)
+                .strokeBorder(AppColor.textPrimary.opacity(0.15), lineWidth: AppSpacing.hairline)
+        )
     }
+}
+
+// MARK: - Subviews
+private extension IconPickerView {
+
+    func iconCell(_ icon: String) -> some View {
+        let isSelected = selectedIcon == icon
+
+        return Image(systemName: icon)
+            .font(.system(size: AppSize.glyphLarge, weight: .semibold))
+            .foregroundStyle(AppColor.textPrimary)
+            .frame(maxWidth: .infinity)
+            .frame(height: AppSize.iconLarge)
+            .background(
+                RoundedRectangle(cornerRadius: AppRadius.medium, style: .continuous)
+                    .fill(isSelected ? color : color.opacity(0.2))
+            )
+            .contentShape(Rectangle())
+            .onTapGesture {
+                selectedIcon = icon
+                onSelect(icon)
+            }
+    }
+}
+
+#Preview {
+    IconPickerView(selectedIcon: .constant("creditcard.fill"), color: .blue, onSelect: { _ in })
+        .padding(AppSpacing.large)
+        .background(AppColor.background)
 }

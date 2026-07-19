@@ -13,6 +13,24 @@ struct ToolbarIconButtonLabel: View {
     var isOutlined: Bool = false
 
     var body: some View {
+        if #available(iOS 26.0, *) {
+            glassLabel
+        } else {
+            legacyLabel
+        }
+    }
+
+    @available(iOS 26.0, *)
+    private var glassLabel: some View {
+        Image(systemName: icon)
+            .font(.system(size: 14, weight: .semibold))
+            .foregroundStyle(isEnabled ? .primary : .secondary)
+            .frame(width: 40, height: 40)
+            .glassEffect(.regular.interactive(), in: .circle)
+            .opacity(isEnabled ? 1 : 0.5)
+    }
+
+    private var legacyLabel: some View {
         ZStack {
             Circle()
                 .fill(Color.appCardBackground)

@@ -55,7 +55,7 @@ struct RootTabView: View {
             .padding(.bottom, 8)
         }
         .ignoresSafeArea(.keyboard, edges: .bottom)
-        .fullScreenCover(isPresented: $isAddPresented) {
+        .sheet(isPresented: $isAddPresented) {
             AddTransactionView()
         }
     }

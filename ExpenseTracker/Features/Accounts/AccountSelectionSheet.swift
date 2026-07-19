@@ -15,6 +15,7 @@ struct AccountSelectionSheet: View {
     let selectedAccount: Account?
     let onSelect: (Account?) -> Void
     let onShowAll: () -> Void
+    var allowsAllAccounts: Bool = true
 
     @Environment(\.dismiss) private var dismiss
     @Environment(\.modelContext) private var context
@@ -37,7 +38,10 @@ struct AccountSelectionSheet: View {
 
                 ScrollView {
                     VStack(spacing: AppSpacing.large) {
-                        if !isEditing {
+                        if isEditing || !allowsAllAccounts {
+                            allAccountsRow
+                                .opacity(allowsAllAccounts ? 1 : 0.4)
+                        } else {
                             Button {
                                 UIImpactFeedbackGenerator(style: .light).impactOccurred()
                                 onSelect(nil)
@@ -92,7 +96,7 @@ private extension AccountSelectionSheet {
 
     var header: some View {
         ZStack {
-            AppText(AppString.selectAccount, style: .section)
+            AppText(AppString.selectAccount, style: .bodySmall)
 
             HStack {
                 ToolbarIconButton(icon: "xmark", isOutlined: true) {
@@ -112,6 +116,7 @@ private extension AccountSelectionSheet {
         }
         .padding(.horizontal, AppSpacing.large)
         .padding(.vertical, AppSpacing.small)
+        .padding(.top, AppSpacing.medium)
     }
 
     var accountsList: some View {
@@ -134,8 +139,11 @@ private extension AccountSelectionSheet {
         if isEditing {
             AccountRowView(
                 account: account,
-                isSelected: selectedAccount?.id == account.id,
                 isEditing: true,
+                onEdit: {
+                    UIImpactFeedbackGenerator(style: .light).impactOccurred()
+                    editingAccount = account
+                },
                 onDelete: {
                     accountToDelete = account
                     showDeleteAlert = true
@@ -148,8 +156,8 @@ private extension AccountSelectionSheet {
             } label: {
                 AccountRowView(
                     account: account,
-                    isSelected: selectedAccount?.id == account.id,
                     isEditing: false,
+                    onEdit: {},
                     onDelete: {}
                 )
             }
@@ -162,25 +170,28 @@ private extension AccountSelectionSheet {
             ZStack {
                 RoundedRectangle(cornerRadius: AppRadius.medium, style: .continuous)
                     .fill(AppColor.accent.opacity(0.2))
-                    .frame(width: AppSize.iconLarge, height: AppSize.iconLarge)
+                    .frame(width: AppSize.iconMedium, height: AppSize.iconMedium)
 
                 AppImage.allAccounts
                     .font(.system(size: AppSize.glyphLarge, weight: .semibold))
-                    .foregroundStyle(AppColor.accent)
+                    .foregroundStyle(AppColor.textPrimary)
             }
 
             AppText(AppString.allAccounts, style: .bodySmall)
 
             Spacer()
 
-            if selectedAccount == nil {
-                AppImage.checkmarkCircleFill
-                    .font(.system(size: 20))
-                    .foregroundStyle(AppColor.accent)
-            }
+            Text(totalBalance.formatted(.currency(code: AppString.currencyCode)))
+                .font(.app(.caption))
+                .fontDesign(.rounded)
+                .foregroundStyle(AppColor.textSecondary)
         }
         .padding(.vertical, AppSpacing.small)
         .padding(.horizontal, AppSpacing.large)
         .card(cornerRadius: AppRadius.xLarge)
+    }
+
+    var totalBalance: Decimal {
+        accounts.reduce(Decimal.zero) { $0 + $1.currentBalance }
     }
 }

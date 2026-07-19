@@ -33,6 +33,12 @@ struct AddTransactionView: View {
         )
     }
 
+    // MARK: - Computed Properties
+
+    private var filteredCategories: [Category] {
+        categories.filter { $0.type == viewModel.type }
+    }
+
     // MARK: - Body
 
     var body: some View {
@@ -59,18 +65,15 @@ struct AddTransactionView: View {
                             }
                             .frame(height: 60)
 
-                            Group {
-                                if viewModel.type == .expense {
-                                    CategorySelectionView(
-                                        categories: categories,
-                                        selectedCategory: $viewModel.selectedCategory
-                                    )
-                                    .transition(.asymmetric(
-                                        insertion: .move(edge: .trailing).combined(with: .opacity),
-                                        removal: .move(edge: .trailing).combined(with: .opacity)
-                                    ))
-                                }
-                            }
+                            CategorySelectionView(
+                                categories: filteredCategories,
+                                type: viewModel.type,
+                                selectedCategory: $viewModel.selectedCategory
+                            )
+                            .background(
+                                RoundedRectangle(cornerRadius: AppRadius.card, style: .continuous)
+                                    .fill(AppColor.cardBackground)
+                            )
                             .animation(.spring(response: 0.35, dampingFraction: 0.7), value: viewModel.type)
 
                             NoteInputView(note: $viewModel.note)
@@ -79,9 +82,7 @@ struct AddTransactionView: View {
                         .padding(.top, 10)
                         .frame(maxWidth: .infinity, alignment: .top)
                     }
-
-                    Divider()
-                        .padding(.bottom, 8)
+                    .scrollDismissesKeyboard(.interactively)
 
                     NumericKeypadView(
                         isEnterEnabled: viewModel.isSaveEnabled,
@@ -97,10 +98,37 @@ struct AddTransactionView: View {
                 }
             }
             .background(AppColor.background)
+            .ignoresSafeArea(.keyboard, edges: .bottom)
+            .toolbar {
+                ToolbarItemGroup(placement: .keyboard) {
+                    Spacer()
+                    Button(AppString.done) {
+                        UIApplication.shared.sendAction(
+                            #selector(UIResponder.resignFirstResponder),
+                            to: nil,
+                            from: nil,
+                            for: nil
+                        )
+                    }
+                }
+            }
+            .onChange(of: viewModel.type) {
+                if viewModel.selectedCategory?.type != viewModel.type {
+                    viewModel.selectedCategory = nil
+                }
+            }
             .sheet(isPresented: $showingAccountPicker) {
-                AccountPickerSheet(
-                    selectedAccount: $viewModel.selectedAccount,
-                    accounts: accounts
+                AccountSelectionSheet(
+                    accounts: accounts,
+                    selectedAccount: viewModel.selectedAccount,
+                    onSelect: { account in
+                        viewModel.selectedAccount = account
+                        showingAccountPicker = false
+                    },
+                    onShowAll: {
+                        showingAccountPicker = false
+                    },
+                    allowsAllAccounts: false
                 )
             }
         }
@@ -129,6 +157,7 @@ private extension AddTransactionView {
             headerContent
         }
         .padding(.vertical, 8)
+        .padding(.top, AppSpacing.medium)
         .background(AppColor.background)
         .frame(maxWidth: .infinity)
     }

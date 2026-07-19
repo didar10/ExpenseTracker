@@ -12,8 +12,8 @@ struct AccountRowView: View {
     // MARK: - Properties
 
     let account: Account
-    let isSelected: Bool
     let isEditing: Bool
+    let onEdit: () -> Void
     let onDelete: () -> Void
 
     // MARK: - Body
@@ -48,32 +48,41 @@ private extension AccountRowView {
         ZStack {
             RoundedRectangle(cornerRadius: AppRadius.medium, style: .continuous)
                 .fill(account.swiftUIColor.opacity(0.2))
-                .frame(width: AppSize.iconLarge, height: AppSize.iconLarge)
+                .frame(width: AppSize.iconMedium, height: AppSize.iconMedium)
 
             Image(systemName: account.icon)
                 .font(.system(size: AppSize.glyphLarge, weight: .semibold))
-                .foregroundStyle(account.swiftUIColor)
+                .foregroundStyle(AppColor.textPrimary)
         }
     }
 
     @ViewBuilder
     var trailingAccessories: some View {
         if isEditing {
-            deleteButton
-        } else {
-            HStack(spacing: 8) {
-                Text(account.currentBalance.formatted(.currency(code: AppString.currencyCode)))
-                    .font(.app(.caption))
-                    .fontDesign(.rounded)
-                    .foregroundStyle(AppColor.textSecondary)
-
-                if isSelected {
-                    AppImage.checkmarkCircleFill
-                        .font(.system(size: 20))
-                        .foregroundStyle(AppColor.accent)
-                }
+            HStack(spacing: AppSpacing.small) {
+                editButton
+                deleteButton
             }
+        } else {
+            Text(account.currentBalance.formatted(.currency(code: AppString.currencyCode)))
+                .font(.app(.caption))
+                .fontDesign(.rounded)
+                .foregroundStyle(AppColor.textSecondary)
         }
+    }
+
+    var editButton: some View {
+        Button(action: onEdit) {
+            Image(systemName: "pencil")
+                .font(.system(size: AppSize.glyphLarge, weight: .semibold))
+                .foregroundStyle(AppColor.textPrimary)
+                .frame(width: AppSize.iconMedium, height: AppSize.iconMedium)
+                .background(
+                    RoundedRectangle(cornerRadius: AppRadius.medium, style: .continuous)
+                        .fill(AppColor.accent.opacity(0.15))
+                )
+        }
+        .buttonStyle(.plain)
     }
 
     var deleteButton: some View {

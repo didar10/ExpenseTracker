@@ -46,7 +46,7 @@ struct DashboardView: View {
             }
             .background(AppColor.background)
             .navigationBarHidden(true)
-            .fullScreenCover(item: $viewModel.selectedTransaction) { transaction in
+            .sheet(item: $viewModel.selectedTransaction) { transaction in
                 AddTransactionView(transaction: transaction)
             }
             .sheet(isPresented: $viewModel.showingAccountsView) {

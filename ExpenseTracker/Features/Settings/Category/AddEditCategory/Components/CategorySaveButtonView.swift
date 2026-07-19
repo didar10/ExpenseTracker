@@ -21,7 +21,7 @@ struct CategorySaveButtonView: View {
         Button(action: action) {
             AppText(
                 title,
-                style: .section,
+                style: .bodySmall,
                 color: isEnabled ? AppColor.background : AppColor.textSecondary
             )
             .frame(maxWidth: .infinity)

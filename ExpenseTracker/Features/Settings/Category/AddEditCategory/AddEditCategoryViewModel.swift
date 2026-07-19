@@ -61,11 +61,13 @@ final class AddEditCategoryViewModel {
             category.name = formData.trimmedName
             category.icon = formData.icon
             category.colorHex = formData.colorHex
+            category.type = formData.type
         } else {
             let newCategory = Category(
                 name: formData.trimmedName,
                 icon: formData.icon,
-                colorHex: formData.colorHex
+                colorHex: formData.colorHex,
+                type: formData.type
             )
             context.insert(newCategory)
         }

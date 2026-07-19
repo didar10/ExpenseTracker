@@ -17,15 +17,18 @@ final class Category {
     var name: String
     var icon: String
     var colorHex: String
+    var type: TransactionType = TransactionType.expense
 
     init(
         name: String,
         icon: String,
-        colorHex: String
+        colorHex: String,
+        type: TransactionType = .expense
     ) {
         self.id = UUID()
         self.name = name
         self.icon = icon
         self.colorHex = colorHex
+        self.type = type
     }
 }

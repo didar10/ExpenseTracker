@@ -17,12 +17,18 @@ struct CategorySeeder {
         let count = (try? context.fetchCount(descriptor)) ?? 0
         guard count == 0 else { return }
 
-        let defaults: [(String, String, String)] = [
-            ("Еда", "fork.knife", "#34C759"),
-            ("Транспорт", "car.fill", "#007AFF"),
-            ("Покупки", "cart.fill", "#FF9500"),
-            ("Дом", "house.fill", "#AF52DE"),
-            ("Развлечения", "gamecontroller.fill", "#FF2D55")
+        let defaults: [(String, String, String, TransactionType)] = [
+            // Расходы
+            ("Еда", "fork.knife", "#34C759", .expense),
+            ("Транспорт", "car.fill", "#007AFF", .expense),
+            ("Покупки", "cart.fill", "#FF9500", .expense),
+            ("Дом", "house.fill", "#AF52DE", .expense),
+            ("Развлечения", "gamecontroller.fill", "#FF2D55", .expense),
+            // Доходы
+            ("Зарплата", "banknote.fill", "#34C759", .income),
+            ("Подработка", "briefcase.fill", "#007AFF", .income),
+            ("Подарок", "gift.fill", "#FF2D55", .income),
+            ("Инвестиции", "chart.line.uptrend.xyaxis", "#5856D6", .income)
         ]
 
         defaults.forEach {
@@ -30,7 +36,8 @@ struct CategorySeeder {
                 Category(
                     name: $0.0,
                     icon: $0.1,
-                    colorHex: $0.2
+                    colorHex: $0.2,
+                    type: $0.3
                 )
             )
         }

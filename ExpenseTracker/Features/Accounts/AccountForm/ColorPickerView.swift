@@ -14,63 +14,64 @@ struct ColorPickerView: View {
     @Binding var selectedColor: String
     let onSelect: (String) -> Void
 
-    struct ColorOption: Identifiable {
-        let id: String
-        let name: String
-        let color: Color
-
-        init(_ name: String, _ color: Color) {
-            self.id = name
-            self.name = name
-            self.color = color
-        }
-    }
-
-    private let colors: [ColorOption] = [
-        ColorOption("blue", .blue),
-        ColorOption("green", .green),
-        ColorOption("orange", .orange),
-        ColorOption("red", .red),
-        ColorOption("purple", .purple),
-        ColorOption("pink", .pink)
+    private let colorNames: [String] = [
+        "blue", "green", "orange", "red", "purple", "pink"
     ]
+
+    private let columns = Array(repeating: GridItem(.flexible(), spacing: AppSpacing.small), count: 6)
 
     // MARK: - Body
 
     var body: some View {
-        ScrollView(.horizontal, showsIndicators: false) {
-            HStack(spacing: 10) {
-                ForEach(colors) { colorOption in
-                    colorButton(for: colorOption)
-                }
+        LazyVGrid(columns: columns, spacing: AppSpacing.medium) {
+            ForEach(colorNames, id: \.self) { name in
+                colorSwatch(name)
             }
         }
+        .padding(AppSpacing.large)
+        .background(
+            RoundedRectangle(cornerRadius: AppRadius.card, style: .continuous)
+                .fill(AppColor.cardBackground)
+        )
+        .overlay(
+            RoundedRectangle(cornerRadius: AppRadius.card, style: .continuous)
+                .strokeBorder(AppColor.textPrimary.opacity(0.15), lineWidth: AppSpacing.hairline)
+        )
     }
 }
 
 // MARK: - Subviews
-extension ColorPickerView {
+private extension ColorPickerView {
 
-    func colorButton(for colorOption: ColorOption) -> some View {
-        Button {
-            selectedColor = colorOption.name
-            onSelect(colorOption.name)
-        } label: {
-            ZStack {
-                Circle()
-                    .fill(colorOption.color)
-                    .frame(width: 36, height: 36)
+    func colorSwatch(_ name: String) -> some View {
+        let isSelected = selectedColor.caseInsensitiveCompare(name) == .orderedSame
 
-                if selectedColor == colorOption.name {
-                    Circle()
-                        .strokeBorder(AppColor.textWhite, lineWidth: 2.5)
-                        .frame(width: 36, height: 36)
+        return ZStack {
+            Circle()
+                .fill(Color(named: name))
+                .frame(width: AppSize.iconLarge, height: AppSize.iconLarge)
 
-                    AppImage.checkmark
-                        .font(.system(size: 14, weight: .bold))
-                        .foregroundStyle(AppColor.textWhite)
-                }
+            if isSelected {
+                AppImage.checkmark
+                    .font(.system(size: AppSize.glyphLarge, weight: .bold))
+                    .foregroundStyle(AppColor.textWhite)
             }
         }
+        .overlay(
+            Circle()
+                .strokeBorder(AppColor.textPrimary.opacity(0.08), lineWidth: AppSpacing.hairline)
+        )
+        .frame(maxWidth: .infinity)
+        .contentShape(Circle())
+        .onTapGesture {
+            selectedColor = name
+            onSelect(name)
+        }
     }
+}
+
+#Preview {
+    ColorPickerView(selectedColor: .constant("blue"), onSelect: { _ in })
+        .padding(AppSpacing.large)
+        .background(AppColor.background)
 }

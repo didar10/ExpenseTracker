@@ -35,9 +35,9 @@ struct NumericKeypadView: View {
     // MARK: - Body
 
     var body: some View {
-        VStack(spacing: 12) {
+        VStack(spacing: 8) {
             ForEach(rows, id: \.self) { row in
-                HStack(spacing: 12) {
+                HStack(spacing: 8) {
                     ForEach(row, id: \.self) { key in
                         keyButton(key)
                     }
@@ -68,20 +68,7 @@ private extension NumericKeypadView {
                 }
             }
         } label: {
-            ZStack {
-                RoundedRectangle(cornerRadius: 16, style: .continuous)
-                    .fill(AppColor.cardBackground)
-                    .shadow(
-                        color: AppColor.textPrimary.opacity(pressedKey == key ? 0.3 : 0.65),
-                        radius: 0,
-                        x: pressedKey == key ? 2 : 4,
-                        y: pressedKey == key ? 3 : 6
-                    )
-                    .overlay(
-                        RoundedRectangle(cornerRadius: 16, style: .continuous)
-                            .strokeBorder(AppColor.textPrimary.opacity(0.15), lineWidth: 1.5)
-                    )
-
+            Group {
                 switch key {
                 case .number(let value):
                     Text(value)
@@ -96,8 +83,10 @@ private extension NumericKeypadView {
                         .symbolRenderingMode(.hierarchical)
                 }
             }
+            .frame(maxWidth: .infinity)
+            .frame(height: 54)
+            .contentShape(Rectangle())
         }
-        .frame(height: 60)
         .scaleEffect(pressedKey == key ? 0.95 : 1.0)
         .animation(.spring(response: 0.2, dampingFraction: 0.6), value: pressedKey == key)
     }
@@ -112,23 +101,23 @@ private extension NumericKeypadView {
             }
         } label: {
             HStack(spacing: 10) {
-                AppText(isEnterEnabled ? AppString.save : AppString.enterAmount, style: .section)
-                    .color(AppColor.textWhite)
+                AppText(AppString.save, style: .bodySmall)
+                    .color(AppColor.background)
             }
             .frame(maxWidth: .infinity)
             .frame(height: 60)
             .background {
                 RoundedRectangle(cornerRadius: 16, style: .continuous)
-                    .fill(isEnterEnabled ? AppColor.income : AppColor.textTertiary.opacity(0.5))
+                    .fill(AppColor.textPrimary)
                     .shadow(
-                        color: isEnterEnabled ? AppColor.income.opacity(0.4) : Color.clear,
-                        radius: isEnterEnabled ? 10 : 0,
-                        y: isEnterEnabled ? 4 : 0
+                        color: AppColor.textPrimary.opacity(0.25),
+                        radius: 10,
+                        y: 4
                     )
             }
         }
         .disabled(!isEnterEnabled)
-        .padding(.top, 4)
+        .padding(.top, 20)
         .animation(.spring(response: 0.4, dampingFraction: 0.7), value: isEnterEnabled)
     }
 }

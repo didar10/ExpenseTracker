@@ -18,23 +18,9 @@ struct CategoryEditToggleButton: View {
 
     var body: some View {
         Button(action: action) {
-            AppText(
-                isEditing ? AppString.done : AppString.edit,
-                style: .bodySmall,
-                color: isEditing ? AppColor.background : AppColor.textPrimary
-            )
-            .padding(.horizontal, AppSpacing.large)
-            .padding(.vertical, AppSpacing.small)
-            .background(
-                Capsule(style: .continuous)
-                    .fill(isEditing ? AppColor.textPrimary : AppColor.cardBackground)
-            )
-            .overlay(
-                Capsule(style: .continuous)
-                    .strokeBorder(
-                        isEditing ? Color.clear : AppColor.textPrimary,
-                        lineWidth: AppSpacing.hairline
-                    )
+            ToolbarIconButtonLabel(
+                icon: isEditing ? "checkmark" : "pencil",
+                isOutlined: true
             )
         }
         .buttonStyle(.plain)

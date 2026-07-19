@@ -93,6 +93,7 @@ struct DateSelectionView: View {
                 }
             }
             .presentationDetents([.medium])
+            .presentationBackground(AppColor.background)
         }
     }
 }

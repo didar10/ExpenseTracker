@@ -60,21 +60,6 @@ final class AccountFormViewModel: ObservableObject {
         return isEditMode ? AppString.saveChanges : AppString.newAccount
     }
 
-    var previewName: String {
-        name.isEmpty ? AppString.accountName : name
-    }
-
-    var previewNameColor: Color {
-        name.isEmpty ? AppColor.textSecondary : AppColor.textPrimary
-    }
-
-    var previewBalance: String? {
-        guard let balance = balanceDecimal, balance > 0 else {
-            return nil
-        }
-        return balance.formatted(.currency(code: AppString.currencyCode))
-    }
-
     private var balanceDecimal: Decimal? {
         Decimal(string: initialBalance.replacingOccurrences(of: ",", with: "."))
     }
