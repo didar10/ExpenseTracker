@@ -62,7 +62,7 @@ struct AccountPickerView: View {
                             Text(predicted.formatted(.currency(code: AppString.currencyCode)))
                                 .font(.app(.bodySmall))
                                 .fontDesign(.rounded)
-                                .foregroundStyle(transactionType == .income ? AppColor.income : AppColor.expense)
+                                .foregroundStyle(AppColor.textPrimary)
                         } else {
                             Text(account.currentBalance.formatted(.currency(code: AppString.currencyCode)))
                                 .font(.app(.bodySmall))

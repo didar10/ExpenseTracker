@@ -14,7 +14,7 @@ struct StatisticsView: View {
 
     @Bindable var viewModel: StatisticsViewModel
     @State private var scrollOffset: CGFloat = 0
-    @State private var navigationPath = NavigationPath()
+    @State private var selectedStatistic: CategoryStatistic?
     @State private var showingAccountsView = false
 
     @Query(sort: \Transaction.date, order: .reverse)
@@ -29,7 +29,7 @@ struct StatisticsView: View {
     // MARK: - Body
 
     var body: some View {
-        NavigationStack(path: $navigationPath) {
+        NavigationStack {
             VStack(spacing: 0) {
                 headerView
 
@@ -64,12 +64,13 @@ struct StatisticsView: View {
             }
             .background(AppColor.background)
             .navigationBarHidden(true)
-            .navigationDestination(for: CategoryStatistic.self) { statistic in
+            .sheet(item: $selectedStatistic) { statistic in
                 CategoryTransactionsView(
                     category: statistic.category,
                     period: viewModel.selectedPeriod,
                     transactions: viewModel.transactions(for: statistic.category)
                 )
+                .presentationDragIndicator(.hidden)
             }
             .sheet(isPresented: $showingAccountsView) {
                 AccountSelectionSheet(
@@ -106,7 +107,7 @@ struct StatisticsView: View {
     // MARK: - Actions
 
     private func handleCategoryTap(_ statistic: CategoryStatistic) {
-        navigationPath.append(statistic)
+        selectedStatistic = statistic
     }
 }
 

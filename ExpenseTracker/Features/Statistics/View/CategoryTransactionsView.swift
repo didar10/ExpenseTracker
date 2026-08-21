@@ -17,7 +17,6 @@ struct CategoryTransactionsView: View {
     let transactions: [Transaction]
 
     @Environment(\.dismiss) private var dismiss
-    @Environment(\.tabBarVisibility) private var isTabBarVisible
 
     // MARK: - Body
 
@@ -26,34 +25,16 @@ struct CategoryTransactionsView: View {
             AppColor.background
                 .ignoresSafeArea()
 
-            if transactions.isEmpty {
-                emptyState
-            } else {
-                transactionsList
-            }
-        }
-        .navigationTitle("")
-        .navigationBarTitleDisplayMode(.inline)
-        .navigationBarBackButtonHidden(true)
-        .toolbarBackground(.hidden, for: .navigationBar)
-        .toolbar {
-            ToolbarItem(placement: .principal) {
-                VStack(spacing: AppSpacing.xxSmall) {
-                    AppText(category.name, style: .bodySmall)
+            VStack(spacing: 0) {
+                header
 
-                    AppText(period.displayName, style: .caption, color: AppColor.textSecondary)
+                if transactions.isEmpty {
+                    emptyState
+                        .frame(maxWidth: .infinity, maxHeight: .infinity)
+                } else {
+                    transactionsList
                 }
             }
-
-            ToolbarItem(placement: .navigationBarLeading) {
-                ToolbarIconButton(icon: "chevron.left") {
-                    isTabBarVisible.wrappedValue = true
-                    dismiss()
-                }
-            }
-        }
-        .onAppear {
-            isTabBarVisible.wrappedValue = false
         }
     }
 }
@@ -61,6 +42,27 @@ struct CategoryTransactionsView: View {
 // MARK: - Subviews
 
 private extension CategoryTransactionsView {
+
+    var header: some View {
+        ZStack {
+            VStack(spacing: AppSpacing.xxSmall) {
+                AppText(category.name, style: .bodySmall)
+
+                AppText(period.displayName, style: .caption, color: AppColor.textSecondary)
+            }
+
+            HStack {
+                ToolbarIconButton(icon: "xmark", isOutlined: true) {
+                    dismiss()
+                }
+
+                Spacer()
+            }
+        }
+        .padding(.horizontal, AppSpacing.large)
+        .padding(.vertical, AppSpacing.small)
+        .padding(.top, AppSpacing.medium)
+    }
 
     var transactionsList: some View {
         ScrollView {

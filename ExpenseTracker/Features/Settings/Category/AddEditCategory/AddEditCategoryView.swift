@@ -49,12 +49,26 @@ struct AddEditCategoryView: View {
                     .padding(AppSpacing.large)
                     .padding(.bottom, AppSpacing.huge + AppSpacing.xxxLarge)
                 }
+                .scrollDismissesKeyboard(.interactively)
             }
 
             saveBar
         }
         .toolbar(.hidden, for: .navigationBar)
         .navigationBarBackButtonHidden(true)
+        .toolbar {
+            ToolbarItemGroup(placement: .keyboard) {
+                Spacer()
+                Button(AppString.done) {
+                    UIApplication.shared.sendAction(
+                        #selector(UIResponder.resignFirstResponder),
+                        to: nil,
+                        from: nil,
+                        for: nil
+                    )
+                }
+            }
+        }
     }
 }
 
