@@ -12,7 +12,6 @@ struct TermsOfServiceView: View {
     // MARK: - Properties
 
     @Environment(\.dismiss) private var dismiss
-    @Environment(\.tabBarVisibility) private var isTabBarVisible
 
     // MARK: - Body
 
@@ -21,34 +20,28 @@ struct TermsOfServiceView: View {
             AppColor.background
                 .ignoresSafeArea()
 
-            ScrollView {
-                VStack(alignment: .leading, spacing: AppSpacing.xxLarge) {
-                    headerSection
-
-                    Divider()
-
-                    ForEach(TermsOfServiceSection.all) { section in
-                        TermsSectionView(title: section.title, content: section.content)
-                    }
-                }
-                .padding(AppSpacing.large)
-                .padding(.bottom, AppSpacing.xxxLarge)
-            }
-        }
-        .navigationTitle(AppString.termsOfService)
-        .navigationBarTitleDisplayMode(.inline)
-        .navigationBarBackButtonHidden(true)
-        .toolbarBackground(.hidden, for: .navigationBar)
-        .toolbar {
-            ToolbarItem(placement: .navigationBarLeading) {
-                ToolbarIconButton(icon: "chevron.left") {
-                    isTabBarVisible.wrappedValue = true
+            VStack(spacing: 0) {
+                SheetHeaderView(title: AppString.termsOfService) {
                     dismiss()
                 }
+
+                ScrollView {
+                    VStack(spacing: AppSpacing.large) {
+                        introCard
+
+                        ForEach(Array(TermsOfServiceSection.all.enumerated()), id: \.element.id) { index, section in
+                            LegalSectionCardView(
+                                number: index + 1,
+                                accentColor: AppColor.expense,
+                                title: section.title,
+                                content: section.content
+                            )
+                        }
+                    }
+                    .padding(AppSpacing.large)
+                    .padding(.bottom, AppSpacing.xxxLarge)
+                }
             }
-        }
-        .onAppear {
-            isTabBarVisible.wrappedValue = false
         }
     }
 }
@@ -57,14 +50,14 @@ struct TermsOfServiceView: View {
 
 private extension TermsOfServiceView {
 
-    var headerSection: some View {
-        VStack(alignment: .leading, spacing: AppSpacing.medium) {
-            AppText(AppString.termsOfService, style: .largeTitle)
-
-            AppText(AppString.lastUpdated, style: .caption, color: AppColor.textSecondary)
-
-            AppText(AppString.termsIntro, style: .body, color: AppColor.textSecondary)
-        }
+    var introCard: some View {
+        LegalIntroCardView(
+            icon: AppImage.docText,
+            accentColor: AppColor.expense,
+            title: AppString.termsOfService,
+            subtitle: AppString.lastUpdated,
+            description: AppString.termsIntro
+        )
     }
 }
 
@@ -87,28 +80,6 @@ struct TermsOfServiceSection: Identifiable {
     ]
 }
 
-// MARK: - Terms Section View
-
-struct TermsSectionView: View {
-
-    // MARK: - Properties
-
-    let title: String
-    let content: String
-
-    // MARK: - Body
-
-    var body: some View {
-        VStack(alignment: .leading, spacing: AppSpacing.medium) {
-            AppText(title, style: .title)
-
-            AppText(content, style: .body, color: AppColor.textSecondary)
-        }
-    }
-}
-
 #Preview {
-    NavigationStack {
-        TermsOfServiceView()
-    }
+    TermsOfServiceView()
 }

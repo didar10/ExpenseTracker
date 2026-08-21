@@ -41,67 +41,88 @@ struct TotalBudgetCard: View {
     // MARK: - Body
 
     var body: some View {
-        VStack(spacing: 16) {
-            HStack(alignment: .top) {
-                VStack(alignment: .leading, spacing: 6) {
-                    AppText(AppString.totalBudget, style: .bodySmall, color: AppColor.textSecondary)
+        AppCardView {
+            VStack(spacing: AppSpacing.large) {
+                amountsRow
 
-                    Text(totalBudget.formatted(.currency(code: AppString.currencyCode)))
-                        .font(.system(size: 26, weight: .bold))
-                        .fontDesign(.rounded)
-                        .foregroundStyle(AppColor.textPrimary)
-                }
+                progressBar
 
-                Spacer()
-
-                VStack(alignment: .trailing, spacing: 6) {
-                    AppText(AppString.spent, style: .bodySmall, color: AppColor.textSecondary)
-
-                    Text(totalSpent.formatted(.currency(code: AppString.currencyCode)))
-                        .font(.system(size: 22, weight: .bold))
-                        .fontDesign(.rounded)
-                        .foregroundStyle(totalSpent > totalBudget ? AppColor.expense : AppColor.income)
-                }
-            }
-
-            GeometryReader { geometry in
-                ZStack(alignment: .leading) {
-                    Capsule()
-                        .fill(Color(.systemGray6))
-
-                    Capsule()
-                        .fill(progressColor)
-                        .frame(width: max(geometry.size.width * progress, 0))
-                        .animation(.spring(response: 0.5, dampingFraction: 0.8), value: progress)
-                }
-            }
-            .frame(height: 8)
-
-            HStack(alignment: .center) {
-                Text("\(percentage)%")
-                    .font(.app(.bodySmall))
-                    .foregroundStyle(AppColor.textSecondary)
-
-                Spacer()
-
-                if remaining >= 0 {
-                    Text("\(AppString.remaining) \(remaining.formatted(.currency(code: AppString.currencyCode)))")
-                        .font(.app(.bodySmall))
-                        .foregroundStyle(AppColor.textSecondary)
-                } else {
-                    Text("\(AppString.exceeded) \(abs(remaining).formatted(.currency(code: AppString.currencyCode)))")
-                        .font(.app(.bodySmall))
-                        .foregroundStyle(AppColor.expense)
-                }
+                summaryRow
             }
         }
-        .padding(16)
-        .cardShadow(cornerRadius: 16)
+    }
+}
+
+// MARK: - Subviews
+private extension TotalBudgetCard {
+
+    var amountsRow: some View {
+        HStack(alignment: .top) {
+            VStack(alignment: .leading, spacing: AppSpacing.xSmall) {
+                AppText(AppString.totalBudget, style: .caption, color: AppColor.textSecondary)
+
+                Text(totalBudget.formatted(.currency(code: AppString.currencyCode)))
+                    .font(.app(.title))
+                    .fontDesign(.rounded)
+                    .foregroundStyle(AppColor.textPrimary)
+                    .contentTransition(.numericText())
+            }
+
+            Spacer()
+
+            VStack(alignment: .trailing, spacing: AppSpacing.xSmall) {
+                AppText(AppString.spent, style: .caption, color: AppColor.textSecondary)
+
+                Text(totalSpent.formatted(.currency(code: AppString.currencyCode)))
+                    .font(.app(.title))
+                    .fontDesign(.rounded)
+                    .foregroundStyle(totalSpent > totalBudget ? AppColor.expense : AppColor.income)
+                    .contentTransition(.numericText())
+            }
+        }
+    }
+
+    var progressBar: some View {
+        GeometryReader { geometry in
+            ZStack(alignment: .leading) {
+                Capsule()
+                    .fill(AppColor.subtleFill)
+
+                Capsule()
+                    .fill(progressColor)
+                    .frame(width: max(geometry.size.width * progress, 0))
+                    .animation(.spring(response: 0.5, dampingFraction: 0.8), value: progress)
+            }
+        }
+        .frame(height: AppSpacing.small)
+    }
+
+    var summaryRow: some View {
+        HStack {
+            Text("\(percentage)%")
+                .font(.app(.caption))
+                .fontDesign(.rounded)
+                .foregroundStyle(AppColor.textSecondary)
+
+            Spacer()
+
+            if remaining >= 0 {
+                Text("\(AppString.remaining) \(remaining.formatted(.currency(code: AppString.currencyCode)))")
+                    .font(.app(.caption))
+                    .fontDesign(.rounded)
+                    .foregroundStyle(AppColor.textSecondary)
+            } else {
+                Text("\(AppString.exceeded) \(abs(remaining).formatted(.currency(code: AppString.currencyCode)))")
+                    .font(.app(.caption))
+                    .fontDesign(.rounded)
+                    .foregroundStyle(AppColor.expense)
+            }
+        }
     }
 }
 
 #Preview {
     TotalBudgetCard(totalBudget: 500000, totalSpent: 250000)
-        .padding()
+        .padding(AppSpacing.large)
         .background(AppColor.background)
 }

@@ -12,7 +12,6 @@ struct PrivacyPolicyView: View {
     // MARK: - Properties
 
     @Environment(\.dismiss) private var dismiss
-    @Environment(\.tabBarVisibility) private var isTabBarVisible
 
     // MARK: - Body
 
@@ -21,34 +20,28 @@ struct PrivacyPolicyView: View {
             AppColor.background
                 .ignoresSafeArea()
 
-            ScrollView {
-                VStack(alignment: .leading, spacing: AppSpacing.xxLarge) {
-                    headerSection
-
-                    Divider()
-
-                    ForEach(PrivacyPolicySection.all) { section in
-                        PolicySectionView(title: section.title, content: section.content)
-                    }
-                }
-                .padding(AppSpacing.large)
-                .padding(.bottom, AppSpacing.xxxLarge)
-            }
-        }
-        .navigationTitle(AppString.privacyPolicyShort)
-        .navigationBarTitleDisplayMode(.inline)
-        .navigationBarBackButtonHidden(true)
-        .toolbarBackground(.hidden, for: .navigationBar)
-        .toolbar {
-            ToolbarItem(placement: .navigationBarLeading) {
-                ToolbarIconButton(icon: "chevron.left") {
-                    isTabBarVisible.wrappedValue = true
+            VStack(spacing: 0) {
+                SheetHeaderView(title: AppString.privacyPolicyShort) {
                     dismiss()
                 }
+
+                ScrollView {
+                    VStack(spacing: AppSpacing.large) {
+                        introCard
+
+                        ForEach(Array(PrivacyPolicySection.all.enumerated()), id: \.element.id) { index, section in
+                            LegalSectionCardView(
+                                number: index + 1,
+                                accentColor: AppColor.decorativePurple,
+                                title: section.title,
+                                content: section.content
+                            )
+                        }
+                    }
+                    .padding(AppSpacing.large)
+                    .padding(.bottom, AppSpacing.xxxLarge)
+                }
             }
-        }
-        .onAppear {
-            isTabBarVisible.wrappedValue = false
         }
     }
 }
@@ -57,12 +50,13 @@ struct PrivacyPolicyView: View {
 
 private extension PrivacyPolicyView {
 
-    var headerSection: some View {
-        VStack(alignment: .leading, spacing: AppSpacing.medium) {
-            AppText(AppString.privacyPolicy, style: .largeTitle)
-
-            AppText(AppString.lastUpdated, style: .caption, color: AppColor.textSecondary)
-        }
+    var introCard: some View {
+        LegalIntroCardView(
+            icon: AppImage.handRaised,
+            accentColor: AppColor.decorativePurple,
+            title: AppString.privacyPolicy,
+            subtitle: AppString.lastUpdated
+        )
     }
 }
 
@@ -83,28 +77,6 @@ struct PrivacyPolicySection: Identifiable {
     ]
 }
 
-// MARK: - Policy Section View
-
-struct PolicySectionView: View {
-
-    // MARK: - Properties
-
-    let title: String
-    let content: String
-
-    // MARK: - Body
-
-    var body: some View {
-        VStack(alignment: .leading, spacing: AppSpacing.medium) {
-            AppText(title, style: .title)
-
-            AppText(content, style: .body, color: AppColor.textSecondary)
-        }
-    }
-}
-
 #Preview {
-    NavigationStack {
-        PrivacyPolicyView()
-    }
+    PrivacyPolicyView()
 }

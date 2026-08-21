@@ -22,51 +22,58 @@ struct PlansView: View {
     private var transactions: [Transaction]
 
     @Environment(\.modelContext) private var context
-    @Environment(\.dismiss) private var dismiss
 
     @State private var showingAddPlan = false
     @State private var selectedPeriod: BudgetPeriod = .month
+    @State private var isEditing = false
     @State private var planToDelete: BudgetPlan?
     @State private var showDeleteAlert = false
 
     // MARK: - Body
 
     var body: some View {
-        NavigationStack {
+        ZStack {
+            AppColor.background
+                .ignoresSafeArea()
+
             VStack(spacing: 0) {
-                headerView
+                header
 
                 ScrollView {
-                    VStack(spacing: 16) {
+                    VStack(spacing: AppSpacing.large) {
+                        BudgetPeriodPickerView(selectedPeriod: $selectedPeriod)
+
                         if filteredPlans.isEmpty {
                             PlansEmptyStateView {
                                 showingAddPlan = true
                             }
                         } else {
                             TotalBudgetCard(totalBudget: totalBudget, totalSpent: totalSpent)
+
                             plansListCard
                         }
                     }
-                    .padding()
-                    .padding(.bottom, 100)
+                    .padding(AppSpacing.large)
+                    .padding(.bottom, AppSpacing.tabBarBottomInset)
                 }
             }
-            .background(AppColor.background)
-            .navigationBarHidden(true)
-            .sheet(isPresented: $showingAddPlan) {
-                AddBudgetPlanView(categories: availableCategories)
-                    .environment(\.modelContext, context)
+        }
+        .onChange(of: selectedPeriod) {
+            isEditing = false
+        }
+        .sheet(isPresented: $showingAddPlan) {
+            AddBudgetPlanView(categories: availableCategories)
+                .environment(\.modelContext, context)
+        }
+        .alert(AppString.deleteBudgetConfirm, isPresented: $showDeleteAlert) {
+            Button(AppString.cancel, role: .cancel) {
+                planToDelete = nil
             }
-            .alert(AppString.deleteBudgetConfirm, isPresented: $showDeleteAlert) {
-                Button(AppString.cancel, role: .cancel) {}
-                Button(AppString.delete, role: .destructive) {
-                    if let plan = planToDelete {
-                        deletePlan(plan)
-                    }
-                }
-            } message: {
-                Text(AppString.cannotUndo)
+            Button(AppString.delete, role: .destructive) {
+                deletePlan()
             }
+        } message: {
+            Text(AppString.cannotUndo)
         }
     }
 }
@@ -104,53 +111,75 @@ private extension PlansView {
             .reduce(0) { $0 + $1.amount }
     }
 
-    func deletePlan(_ plan: BudgetPlan) {
+    func prepareDelete(_ plan: BudgetPlan) {
+        planToDelete = plan
+        showDeleteAlert = true
+    }
+
+    func deletePlan() {
+        guard let plan = planToDelete else { return }
+
         withAnimation {
             context.delete(plan)
             try? context.save()
         }
+
+        planToDelete = nil
     }
 }
 
 // MARK: - Subviews
 private extension PlansView {
 
-    var headerView: some View {
-        HStack {
-            PeriodPickerButton(selectedPeriod: selectedPeriod) { period in
-                selectedPeriod = period
-            }
+    var header: some View {
+        ZStack {
+            AppText(AppString.budgets, style: .bodySmall)
 
-            Spacer()
+            HStack(spacing: AppSpacing.small) {
+                Spacer()
 
-            ToolbarIconButton(icon: "plus") {
-                showingAddPlan = true
-            }
-        }
-        .padding(.horizontal, 16)
-        .padding(.vertical, 8)
-        .background(AppColor.background)
-    }
-
-    var plansListCard: some View {
-        VStack(spacing: 0) {
-            ForEach(Array(filteredPlans.enumerated()), id: \.element.persistentModelID) { index, plan in
-                BudgetPlanRow(
-                    plan: plan,
-                    spent: spentAmount(for: plan),
-                    onDelete: {
-                        planToDelete = plan
-                        showDeleteAlert = true
+                if !filteredPlans.isEmpty {
+                    EditToggleButton(isEditing: isEditing) {
+                        withAnimation(.easeInOut(duration: 0.2)) {
+                            isEditing.toggle()
+                        }
                     }
-                )
+                }
 
-                if index < filteredPlans.count - 1 {
-                    Divider()
-                        .padding(.leading, 56)
+                ToolbarIconButton(icon: "plus", isOutlined: true) {
+                    UIImpactFeedbackGenerator(style: .light).impactOccurred()
+                    showingAddPlan = true
                 }
             }
         }
-        .padding(16)
-        .cardShadow(cornerRadius: 16)
+        .padding(.horizontal, AppSpacing.large)
+        .padding(.vertical, AppSpacing.small)
+        .padding(.top, AppSpacing.medium)
     }
+
+    var plansListCard: some View {
+        AppCardView {
+            VStack(spacing: 0) {
+                ForEach(Array(filteredPlans.enumerated()), id: \.element.persistentModelID) { index, plan in
+                    BudgetPlanRow(
+                        plan: plan,
+                        spent: spentAmount(for: plan),
+                        isEditing: isEditing,
+                        onDelete: {
+                            prepareDelete(plan)
+                        }
+                    )
+
+                    if index < filteredPlans.count - 1 {
+                        Divider()
+                            .padding(.leading, AppSpacing.listDividerIndent)
+                    }
+                }
+            }
+        }
+    }
+}
+
+#Preview {
+    PlansView()
 }

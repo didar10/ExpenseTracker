@@ -14,6 +14,8 @@ enum AppColor {
     static let background = Color.appBackground
     static let cardBackground = Color.appCardBackground
     static let secondaryBackground = Color(uiColor: .secondarySystemGroupedBackground)
+    /// Нейтральная подложка внутри карточек: прогресс-бары, вложенные блоки
+    static let subtleFill = Color.primary.opacity(0.08)
 
     // MARK: - Semantic
 

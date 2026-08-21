@@ -94,6 +94,7 @@ enum AppString {
     static let spent = String(localized: "spent")
     static let remaining = String(localized: "remaining")
     static let exceeded = String(localized: "exceeded")
+    static let outOf = String(localized: "out_of")
     static let category = String(localized: "category")
     static let limit = String(localized: "limit")
     static let period = String(localized: "period")

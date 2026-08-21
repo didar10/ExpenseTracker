@@ -12,6 +12,9 @@ struct SettingsView: View {
     // MARK: - Properties
 
     @State private var showingCategories = false
+    @State private var showingPrivacyPolicy = false
+    @State private var showingHelpSupport = false
+    @State private var showingTermsOfService = false
 
     // MARK: - Body
 
@@ -38,6 +41,21 @@ struct SettingsView: View {
             .sheet(isPresented: $showingCategories) {
                 CategoriesListView()
             }
+            .sheet(isPresented: $showingPrivacyPolicy) {
+                PrivacyPolicyView()
+                    .presentationDetents([.large])
+                    .presentationDragIndicator(.hidden)
+            }
+            .sheet(isPresented: $showingHelpSupport) {
+                HelpSupportView()
+                    .presentationDetents([.large])
+                    .presentationDragIndicator(.hidden)
+            }
+            .sheet(isPresented: $showingTermsOfService) {
+                TermsOfServiceView()
+                    .presentationDetents([.large])
+                    .presentationDragIndicator(.hidden)
+            }
         }
     }
 }
@@ -52,24 +70,12 @@ private extension SettingsView {
                 .frame(maxWidth: .infinity, alignment: .leading)
                 .padding(.horizontal, AppSpacing.xSmall)
 
-            VStack(spacing: 0) {
-                SettingsActionRowView(
-                    icon: AppImage.categoriesGrid,
-                    iconColor: AppColor.accent,
-                    title: AppString.categories
-                ) {
-                    showingCategories = true
-                }
-
-                Divider()
-                    .padding(.leading, AppSpacing.listDividerIndent)
-
-                SettingsRowView(
-                    icon: AppImage.dollarsignCircle,
-                    iconColor: AppColor.income,
-                    title: AppString.defaultCurrency,
-                    destination: PlansView()
-                )
+            SettingsActionRowView(
+                icon: AppImage.categoriesGrid,
+                iconColor: AppColor.accent,
+                title: AppString.categories
+            ) {
+                showingCategories = true
             }
             .cardShadow(cornerRadius: AppRadius.card)
         }
@@ -82,32 +88,35 @@ private extension SettingsView {
                 .padding(.horizontal, AppSpacing.xSmall)
 
             VStack(spacing: 0) {
-                SettingsRowView(
+                SettingsActionRowView(
                     icon: AppImage.handRaised,
                     iconColor: AppColor.decorativePurple,
-                    title: AppString.privacyPolicy,
-                    destination: PrivacyPolicyView()
-                )
+                    title: AppString.privacyPolicy
+                ) {
+                    showingPrivacyPolicy = true
+                }
 
                 Divider()
                     .padding(.leading, AppSpacing.listDividerIndent)
 
-                SettingsRowView(
+                SettingsActionRowView(
                     icon: AppImage.questionmarkCircle,
                     iconColor: AppColor.warning,
-                    title: AppString.helpAndSupport,
-                    destination: HelpSupportView()
-                )
+                    title: AppString.helpAndSupport
+                ) {
+                    showingHelpSupport = true
+                }
 
                 Divider()
                     .padding(.leading, AppSpacing.listDividerIndent)
 
-                SettingsRowView(
+                SettingsActionRowView(
                     icon: AppImage.docText,
                     iconColor: AppColor.expense,
-                    title: AppString.termsOfService,
-                    destination: TermsOfServiceView()
-                )
+                    title: AppString.termsOfService
+                ) {
+                    showingTermsOfService = true
+                }
             }
             .cardShadow(cornerRadius: AppRadius.card)
         }

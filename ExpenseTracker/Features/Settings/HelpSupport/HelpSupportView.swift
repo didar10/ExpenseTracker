@@ -12,7 +12,6 @@ struct HelpSupportView: View {
     // MARK: - Properties
 
     @Environment(\.dismiss) private var dismiss
-    @Environment(\.tabBarVisibility) private var isTabBarVisible
     @State private var expandedFAQ: UUID?
 
     // MARK: - Body
@@ -22,31 +21,22 @@ struct HelpSupportView: View {
             AppColor.background
                 .ignoresSafeArea()
 
-            ScrollView {
-                VStack(spacing: AppSpacing.xxLarge) {
-                    introSection
-                    quickActionsSection
-                    faqSection
-                    contactSection
-                }
-                .padding(AppSpacing.large)
-                .padding(.bottom, AppSpacing.xxxLarge)
-            }
-        }
-        .navigationTitle(AppString.helpShort)
-        .navigationBarTitleDisplayMode(.inline)
-        .navigationBarBackButtonHidden(true)
-        .toolbarBackground(.hidden, for: .navigationBar)
-        .toolbar {
-            ToolbarItem(placement: .navigationBarLeading) {
-                ToolbarIconButton(icon: "chevron.left") {
-                    isTabBarVisible.wrappedValue = true
+            VStack(spacing: 0) {
+                SheetHeaderView(title: AppString.helpShort) {
                     dismiss()
                 }
+
+                ScrollView {
+                    VStack(spacing: AppSpacing.xLarge) {
+                        introCard
+                        quickActionsSection
+                        faqSection
+                        contactCard
+                    }
+                    .padding(AppSpacing.large)
+                    .padding(.bottom, AppSpacing.xxxLarge)
+                }
             }
-        }
-        .onAppear {
-            isTabBarVisible.wrappedValue = false
         }
     }
 }
@@ -55,73 +45,77 @@ struct HelpSupportView: View {
 
 private extension HelpSupportView {
 
-    var introSection: some View {
-        VStack(spacing: AppSpacing.medium) {
-            AppImage.helpCircle
-                .font(.system(size: AppSize.glyphHuge))
-                .foregroundStyle(AppColor.accent.gradient)
+    var introCard: some View {
+        AppCardView {
+            VStack(spacing: AppSpacing.large) {
+                AppImage.helpCircle
+                    .font(.system(size: AppSize.glyphEmptyState))
+                    .foregroundStyle(AppColor.accent.gradient)
 
-            AppText(AppString.helpAndSupport, style: .largeTitle)
+                VStack(spacing: AppSpacing.small) {
+                    AppText(AppString.helpAndSupport, style: .section)
 
-            AppText(
-                AppString.helpSupportIntro,
-                style: .body,
-                color: AppColor.textSecondary,
-                alignment: .center
-            )
-            .padding(.horizontal, AppSpacing.large)
+                    AppText(
+                        AppString.helpSupportIntro,
+                        style: .bodySmaller,
+                        color: AppColor.textSecondary,
+                        alignment: .center
+                    )
+                }
+            }
+            .padding(.vertical, AppSpacing.medium)
+            .frame(maxWidth: .infinity)
         }
-        .padding(.top, AppSpacing.xLarge)
     }
 
     var quickActionsSection: some View {
         VStack(spacing: AppSpacing.medium) {
-            AppText(AppString.quickActions, style: .section)
-                .frame(maxWidth: .infinity, alignment: .leading)
+            sectionHeader(AppString.quickActions)
 
-            VStack(spacing: 0) {
-                QuickActionRow(
-                    icon: AppImage.envelope,
-                    iconColor: AppColor.accent,
-                    title: AppString.writeToUs,
-                    subtitle: AppString.supportEmail
-                )
+            AppCardView {
+                VStack(spacing: 0) {
+                    QuickActionRow(
+                        icon: AppImage.envelope,
+                        iconColor: AppColor.accent,
+                        title: AppString.writeToUs,
+                        subtitle: AppString.supportEmail
+                    )
 
-                Divider()
-                    .padding(.leading, AppSpacing.listDividerIndent)
+                    Divider()
+                        .padding(.leading, AppSpacing.listDividerIndent)
 
-                QuickActionRow(
-                    icon: AppImage.globe,
-                    iconColor: AppColor.income,
-                    title: AppString.website,
-                    subtitle: AppString.supportWebsite
-                )
+                    QuickActionRow(
+                        icon: AppImage.globe,
+                        iconColor: AppColor.income,
+                        title: AppString.website,
+                        subtitle: AppString.supportWebsite
+                    )
 
-                Divider()
-                    .padding(.leading, AppSpacing.listDividerIndent)
+                    Divider()
+                        .padding(.leading, AppSpacing.listDividerIndent)
 
-                QuickActionRow(
-                    icon: AppImage.message,
-                    iconColor: AppColor.decorativePurple,
-                    title: AppString.telegram,
-                    subtitle: AppString.supportTelegram
-                )
+                    QuickActionRow(
+                        icon: AppImage.message,
+                        iconColor: AppColor.decorativePurple,
+                        title: AppString.telegram,
+                        subtitle: AppString.supportTelegram
+                    )
+                }
             }
-            .cardShadow(cornerRadius: AppRadius.card)
         }
     }
 
     var faqSection: some View {
         VStack(spacing: AppSpacing.medium) {
-            AppText(AppString.faq, style: .section)
-                .frame(maxWidth: .infinity, alignment: .leading)
+            sectionHeader(AppString.faq)
 
-            VStack(spacing: AppSpacing.small) {
+            VStack(spacing: AppSpacing.medium) {
                 ForEach(FAQItem.all) { item in
                     FAQItemView(
                         item: item,
                         isExpanded: expandedFAQ == item.id
                     ) {
+                        UIImpactFeedbackGenerator(style: .light).impactOccurred()
                         withAnimation(.spring(response: 0.3, dampingFraction: 0.7)) {
                             expandedFAQ = expandedFAQ == item.id ? nil : item.id
                         }
@@ -131,32 +125,47 @@ private extension HelpSupportView {
         }
     }
 
-    var contactSection: some View {
-        VStack(spacing: AppSpacing.large) {
-            AppText(AppString.noAnswerFound, style: .title)
+    var contactCard: some View {
+        AppCardView {
+            VStack(spacing: AppSpacing.large) {
+                AppText(AppString.noAnswerFound, style: .section)
 
-            AppText(
-                AppString.supportAvailable,
-                style: .body,
-                color: AppColor.textSecondary,
-                alignment: .center
-            )
+                AppText(
+                    AppString.supportAvailable,
+                    style: .bodySmaller,
+                    color: AppColor.textSecondary,
+                    alignment: .center
+                )
 
-            Button {
-                // TODO: open mail composer
-            } label: {
-                HStack {
-                    AppImage.envelope
-                    AppText(AppString.contactSupport, style: .bodySmall)
+                Button {
+                    UIImpactFeedbackGenerator(style: .light).impactOccurred()
+                    // TODO: open mail composer
+                } label: {
+                    HStack(spacing: AppSpacing.small) {
+                        AppImage.envelope
+                            .font(.system(size: AppSize.glyphMedium, weight: .semibold))
+
+                        AppText(AppString.contactSupport, style: .bodySmall)
+                    }
+                    .foregroundStyle(AppColor.textWhite)
+                    .frame(maxWidth: .infinity)
+                    .padding(.vertical, AppSpacing.large)
+                    .background(
+                        RoundedRectangle(cornerRadius: AppRadius.button, style: .continuous)
+                            .fill(AppColor.accent.gradient)
+                    )
                 }
-                .foregroundStyle(AppColor.textWhite)
-                .frame(maxWidth: .infinity)
-                .padding(AppSpacing.large)
-                .background(AppColor.accent.gradient)
-                .clipShape(RoundedRectangle(cornerRadius: AppRadius.button))
+                .buttonStyle(.plain)
             }
+            .padding(.vertical, AppSpacing.small)
+            .frame(maxWidth: .infinity)
         }
-        .padding(.vertical, AppSpacing.xLarge)
+    }
+
+    func sectionHeader(_ title: String) -> some View {
+        AppText(title, style: .sectionHeader, color: AppColor.textSecondary)
+            .frame(maxWidth: .infinity, alignment: .leading)
+            .padding(.horizontal, AppSpacing.xSmall)
     }
 }
 
@@ -193,19 +202,11 @@ struct QuickActionRow: View {
     // MARK: - Body
 
     var body: some View {
-        HStack(spacing: AppSpacing.large) {
-            ZStack {
-                RoundedRectangle(cornerRadius: AppRadius.medium)
-                    .fill(iconColor.opacity(0.15))
-                    .frame(width: AppSize.iconLarge, height: AppSize.iconLarge)
+        HStack(spacing: AppSpacing.medium) {
+            iconBadge
 
-                icon
-                    .font(.system(size: AppSize.glyphXLarge, weight: .semibold))
-                    .foregroundStyle(iconColor)
-            }
-
-            VStack(alignment: .leading, spacing: AppSpacing.xSmall) {
-                AppText(title, style: .body)
+            VStack(alignment: .leading, spacing: AppSpacing.xxSmall) {
+                AppText(title, style: .bodySmall)
 
                 AppText(subtitle, style: .caption, color: AppColor.textSecondary)
             }
@@ -214,9 +215,24 @@ struct QuickActionRow: View {
 
             AppImage.arrowUpRight
                 .font(.system(size: AppSize.glyphMedium, weight: .semibold))
-                .foregroundStyle(AppColor.textTertiary)
+                .foregroundStyle(.tertiary)
         }
-        .padding(AppSpacing.large)
+        .padding(.vertical, AppSpacing.small)
+        .contentShape(Rectangle())
+    }
+
+    // MARK: - Subviews
+
+    private var iconBadge: some View {
+        ZStack {
+            RoundedRectangle(cornerRadius: AppRadius.medium, style: .continuous)
+                .fill(iconColor.opacity(0.2))
+                .frame(width: AppSize.iconLarge, height: AppSize.iconLarge)
+
+            icon
+                .font(.system(size: AppSize.glyphLarge, weight: .semibold))
+                .foregroundStyle(iconColor)
+        }
     }
 }
 
@@ -235,31 +251,30 @@ struct FAQItemView: View {
     var body: some View {
         VStack(spacing: 0) {
             Button(action: onTap) {
-                HStack {
-                    AppText(item.question, style: .body)
+                HStack(spacing: AppSpacing.medium) {
+                    AppText(item.question, style: .bodySmall)
                         .frame(maxWidth: .infinity, alignment: .leading)
-
-                    Spacer()
 
                     expandIcon
                 }
-                .padding(AppSpacing.large)
+                .contentShape(Rectangle())
             }
             .buttonStyle(.plain)
 
             if isExpanded {
                 Divider()
+                    .padding(.vertical, AppSpacing.medium)
 
                 AppText(item.answer, style: .bodySmaller, color: AppColor.textSecondary)
                     .frame(maxWidth: .infinity, alignment: .leading)
-                    .padding(AppSpacing.large)
                     .transition(.opacity.combined(with: .move(edge: .top)))
             }
         }
-        .background(AppColor.cardBackground)
-        .clipShape(RoundedRectangle(cornerRadius: AppRadius.large))
-        .shadow(color: AppColor.textPrimary.opacity(0.05), radius: AppSpacing.xSmall, y: AppSpacing.xxSmall)
+        .padding(AppSpacing.large)
+        .card(cornerRadius: AppRadius.xLarge)
     }
+
+    // MARK: - Subviews
 
     private var expandIcon: some View {
         Group {
@@ -271,11 +286,14 @@ struct FAQItemView: View {
         }
         .font(.system(size: AppSize.glyphMedium, weight: .semibold))
         .foregroundStyle(AppColor.textSecondary)
+        .frame(width: AppSize.iconSmall, height: AppSize.iconSmall)
+        .background(
+            Circle()
+                .fill(AppColor.secondaryBackground)
+        )
     }
 }
 
 #Preview {
-    NavigationStack {
-        HelpSupportView()
-    }
+    HelpSupportView()
 }

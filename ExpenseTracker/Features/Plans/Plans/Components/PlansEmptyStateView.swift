@@ -16,42 +16,53 @@ struct PlansEmptyStateView: View {
     // MARK: - Body
 
     var body: some View {
-        VStack(spacing: 20) {
-            Spacer()
+        AppCardView {
+            VStack(spacing: AppSpacing.large) {
+                AppImage.chartBarDoc
+                    .font(.system(size: AppSize.glyphEmptyState))
+                    .foregroundStyle(.tertiary)
+                    .symbolRenderingMode(.hierarchical)
 
-            AppImage.chartBarDoc
-                .font(.system(size: 70))
-                .foregroundStyle(AppColor.accent.opacity(0.7))
-                .symbolRenderingMode(.hierarchical)
+                VStack(spacing: AppSpacing.small) {
+                    AppText(AppString.noBudgets, style: .section)
 
-            VStack(spacing: 10) {
-                AppText(AppString.noBudgets, style: .title)
-
-                AppText(AppString.noBudgetsHint, style: .body, color: AppColor.textSecondary, alignment: .center)
-                    .padding(.horizontal, 40)
-            }
-
-            Button(action: onCreateTap) {
-                HStack(spacing: 8) {
-                    AppImage.plusCircleFill
-                        .font(.system(size: 18))
-                    AppText(AppString.createBudget, style: .section)
+                    AppText(
+                        AppString.noBudgetsHint,
+                        style: .bodySmaller,
+                        color: AppColor.textSecondary,
+                        alignment: .center
+                    )
                 }
-                .foregroundStyle(AppColor.textWhite)
-                .padding(.horizontal, 28)
-                .padding(.vertical, 16)
-                .background(AppColor.accent)
-                .clipShape(Capsule())
-                .shadow(color: AppColor.accent.opacity(0.3), radius: 8, y: 4)
-            }
-            .padding(.top, 8)
 
-            Spacer()
+                Button {
+                    UIImpactFeedbackGenerator(style: .light).impactOccurred()
+                    onCreateTap()
+                } label: {
+                    HStack(spacing: AppSpacing.small) {
+                        AppImage.plus
+                            .font(.system(size: AppSize.glyphLarge, weight: .semibold))
+
+                        AppText(AppString.createBudget, style: .bodySmall, color: AppColor.background)
+                    }
+                    .foregroundStyle(AppColor.background)
+                    .padding(.horizontal, AppSpacing.xLarge)
+                    .padding(.vertical, AppSpacing.medium)
+                    .background(
+                        Capsule(style: .continuous)
+                            .fill(AppColor.textPrimary)
+                    )
+                }
+                .buttonStyle(.plain)
+                .padding(.top, AppSpacing.small)
+            }
+            .padding(.vertical, AppSpacing.xxLarge)
+            .frame(maxWidth: .infinity)
         }
     }
 }
 
 #Preview {
     PlansEmptyStateView(onCreateTap: {})
+        .padding(AppSpacing.large)
         .background(AppColor.background)
 }

@@ -47,12 +47,12 @@ struct AddBudgetPlanView: View {
             saveBar
         }
         .sheet(isPresented: $showingCategoryPicker) {
-            CategoryPickerSheet(
-                categories: categories,
-                selectedCategory: selectedCategory,
+            CategoriesListView(
                 onSelect: { category in
                     selectedCategory = category
-                }
+                },
+                initialType: .expense,
+                selectableCategoryIDs: Set(categories.map(\.persistentModelID))
             )
             .presentationDetents([.large])
             .presentationDragIndicator(.hidden)
@@ -65,7 +65,7 @@ private extension AddBudgetPlanView {
 
     var header: some View {
         ZStack {
-            AppText(AppString.newBudget, style: .section)
+            AppText(AppString.newBudget, style: .bodySmall)
 
             HStack {
                 ToolbarIconButton(icon: "xmark", isOutlined: true) {
@@ -77,6 +77,7 @@ private extension AddBudgetPlanView {
         }
         .padding(.horizontal, AppSpacing.large)
         .padding(.vertical, AppSpacing.small)
+        .padding(.top, AppSpacing.medium)
     }
 
     var previewCard: some View {
@@ -97,7 +98,7 @@ private extension AddBudgetPlanView {
 
                         Image(systemName: category.icon)
                             .font(.system(size: AppSize.glyphLarge, weight: .semibold))
-                            .foregroundStyle(Color(hex: category.colorHex))
+                            .foregroundStyle(AppColor.textPrimary)
                     }
 
                     AppText(category.name, style: .bodySmall)
@@ -107,7 +108,7 @@ private extension AddBudgetPlanView {
                             .fill(Color(.systemGray4).opacity(0.2))
                             .frame(width: AppSize.iconLarge, height: AppSize.iconLarge)
 
-                        Image(systemName: "minus")
+                        AppImage.noIcon
                             .font(.system(size: AppSize.glyphLarge, weight: .semibold))
                             .foregroundStyle(AppColor.textSecondary)
                     }
@@ -127,7 +128,7 @@ private extension AddBudgetPlanView {
             .padding(AppSpacing.large)
             .background(
                 RoundedRectangle(cornerRadius: AppRadius.card, style: .continuous)
-                    .fill(AppColor.cardBackground)
+                    .fill(AppColor.subtleFill)
             )
         }
         .frame(maxWidth: .infinity)
@@ -139,31 +140,32 @@ private extension AddBudgetPlanView {
     var categorySection: some View {
         CategoryFormSectionView(title: AppString.category.uppercased()) {
             Button {
+                UIImpactFeedbackGenerator(style: .light).impactOccurred()
                 showingCategoryPicker = true
             } label: {
                 HStack {
                     if let category = selectedCategory {
-                        HStack(spacing: AppSpacing.small) {
+                        HStack(spacing: AppSpacing.medium) {
                             ZStack {
-                                Circle()
+                                RoundedRectangle(cornerRadius: AppRadius.medium, style: .continuous)
                                     .fill(Color(hex: category.colorHex).opacity(0.2))
-                                    .frame(width: 28, height: 28)
+                                    .frame(width: AppSize.iconMedium, height: AppSize.iconMedium)
 
                                 Image(systemName: category.icon)
-                                    .font(.system(size: 12, weight: .semibold))
-                                    .foregroundStyle(Color(hex: category.colorHex))
+                                    .font(.system(size: AppSize.glyphLarge, weight: .semibold))
+                                    .foregroundStyle(AppColor.textPrimary)
                             }
 
-                            AppText(category.name, style: .body)
+                            AppText(category.name, style: .bodySmall)
                         }
                     } else {
-                        AppText(AppString.chooseCategory, style: .body, color: AppColor.textSecondary)
+                        AppText(AppString.chooseCategory, style: .bodySmall, color: AppColor.textSecondary)
                     }
 
                     Spacer()
 
-                    Image(systemName: "chevron.right")
-                        .font(.system(size: 14, weight: .semibold))
+                    AppImage.chevronRight
+                        .font(.system(size: AppSize.glyphMedium, weight: .semibold))
                         .foregroundStyle(.tertiary)
                 }
                 .padding(AppSpacing.large)
@@ -187,7 +189,7 @@ private extension AddBudgetPlanView {
         CategoryFormSectionView(title: AppString.limit.uppercased()) {
             HStack {
                 TextField("0", text: $amount)
-                    .font(.system(size: 28, weight: .bold))
+                    .font(.app(.title))
                     .fontDesign(.rounded)
                     .keyboardType(.decimalPad)
 

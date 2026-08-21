@@ -15,6 +15,8 @@ struct CategoriesListView: View {
     /// Когда задан — экран работает в режиме выбора: тап по категории выбирает её, а не открывает редактирование.
     var onSelect: ((Category) -> Void)? = nil
     var initialType: TransactionType = .expense
+    /// Когда задан — в списке доступны только эти категории (например, свободные для нового бюджета).
+    var selectableCategoryIDs: Set<PersistentIdentifier>? = nil
 
     @Query(sort: \Category.name)
     private var categories: [Category]
@@ -31,7 +33,11 @@ struct CategoriesListView: View {
     // MARK: - Computed Properties
 
     private var filteredCategories: [Category] {
-        categories.filter { $0.type == selectedType }
+        categories.filter { category in
+            guard category.type == selectedType else { return false }
+            guard let selectableCategoryIDs else { return true }
+            return selectableCategoryIDs.contains(category.persistentModelID)
+        }
     }
 
     // MARK: - Body

@@ -13,6 +13,7 @@ struct BudgetPlanRow: View {
 
     let plan: BudgetPlan
     let spent: Decimal
+    let isEditing: Bool
     let onDelete: () -> Void
 
     // MARK: - Computed Properties
@@ -42,73 +43,107 @@ struct BudgetPlanRow: View {
     // MARK: - Body
 
     var body: some View {
-        VStack(spacing: 12) {
-            HStack(spacing: 12) {
-                ZStack {
-                    RoundedRectangle(cornerRadius: 8)
-                        .fill(Color(hex: plan.category.colorHex).opacity(0.15))
-                        .frame(width: 38, height: 38)
+        VStack(spacing: AppSpacing.medium) {
+            HStack(spacing: AppSpacing.medium) {
+                iconBadge
 
-                    Image(systemName: plan.category.icon)
-                        .font(.system(size: 18, weight: .semibold))
-                        .foregroundStyle(Color(hex: plan.category.colorHex))
-                        .symbolRenderingMode(.hierarchical)
-                }
+                VStack(alignment: .leading, spacing: AppSpacing.xxSmall) {
+                    AppText(plan.category.name, style: .bodySmall)
 
-                VStack(alignment: .leading, spacing: 3) {
-                    Text(plan.category.name)
-                        .font(.app(.bodySmall))
-
-                    Text("\(spent.formatted(.currency(code: AppString.currencyCode))) из \(plan.monthlyLimit.formatted(.currency(code: AppString.currencyCode)))")
+                    Text("\(spent.formatted(.currency(code: AppString.currencyCode))) \(AppString.outOf) \(plan.monthlyLimit.formatted(.currency(code: AppString.currencyCode)))")
                         .font(.app(.microCaption))
+                        .fontDesign(.rounded)
                         .foregroundStyle(AppColor.textSecondary)
                 }
 
                 Spacer()
 
-                HStack(spacing: 12) {
-                    Text("\(percentage)%")
-                        .font(.system(size: 15, weight: .bold))
-                        .fontDesign(.rounded)
-                        .foregroundStyle(progressColor)
-
-                    Button(action: onDelete) {
-                        AppImage.trashFill
-                            .font(.system(size: 15))
-                            .foregroundStyle(AppColor.expense.opacity(0.8))
-                    }
-                    .buttonStyle(.plain)
-                }
+                trailingAccessories
             }
 
-            GeometryReader { geometry in
-                ZStack(alignment: .leading) {
-                    Capsule()
-                        .fill(Color(.systemGray6))
-
-                    Capsule()
-                        .fill(progressColor)
-                        .frame(width: max(geometry.size.width * progress, 0))
-                        .animation(.spring(response: 0.5, dampingFraction: 0.8), value: progress)
-                }
-            }
-            .frame(height: 6)
+            progressBar
 
             HStack {
-                if remaining >= 0 {
-                    Text("\(AppString.remaining) \(remaining.formatted(.currency(code: AppString.currencyCode)))")
-                        .font(.app(.microCaption))
-                        .foregroundStyle(.tertiary)
-                } else {
-                    Text("\(AppString.exceeded) \(abs(remaining).formatted(.currency(code: AppString.currencyCode)))")
-                        .font(.app(.microCaption))
-                        .foregroundStyle(AppColor.expense)
-                }
+                remainingLabel
 
                 Spacer()
             }
         }
-        .padding(.vertical, 10)
+        .padding(.vertical, AppSpacing.medium)
         .contentShape(Rectangle())
+    }
+}
+
+// MARK: - Subviews
+private extension BudgetPlanRow {
+
+    var iconBadge: some View {
+        ZStack {
+            RoundedRectangle(cornerRadius: AppRadius.medium, style: .continuous)
+                .fill(Color(hex: plan.category.colorHex).opacity(0.2))
+                .frame(width: AppSize.iconMedium, height: AppSize.iconMedium)
+
+            Image(systemName: plan.category.icon)
+                .font(.system(size: AppSize.glyphLarge, weight: .semibold))
+                .foregroundStyle(AppColor.textPrimary)
+        }
+    }
+
+    @ViewBuilder
+    var trailingAccessories: some View {
+        HStack(spacing: AppSpacing.medium) {
+            Text("\(percentage)%")
+                .font(.app(.bodySmall))
+                .fontDesign(.rounded)
+                .foregroundStyle(progressColor)
+
+            if isEditing {
+                deleteButton
+            }
+        }
+    }
+
+    var deleteButton: some View {
+        Button(action: onDelete) {
+            AppImage.trash
+                .font(.system(size: AppSize.glyphLarge, weight: .semibold))
+                .foregroundStyle(AppColor.textPrimary)
+                .frame(width: AppSize.iconMedium, height: AppSize.iconMedium)
+                .background(
+                    RoundedRectangle(cornerRadius: AppRadius.medium, style: .continuous)
+                        .fill(AppColor.expense.opacity(0.15))
+                )
+        }
+        .buttonStyle(.plain)
+    }
+
+    var progressBar: some View {
+        GeometryReader { geometry in
+            ZStack(alignment: .leading) {
+                Capsule()
+                    .fill(AppColor.subtleFill)
+
+                Capsule()
+                    .fill(progressColor)
+                    .frame(width: max(geometry.size.width * progress, 0))
+                    .animation(.spring(response: 0.5, dampingFraction: 0.8), value: progress)
+            }
+        }
+        .frame(height: AppSpacing.smaller)
+    }
+
+    @ViewBuilder
+    var remainingLabel: some View {
+        if remaining >= 0 {
+            Text("\(AppString.remaining) \(remaining.formatted(.currency(code: AppString.currencyCode)))")
+                .font(.app(.microCaption))
+                .fontDesign(.rounded)
+                .foregroundStyle(.tertiary)
+        } else {
+            Text("\(AppString.exceeded) \(abs(remaining).formatted(.currency(code: AppString.currencyCode)))")
+                .font(.app(.microCaption))
+                .fontDesign(.rounded)
+                .foregroundStyle(AppColor.expense)
+        }
     }
 }
