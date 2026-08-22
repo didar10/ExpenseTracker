@@ -56,7 +56,7 @@ struct AddTransactionView: View {
                             HStack(spacing: 20) {
                                 AccountPickerView(
                                     selectedAccount: $viewModel.selectedAccount,
-                                    transactionAmount: viewModel.amount,
+                                    transactionAmount: viewModel.pendingAmount,
                                     transactionType: viewModel.type,
                                     showingAccountPicker: $showingAccountPicker
                                 )

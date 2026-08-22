@@ -133,7 +133,7 @@ private extension PlansView {
 
     var header: some View {
         ZStack {
-            AppText(AppString.budgets, style: .bodySmall)
+            AppText(AppString.budgets, style: .title)
 
             HStack(spacing: AppSpacing.small) {
                 Spacer()
@@ -153,8 +153,7 @@ private extension PlansView {
             }
         }
         .padding(.horizontal, AppSpacing.large)
-        .padding(.vertical, AppSpacing.small)
-        .padding(.top, AppSpacing.medium)
+        .padding(.vertical, AppSpacing.large)
     }
 
     var plansListCard: some View {

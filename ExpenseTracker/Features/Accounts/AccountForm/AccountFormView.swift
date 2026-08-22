@@ -39,10 +39,11 @@ struct AccountFormView: View {
 
                 ScrollView {
                     VStack(spacing: AppSpacing.xLarge) {
-                        AccountPreviewCardView(
+                        NamePreviewCardView(
                             name: $viewModel.name,
                             icon: viewModel.selectedIcon,
-                            colorName: viewModel.selectedColor
+                            color: Color(named: viewModel.selectedColor),
+                            placeholder: AppString.accountName
                         )
 
                         colorSection
@@ -94,39 +95,33 @@ private extension AccountFormView {
     }
 
     var balanceSection: some View {
-        CategoryFormSectionView(title: AppString.initialBalance.uppercased()) {
+        HStack(spacing: AppSpacing.medium) {
+            AppText(AppString.initialBalance, style: .bodySmall)
+                .lineLimit(1)
+                .fixedSize(horizontal: true, vertical: false)
+
             TextField("0", text: $viewModel.initialBalance)
                 .keyboardType(.decimalPad)
                 .font(.app(.body))
-                .padding(AppSpacing.large)
-                .background(
-                    RoundedRectangle(cornerRadius: AppRadius.card, style: .continuous)
-                        .fill(AppColor.cardBackground)
-                )
-                .overlay(
-                    RoundedRectangle(cornerRadius: AppRadius.card, style: .continuous)
-                        .strokeBorder(
-                            AppColor.textPrimary.opacity(0.15),
-                            lineWidth: AppSpacing.hairline
-                        )
-                )
+                .multilineTextAlignment(.trailing)
         }
+        .padding(AppSpacing.large)
+        .background(
+            RoundedRectangle(cornerRadius: AppRadius.card, style: .continuous)
+                .fill(AppColor.fieldFill)
+        )
     }
 
     var iconSection: some View {
-        CategoryFormSectionView(title: AppString.icon.uppercased()) {
-            IconPickerView(
-                selectedIcon: $viewModel.selectedIcon,
-                color: Color(named: viewModel.selectedColor),
-                onSelect: viewModel.selectIcon
-            )
-        }
+        IconPickerView(
+            selectedIcon: $viewModel.selectedIcon,
+            color: Color(named: viewModel.selectedColor),
+            onSelect: viewModel.selectIcon
+        )
     }
 
     var colorSection: some View {
-        CategoryFormSectionView(title: AppString.color.uppercased()) {
-            ColorPickerView(selectedColor: $viewModel.selectedColor, onSelect: viewModel.selectColor)
-        }
+        ColorPickerView(selectedColor: $viewModel.selectedColor, onSelect: viewModel.selectColor)
     }
 
     var defaultSection: some View {
@@ -138,7 +133,7 @@ private extension AccountFormView {
         }
         .tint(AppColor.accent)
         .padding(AppSpacing.large)
-        .card(cornerRadius: AppRadius.card)
+        .card(cornerRadius: AppRadius.card, fillColor: AppColor.fieldFill)
     }
 
     var deleteSection: some View {
@@ -159,7 +154,7 @@ private extension AccountFormView {
                 Spacer()
             }
             .padding(AppSpacing.large)
-            .card(cornerRadius: AppRadius.card)
+            .card(cornerRadius: AppRadius.card, fillColor: AppColor.fieldFill)
         }
         .buttonStyle(.plain)
     }

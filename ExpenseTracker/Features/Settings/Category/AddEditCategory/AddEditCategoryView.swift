@@ -35,13 +35,17 @@ struct AddEditCategoryView: View {
 
                 ScrollView {
                     VStack(spacing: AppSpacing.xLarge) {
-                        CategoryPreviewCardView(
+                        NamePreviewCardView(
                             name: $viewModel.formData.name,
                             icon: viewModel.formData.icon,
-                            colorHex: viewModel.formData.colorHex
+                            color: Color(hex: viewModel.formData.colorHex),
+                            placeholder: AppString.categoryName
                         )
 
-                        TransactionTypePickerView(selectedType: $viewModel.formData.type)
+                        TransactionTypePickerView(
+                            selectedType: $viewModel.formData.type,
+                            backgroundColor: AppColor.fieldFill
+                        )
 
                         colorSection
                         iconSection
@@ -93,18 +97,14 @@ private extension AddEditCategoryView {
     }
 
     var iconSection: some View {
-        CategoryFormSectionView(title: AppString.icon.uppercased()) {
-            IconPicker(
-                selectedIcon: $viewModel.formData.icon,
-                colorHex: viewModel.formData.colorHex
-            )
-        }
+        IconPicker(
+            selectedIcon: $viewModel.formData.icon,
+            colorHex: viewModel.formData.colorHex
+        )
     }
 
     var colorSection: some View {
-        CategoryFormSectionView(title: AppString.color.uppercased()) {
-            CategoryColorPickerView(colorHex: $viewModel.formData.colorHex)
-        }
+        ColorPickerView(selectedColor: $viewModel.formData.colorHex, palette: .hex)
     }
 
     var saveBar: some View {

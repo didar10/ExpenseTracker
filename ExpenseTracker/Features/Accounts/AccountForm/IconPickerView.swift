@@ -37,11 +37,7 @@ struct IconPickerView: View {
         .padding(AppSpacing.medium)
         .background(
             RoundedRectangle(cornerRadius: AppRadius.card, style: .continuous)
-                .fill(AppColor.cardBackground)
-        )
-        .overlay(
-            RoundedRectangle(cornerRadius: AppRadius.card, style: .continuous)
-                .strokeBorder(AppColor.textPrimary.opacity(0.15), lineWidth: AppSpacing.hairline)
+                .fill(AppColor.fieldFill)
         )
     }
 }

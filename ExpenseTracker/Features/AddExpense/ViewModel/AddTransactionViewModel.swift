@@ -25,6 +25,8 @@ final class AddTransactionViewModel: ObservableObject {
 
     @Published var showSuccessAnimation = false
     @Published var showAllCategories = false
+    /// Транзакция уже записана в контекст: защищает от повторного сохранения
+    @Published private(set) var isSaved = false
 
     private(set) var editingTransaction: Transaction?
 
@@ -49,8 +51,15 @@ final class AddTransactionViewModel: ObservableObject {
     }
 
     var isSaveEnabled: Bool {
+        !isSaved &&
         Decimal(string: amount) != nil &&
         selectedAccount != nil
+    }
+
+    /// Сумма для предпросмотра баланса счёта: после сохранения транзакция
+    /// уже учтена в `currentBalance`, поэтому вычитать её повторно нельзя
+    var pendingAmount: String {
+        isSaved ? "" : amount
     }
 
     var amountDisplay: String {
@@ -80,7 +89,7 @@ final class AddTransactionViewModel: ObservableObject {
     
     // MARK: - Save
     func save(using context: ModelContext) -> Bool {
-        guard let value = amountDecimal else { return false }
+        guard !isSaved, let value = amountDecimal else { return false }
         
         provideFeedback(.medium)
 
@@ -102,7 +111,9 @@ final class AddTransactionViewModel: ObservableObject {
             )
             context.insert(newTransaction)
         }
-        
+
+        isSaved = true
+
         return true
     }
     

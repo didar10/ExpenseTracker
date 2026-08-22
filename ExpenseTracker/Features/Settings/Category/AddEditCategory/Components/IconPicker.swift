@@ -37,24 +37,25 @@ struct IconPicker: View {
         "star", "star.fill"
     ]
 
-    private let columns = Array(repeating: GridItem(.flexible(), spacing: AppSpacing.small), count: 6)
+    private let rows = Array(
+        repeating: GridItem(.fixed(AppSize.iconLarge), spacing: AppSpacing.small),
+        count: 4
+    )
 
     // MARK: - Body
 
     var body: some View {
-        LazyVGrid(columns: columns, spacing: AppSpacing.small) {
-            ForEach(icons, id: \.self) { icon in
-                iconCell(icon)
+        ScrollView(.horizontal, showsIndicators: false) {
+            LazyHGrid(rows: rows, spacing: AppSpacing.small) {
+                ForEach(icons, id: \.self) { icon in
+                    iconCell(icon)
+                }
             }
+            .padding(AppSpacing.medium)
         }
-        .padding(AppSpacing.medium)
         .background(
             RoundedRectangle(cornerRadius: AppRadius.card, style: .continuous)
-                .fill(AppColor.cardBackground)
-        )
-        .overlay(
-            RoundedRectangle(cornerRadius: AppRadius.card, style: .continuous)
-                .strokeBorder(AppColor.textPrimary.opacity(0.15), lineWidth: AppSpacing.hairline)
+                .fill(AppColor.fieldFill)
         )
     }
 }
@@ -69,8 +70,7 @@ private extension IconPicker {
         return Image(systemName: icon)
             .font(.system(size: AppSize.glyphLarge, weight: .semibold))
             .foregroundStyle(AppColor.textPrimary)
-            .frame(maxWidth: .infinity)
-            .frame(height: AppSize.iconLarge)
+            .frame(width: AppSize.iconLarge, height: AppSize.iconLarge)
             .background(
                 RoundedRectangle(cornerRadius: AppRadius.medium, style: .continuous)
                     .fill(isSelected ? color : color.opacity(0.2))

@@ -18,6 +18,7 @@ enum AppFont {
     case bodySmaller
     case bodySmall
     case caption
+    case captionMedium
     case microCaption
 
     var font: Font {
@@ -49,6 +50,9 @@ enum AppFont {
 
         case .caption:
             return .custom("Montserrat-Regular", size: 13)
+
+        case .captionMedium:
+            return .custom("Montserrat-SemiBold", size: 13)
             
         case .microCaption:
             return .custom("Montserrat-Medium", size: 10)

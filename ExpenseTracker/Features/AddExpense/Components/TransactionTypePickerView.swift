@@ -12,6 +12,7 @@ struct TransactionTypePickerView: View {
     // MARK: - Properties
 
     @Binding var selectedType: TransactionType
+    var backgroundColor: Color = AppColor.secondaryBackground
 
     // MARK: - Body
 
@@ -28,7 +29,7 @@ struct TransactionTypePickerView: View {
                         .font(.system(size: 14, weight: .semibold))
                         .foregroundStyle(AppColor.warning)
                     if selectedType == .expense {
-                        AppText(AppString.expense, style: .caption, color: AppColor.warning)
+                        AppText(AppString.expense, style: .captionMedium, color: AppColor.warning)
                             .transition(.opacity.combined(with: .move(edge: .leading)))
                     }
                 }
@@ -52,7 +53,7 @@ struct TransactionTypePickerView: View {
                         .font(.system(size: 14, weight: .semibold))
                         .foregroundStyle(AppColor.income)
                     if selectedType == .income {
-                        AppText(AppString.income, style: .caption, color: AppColor.income)
+                        AppText(AppString.income, style: .captionMedium, color: AppColor.income)
                             .transition(.opacity.combined(with: .move(edge: .trailing)))
                     }
                 }
@@ -67,7 +68,7 @@ struct TransactionTypePickerView: View {
         }
         .padding(6)
         .background(
-            Capsule().fill(AppColor.secondaryBackground)
+            Capsule().fill(backgroundColor)
         )
     }
 }

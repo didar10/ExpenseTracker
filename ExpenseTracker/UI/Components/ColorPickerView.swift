@@ -7,35 +7,59 @@
 
 import SwiftUI
 
+/// Палитра выбора цвета: горизонтальный список кружков
 struct ColorPickerView: View {
+
+    // MARK: - Palette
+
+    enum Palette {
+
+        /// Системные цвета по имени: "blue", "green", ...
+        case named
+        /// Пресеты в формате hex: "#F5A623", ...
+        case hex
+
+        var values: [String] {
+            switch self {
+            case .named:
+                return AppColorPalette.names
+
+            case .hex:
+                return [
+                    "#F5A623", "#E74C3C", "#E91E63", "#9C27B0", "#673AB7", "#3F51B5",
+                    "#2196F3", "#00BCD4", "#009688", "#4CAF50", "#8BC34A", "#9E9E9E"
+                ]
+            }
+        }
+
+        func color(for value: String) -> Color {
+            switch self {
+            case .named: return Color(named: value)
+            case .hex: return Color(hex: value)
+            }
+        }
+    }
 
     // MARK: - Properties
 
     @Binding var selectedColor: String
-    let onSelect: (String) -> Void
-
-    private let colorNames: [String] = [
-        "blue", "green", "orange", "red", "purple", "pink"
-    ]
-
-    private let columns = Array(repeating: GridItem(.flexible(), spacing: AppSpacing.small), count: 6)
+    var palette: Palette = .named
+    var onSelect: (String) -> Void = { _ in }
 
     // MARK: - Body
 
     var body: some View {
-        LazyVGrid(columns: columns, spacing: AppSpacing.medium) {
-            ForEach(colorNames, id: \.self) { name in
-                colorSwatch(name)
+        ScrollView(.horizontal, showsIndicators: false) {
+            HStack(spacing: AppSpacing.medium) {
+                ForEach(palette.values, id: \.self) { value in
+                    colorSwatch(value)
+                }
             }
+            .padding(AppSpacing.large)
         }
-        .padding(AppSpacing.large)
         .background(
             RoundedRectangle(cornerRadius: AppRadius.card, style: .continuous)
-                .fill(AppColor.cardBackground)
-        )
-        .overlay(
-            RoundedRectangle(cornerRadius: AppRadius.card, style: .continuous)
-                .strokeBorder(AppColor.textPrimary.opacity(0.15), lineWidth: AppSpacing.hairline)
+                .fill(AppColor.fieldFill)
         )
     }
 }
@@ -43,17 +67,17 @@ struct ColorPickerView: View {
 // MARK: - Subviews
 private extension ColorPickerView {
 
-    func colorSwatch(_ name: String) -> some View {
-        let isSelected = selectedColor.caseInsensitiveCompare(name) == .orderedSame
+    func colorSwatch(_ value: String) -> some View {
+        let isSelected = selectedColor.caseInsensitiveCompare(value) == .orderedSame
 
         return ZStack {
             Circle()
-                .fill(Color(named: name))
-                .frame(width: AppSize.iconLarge, height: AppSize.iconLarge)
+                .fill(palette.color(for: value))
+                .frame(width: AppSize.iconSmall, height: AppSize.iconSmall)
 
             if isSelected {
                 AppImage.checkmark
-                    .font(.system(size: AppSize.glyphLarge, weight: .bold))
+                    .font(.system(size: AppSize.glyphSmall, weight: .bold))
                     .foregroundStyle(AppColor.textWhite)
             }
         }
@@ -61,17 +85,19 @@ private extension ColorPickerView {
             Circle()
                 .strokeBorder(AppColor.textPrimary.opacity(0.08), lineWidth: AppSpacing.hairline)
         )
-        .frame(maxWidth: .infinity)
         .contentShape(Circle())
         .onTapGesture {
-            selectedColor = name
-            onSelect(name)
+            selectedColor = value
+            onSelect(value)
         }
     }
 }
 
 #Preview {
-    ColorPickerView(selectedColor: .constant("blue"), onSelect: { _ in })
-        .padding(AppSpacing.large)
-        .background(AppColor.background)
+    VStack(spacing: AppSpacing.large) {
+        ColorPickerView(selectedColor: .constant("blue"))
+        ColorPickerView(selectedColor: .constant("#F5A623"), palette: .hex)
+    }
+    .padding(AppSpacing.large)
+    .background(AppColor.background)
 }

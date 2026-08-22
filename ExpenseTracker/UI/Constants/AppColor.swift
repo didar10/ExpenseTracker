@@ -16,6 +16,8 @@ enum AppColor {
     static let secondaryBackground = Color(uiColor: .secondarySystemGroupedBackground)
     /// Нейтральная подложка внутри карточек: прогресс-бары, вложенные блоки
     static let subtleFill = Color.primary.opacity(0.08)
+    /// Светлая нейтральная заливка полей ввода и секций формы
+    static let fieldFill = Color.primary.opacity(0.04)
 
     // MARK: - Semantic
 

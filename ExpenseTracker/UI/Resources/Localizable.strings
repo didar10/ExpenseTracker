@@ -25,7 +25,7 @@
 "no_accounts_hint" = "Создайте счет в разделе \"Счета\"";
 "choose_account" = "Выберите счет";
 "account_name" = "Название счета";
-"initial_balance" = "Начальный баланс (опционально)";
+"initial_balance" = "Начальный баланс";
 "icon" = "Иконка";
 "color" = "Цвет";
 "default_account" = "Счет по умолчанию";
