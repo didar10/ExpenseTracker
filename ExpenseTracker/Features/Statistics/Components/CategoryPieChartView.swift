@@ -1,5 +1,5 @@
 //
-//  ExpensesPieChartView.swift
+//  CategoryPieChartView.swift
 //  ExpenseTracker
 //
 //  Created by Didar on 21.01.2026.
@@ -8,13 +8,14 @@
 import SwiftUI
 import Charts
 
-/// Круговая диаграмма расходов по категориям
-struct ExpensesPieChartView: View {
+/// Круговая диаграмма доходов или расходов по категориям
+struct CategoryPieChartView: View {
 
     // MARK: - Properties
 
     let statistics: [CategoryStatistic]
-    let totalExpenses: Decimal
+    let totalAmount: Decimal
+    let title: String
 
     // MARK: - Body
 
@@ -39,11 +40,14 @@ struct ExpensesPieChartView: View {
                 }
             }
             .frame(height: AppSize.chartHeight)
+            // Charts падает при интерполяции секторов, если данные меняются
+            // внутри withAnimation, поэтому отключаем анимацию для диаграммы
+            .transaction { $0.animation = nil }
             .chartBackground { _ in
                 VStack(spacing: AppSpacing.xSmall) {
-                    AppText(AppString.expenses, style: .microCaption, color: AppColor.textSecondary)
+                    AppText(title, style: .microCaption, color: AppColor.textSecondary)
 
-                    Text(totalExpenses.formatted(.currency(code: AppString.currencyCode)))
+                    Text(totalAmount.formatted(.currency(code: AppString.currencyCode)))
                         .font(.app(.title))
                         .fontDesign(.rounded)
                         .foregroundStyle(AppColor.textPrimary)
@@ -56,14 +60,15 @@ struct ExpensesPieChartView: View {
     // MARK: - Private Methods
 
     private func shouldShowAnnotation(for stat: CategoryStatistic) -> Bool {
-        stat.percentage(of: totalExpenses) > 0.12
+        stat.percentage(of: totalAmount) > 0.12
     }
 }
 
 #Preview {
-    ExpensesPieChartView(
+    CategoryPieChartView(
         statistics: [],
-        totalExpenses: 450000
+        totalAmount: 450000,
+        title: AppString.expenses
     )
     .padding(AppSpacing.large)
     .background(AppColor.background)

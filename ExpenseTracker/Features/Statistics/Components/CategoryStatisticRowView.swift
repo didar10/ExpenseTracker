@@ -13,7 +13,7 @@ struct CategoryStatisticRowView: View {
     // MARK: - Properties
 
     let statistic: CategoryStatistic
-    let totalExpenses: Decimal
+    let totalAmount: Decimal
 
     // MARK: - Body
 
@@ -54,7 +54,7 @@ private extension CategoryStatisticRowView {
             AppText(statistic.category.name, style: .bodySmaller)
 
             AppText(
-                statistic.percentageString(of: totalExpenses),
+                statistic.percentageString(of: totalAmount),
                 style: .microCaption,
                 color: AppColor.textSecondary
             )
@@ -82,7 +82,7 @@ private extension CategoryStatisticRowView {
             amount: 125000,
             transactionCount: 15
         ),
-        totalExpenses: 450000
+        totalAmount: 450000
     )
     .padding(AppSpacing.large)
 }

@@ -13,7 +13,7 @@ struct CategoryStatisticsListView: View {
     // MARK: - Properties
 
     let statistics: [CategoryStatistic]
-    let totalExpenses: Decimal
+    let totalAmount: Decimal
     let selectedPeriod: StatisticsPeriod
     let onCategoryTap: (CategoryStatistic) -> Void
 
@@ -27,7 +27,7 @@ struct CategoryStatisticsListView: View {
                 } label: {
                     CategoryStatisticRowView(
                         statistic: stat,
-                        totalExpenses: totalExpenses
+                        totalAmount: totalAmount
                     )
                     .padding(.horizontal, AppSpacing.large)
                     .padding(.vertical, AppSpacing.medium)
@@ -53,7 +53,7 @@ struct CategoryStatisticsListView: View {
                 transactionCount: 8
             )
         ],
-        totalExpenses: 450000,
+        totalAmount: 450000,
         selectedPeriod: .month,
         onCategoryTap: { _ in }
     )

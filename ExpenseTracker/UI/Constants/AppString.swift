@@ -108,6 +108,8 @@ enum AppString {
     static let expenses = String(localized: "expenses")
     static let noData = String(localized: "no_data")
     static let noDataHint = String(localized: "no_data_hint")
+    static let incomes = String(localized: "incomes")
+    static let noDataHintIncome = String(localized: "no_data_hint_income")
     static let totalForPeriod = String(localized: "total_for_period")
     static let totalExpenses = String(localized: "total_expenses")
     static let noTransactionsForPeriod = String(localized: "no_transactions_for_period")
@@ -150,6 +152,13 @@ enum AppString {
     static let supportTelegram = String(localized: "support_telegram")
     static let lastUpdated = String(localized: "last_updated")
     static let termsIntro = String(localized: "terms_intro")
+
+    // MARK: - Data
+
+    static let data = String(localized: "data")
+    static let deleteAllData = String(localized: "delete_all_data")
+    static let deleteAllDataConfirm = String(localized: "delete_all_data_confirm")
+    static let deleteAllDataMessage = String(localized: "delete_all_data_message")
 
     // MARK: - FAQ
 

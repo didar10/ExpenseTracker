@@ -10,6 +10,10 @@ import SwiftUI
 /// Пустое состояние для экрана статистики
 struct StatisticsEmptyStateView: View {
 
+    // MARK: - Properties
+
+    let hint: String
+
     // MARK: - Body
 
     var body: some View {
@@ -23,7 +27,7 @@ struct StatisticsEmptyStateView: View {
                 AppText(AppString.noData, style: .section)
 
                 AppText(
-                    AppString.noDataHint,
+                    hint,
                     style: .sectionHeader,
                     color: AppColor.textSecondary,
                     alignment: .center
@@ -35,7 +39,7 @@ struct StatisticsEmptyStateView: View {
 }
 
 #Preview {
-    StatisticsEmptyStateView()
+    StatisticsEmptyStateView(hint: AppString.noDataHint)
         .padding(AppSpacing.large)
         .background(AppColor.background)
 }

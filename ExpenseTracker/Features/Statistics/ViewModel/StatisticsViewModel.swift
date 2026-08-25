@@ -18,8 +18,9 @@ final class StatisticsViewModel {
     
     var selectedPeriod: StatisticsPeriod = .month
     var selectedAccount: Account?
+    var selectedType: TransactionType = .expense
     private(set) var statistics: [CategoryStatistic] = []
-    private(set) var totalExpenses: Decimal = 0
+    private(set) var totalAmount: Decimal = 0
     
     private var transactions: [Transaction] = []
     private(set) var accounts: [Account] = []
@@ -38,6 +39,16 @@ final class StatisticsViewModel {
     
     var totalBalance: Decimal {
         accounts.reduce(0) { $0 + $1.currentBalance }
+    }
+    
+    /// Подпись в центре диаграммы — зависит от выбранного типа операций
+    var totalTitle: String {
+        selectedType == .income ? AppString.incomes : AppString.expenses
+    }
+    
+    /// Подсказка пустого состояния — зависит от выбранного типа операций
+    var emptyStateHint: String {
+        selectedType == .income ? AppString.noDataHintIncome : AppString.noDataHint
     }
     
     // MARK: - Initialization
@@ -81,24 +92,31 @@ final class StatisticsViewModel {
         calculateStatistics()
     }
     
+    /// Изменяет тип операций: доходы или расходы
+    func changeType(_ type: TransactionType) {
+        selectedType = type
+        calculateStatistics()
+    }
+    
     /// Возвращает транзакции для конкретной категории
     func transactions(for category: Category) -> [Transaction] {
-        expenses.filter { $0.category == category }
+        filteredTransactions.filter { $0.category == category }
     }
     
     // MARK: - Private Methods
     
-    private var expenses: [Transaction] {
+    /// Операции выбранного типа за выбранный период по выбранному счету
+    private var filteredTransactions: [Transaction] {
         transactions.filter {
-            $0.type == .expense &&
+            $0.type == selectedType &&
             periodInterval.contains($0.date) &&
             (selectedAccount == nil || $0.account == selectedAccount)
         }
     }
     
     private func calculateStatistics() {
-        // Группируем расходы по категориям
-        let grouped = Dictionary(grouping: expenses) { $0.category }
+        // Группируем операции по категориям
+        let grouped = Dictionary(grouping: filteredTransactions) { $0.category }
         
         // Создаем статистику для каждой категории
         statistics = grouped.compactMap { category, transactions in
@@ -114,7 +132,7 @@ final class StatisticsViewModel {
         }
         .sorted { $0.amount > $1.amount }
         
-        // Считаем общую сумму расходов
-        totalExpenses = expenses.reduce(0) { $0 + $1.amount }
+        // Считаем общую сумму за период
+        totalAmount = filteredTransactions.reduce(0) { $0 + $1.amount }
     }
 }

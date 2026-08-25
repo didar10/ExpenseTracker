@@ -6,21 +6,29 @@
 //
 
 import SwiftUI
+import SwiftData
 
 struct SettingsView: View {
 
     // MARK: - Properties
 
-    @State private var showingCategories = false
-    @State private var showingPrivacyPolicy = false
-    @State private var showingHelpSupport = false
-    @State private var showingTermsOfService = false
+    @Environment(\.modelContext) private var context
+
+    @State private var viewModel = SettingsViewModel()
+    @State private var coordinator: SettingsCoordinator
+
+    // MARK: - Init
+
+    @MainActor
+    init(coordinator: SettingsCoordinator? = nil) {
+        _coordinator = State(initialValue: coordinator ?? SettingsCoordinator())
+    }
 
     // MARK: - Body
 
     var body: some View {
         NavigationStack {
-            VStack(spacing: 0) {
+            VStack(spacing: .zero) {
                 AppText(AppString.settings, style: .title)
                     .frame(maxWidth: .infinity, alignment: .center)
                     .padding(.vertical, AppSpacing.large)
@@ -30,6 +38,7 @@ struct SettingsView: View {
                     VStack(spacing: AppSpacing.xLarge) {
                         generalSection
                         informationSection
+                        dataSection
                         appInfoSection
                     }
                     .padding(AppSpacing.large)
@@ -38,23 +47,18 @@ struct SettingsView: View {
             }
             .background(AppColor.background)
             .navigationBarHidden(true)
-            .sheet(isPresented: $showingCategories) {
-                CategoriesListView()
+            .sheet(item: $coordinator.activeRoute) { route in
+                SettingsRouteView(route: route)
             }
-            .sheet(isPresented: $showingPrivacyPolicy) {
-                PrivacyPolicyView()
-                    .presentationDetents([.large])
-                    .presentationDragIndicator(.hidden)
-            }
-            .sheet(isPresented: $showingHelpSupport) {
-                HelpSupportView()
-                    .presentationDetents([.large])
-                    .presentationDragIndicator(.hidden)
-            }
-            .sheet(isPresented: $showingTermsOfService) {
-                TermsOfServiceView()
-                    .presentationDetents([.large])
-                    .presentationDragIndicator(.hidden)
+            .alert(AppString.deleteAllDataConfirm, isPresented: $viewModel.showingDeleteAllDataAlert) {
+                Button(AppString.cancel, role: .cancel) {
+                    viewModel.cancelDeleteAllData()
+                }
+                Button(AppString.delete, role: .destructive) {
+                    viewModel.confirmDeleteAllData(context: context)
+                }
+            } message: {
+                Text(AppString.deleteAllDataMessage)
             }
         }
     }
@@ -75,7 +79,7 @@ private extension SettingsView {
                 iconColor: AppColor.accent,
                 title: AppString.categories
             ) {
-                showingCategories = true
+                coordinator.show(.categories)
             }
             .cardShadow(cornerRadius: AppRadius.card)
         }
@@ -87,13 +91,13 @@ private extension SettingsView {
                 .frame(maxWidth: .infinity, alignment: .leading)
                 .padding(.horizontal, AppSpacing.xSmall)
 
-            VStack(spacing: 0) {
+            VStack(spacing: .zero) {
                 SettingsActionRowView(
                     icon: AppImage.handRaised,
                     iconColor: AppColor.decorativePurple,
                     title: AppString.privacyPolicy
                 ) {
-                    showingPrivacyPolicy = true
+                    coordinator.show(.privacyPolicy)
                 }
 
                 Divider()
@@ -104,7 +108,7 @@ private extension SettingsView {
                     iconColor: AppColor.warning,
                     title: AppString.helpAndSupport
                 ) {
-                    showingHelpSupport = true
+                    coordinator.show(.helpSupport)
                 }
 
                 Divider()
@@ -115,8 +119,27 @@ private extension SettingsView {
                     iconColor: AppColor.expense,
                     title: AppString.termsOfService
                 ) {
-                    showingTermsOfService = true
+                    coordinator.show(.termsOfService)
                 }
+            }
+            .cardShadow(cornerRadius: AppRadius.card)
+        }
+    }
+
+    var dataSection: some View {
+        VStack(spacing: AppSpacing.medium) {
+            AppText(AppString.data, style: .sectionHeader, color: AppColor.textSecondary)
+                .frame(maxWidth: .infinity, alignment: .leading)
+                .padding(.horizontal, AppSpacing.xSmall)
+
+            SettingsActionRowView(
+                icon: AppImage.trashFill,
+                iconColor: AppColor.expense,
+                title: AppString.deleteAllData,
+                titleColor: AppColor.expense,
+                showsChevron: false
+            ) {
+                viewModel.prepareDeleteAllData()
             }
             .cardShadow(cornerRadius: AppRadius.card)
         }
@@ -138,6 +161,8 @@ struct SettingsRowLabel: View {
     let icon: Image
     let iconColor: Color
     let title: String
+    var titleColor: Color = AppColor.textPrimary
+    var showsChevron: Bool = true
 
     var body: some View {
         HStack(spacing: AppSpacing.large) {
@@ -152,13 +177,15 @@ struct SettingsRowLabel: View {
             }
             .circleShadow()
 
-            AppText(title, style: .bodySmaller)
+            AppText(title, style: .bodySmaller, color: titleColor)
 
             Spacer()
 
-            AppImage.chevronRight
-                .font(.system(size: AppSize.glyphMedium, weight: .semibold))
-                .foregroundStyle(AppColor.textTertiary)
+            if showsChevron {
+                AppImage.chevronRight
+                    .font(.system(size: AppSize.glyphMedium, weight: .semibold))
+                    .foregroundStyle(AppColor.textTertiary)
+            }
         }
         .padding(.horizontal, AppSpacing.large)
         .padding(.vertical, AppSpacing.medium)
@@ -194,21 +221,30 @@ struct SettingsActionRowView: View {
     let icon: Image
     let iconColor: Color
     let title: String
+    var titleColor: Color = AppColor.textPrimary
+    var showsChevron: Bool = true
     let action: () -> Void
 
     // MARK: - Body
 
     var body: some View {
         Button(action: action) {
-            SettingsRowLabel(icon: icon, iconColor: iconColor, title: title)
+            SettingsRowLabel(
+                icon: icon,
+                iconColor: iconColor,
+                title: title,
+                titleColor: titleColor,
+                showsChevron: showsChevron
+            )
         }
         .buttonStyle(SettingsButtonStyle())
     }
 }
 
+/// Убирает подсветку нажатия у строк настроек: стандартный фон рисуется прямоугольником
+/// и выходит за скругления карточки
 struct SettingsButtonStyle: ButtonStyle {
     func makeBody(configuration: Configuration) -> some View {
         configuration.label
-            .background(configuration.isPressed ? AppColor.secondaryBackground : Color.clear)
     }
 }

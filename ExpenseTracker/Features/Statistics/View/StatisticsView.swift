@@ -40,11 +40,12 @@ struct StatisticsView: View {
                                 .frame(maxWidth: .infinity, alignment: .center)
                                 .padding(.top, AppSpacing.small)
 
-                            StatisticsEmptyStateView()
+                            StatisticsEmptyStateView(hint: viewModel.emptyStateHint)
                         } else {
-                            ExpensesPieChartView(
+                            CategoryPieChartView(
                                 statistics: viewModel.statistics,
-                                totalExpenses: viewModel.totalExpenses
+                                totalAmount: viewModel.totalAmount,
+                                title: viewModel.totalTitle
                             )
 
                             periodPickerButton
@@ -52,7 +53,7 @@ struct StatisticsView: View {
 
                             CategoryStatisticsListView(
                                 statistics: viewModel.statistics,
-                                totalExpenses: viewModel.totalExpenses,
+                                totalAmount: viewModel.totalAmount,
                                 selectedPeriod: viewModel.selectedPeriod,
                                 onCategoryTap: handleCategoryTap
                             )
@@ -96,6 +97,9 @@ struct StatisticsView: View {
             .onChange(of: viewModel.selectedAccount) { _, newValue in
                 viewModel.changeAccount(newValue)
             }
+            .onChange(of: viewModel.selectedType) { _, newValue in
+                viewModel.changeType(newValue)
+            }
             .onAppear {
                 if viewModel.modelContext == nil {
                     viewModel.setup(with: modelContext)
@@ -124,7 +128,10 @@ private extension StatisticsView {
                     showingAccountsView = true
                 }
             )
+
             Spacer()
+
+            TransactionTypePickerView(selectedType: $viewModel.selectedType)
         }
         .padding(.horizontal, AppSpacing.large)
         .padding(.vertical, AppSpacing.small)
