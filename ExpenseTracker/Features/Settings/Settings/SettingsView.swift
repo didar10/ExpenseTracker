@@ -14,14 +14,21 @@ struct SettingsView: View {
 
     @Environment(\.modelContext) private var context
 
+    /// Вызывается после удаления всех данных — нужен для возврата на главный экран
+    private let onDataReset: () -> Void
+
     @State private var viewModel = SettingsViewModel()
     @State private var coordinator: SettingsCoordinator
 
     // MARK: - Init
 
     @MainActor
-    init(coordinator: SettingsCoordinator? = nil) {
+    init(
+        coordinator: SettingsCoordinator? = nil,
+        onDataReset: @escaping () -> Void = {}
+    ) {
         _coordinator = State(initialValue: coordinator ?? SettingsCoordinator())
+        self.onDataReset = onDataReset
     }
 
     // MARK: - Body
@@ -56,6 +63,7 @@ struct SettingsView: View {
                 }
                 Button(AppString.delete, role: .destructive) {
                     viewModel.confirmDeleteAllData(context: context)
+                    onDataReset()
                 }
             } message: {
                 Text(AppString.deleteAllDataMessage)

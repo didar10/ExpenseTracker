@@ -36,21 +36,21 @@ struct StatisticsView: View {
                 ScrollView {
                     VStack(spacing: AppSpacing.large) {
                         if viewModel.isEmpty {
-                            periodPickerButton
-                                .frame(maxWidth: .infinity, alignment: .center)
-                                .padding(.top, AppSpacing.small)
-
-                            StatisticsEmptyStateView(hint: viewModel.emptyStateHint)
+                            StatisticsEmptyChartView()
                         } else {
                             CategoryPieChartView(
                                 statistics: viewModel.statistics,
                                 totalAmount: viewModel.totalAmount,
                                 title: viewModel.totalTitle
                             )
+                        }
 
-                            periodPickerButton
-                                .frame(maxWidth: .infinity, alignment: .center)
+                        periodSelector
+                            .frame(maxWidth: .infinity, alignment: .center)
 
+                        if viewModel.isEmpty {
+                            StatisticsEmptyStateView(hint: viewModel.emptyStateHint)
+                        } else {
                             CategoryStatisticsListView(
                                 statistics: viewModel.statistics,
                                 totalAmount: viewModel.totalAmount,
@@ -68,7 +68,7 @@ struct StatisticsView: View {
             .sheet(item: $selectedStatistic) { statistic in
                 CategoryTransactionsView(
                     category: statistic.category,
-                    period: viewModel.selectedPeriod,
+                    periodTitle: viewModel.periodTitle,
                     transactions: viewModel.transactions(for: statistic.category)
                 )
                 .presentationDragIndicator(.hidden)
@@ -138,6 +138,56 @@ private extension StatisticsView {
         .background(AppColor.background)
     }
 
+    /// Выбор периода со стрелками переключения на соседний период
+    var periodSelector: some View {
+        HStack(spacing: AppSpacing.small) {
+            if viewModel.isPeriodNavigable {
+                periodArrowButton(
+                    image: AppImage.chevronLeft,
+                    label: AppString.previousPeriod,
+                    isEnabled: true,
+                    action: viewModel.goToPreviousPeriod
+                )
+            }
+
+            periodPickerButton
+
+            if viewModel.isPeriodNavigable {
+                periodArrowButton(
+                    image: AppImage.chevronRight,
+                    label: AppString.nextPeriod,
+                    isEnabled: viewModel.canGoToNextPeriod,
+                    action: viewModel.goToNextPeriod
+                )
+            }
+        }
+    }
+
+    func periodArrowButton(
+        image: Image,
+        label: String,
+        isEnabled: Bool,
+        action: @escaping () -> Void
+    ) -> some View {
+        Button {
+            UIImpactFeedbackGenerator(style: .light).impactOccurred()
+            action()
+        } label: {
+            image
+                .font(.system(size: AppSize.glyphMedium, weight: .semibold))
+                .foregroundStyle(isEnabled ? AppColor.textPrimary : AppColor.textSecondary.opacity(0.4))
+                .frame(width: AppSize.iconMedium, height: AppSize.iconMedium)
+                .background {
+                    Circle()
+                        .fill(AppColor.cardBackground)
+                        .shadow(color: AppColor.textPrimary.opacity(0.04), radius: AppSpacing.xSmall, y: 1)
+                }
+        }
+        .buttonStyle(.plain)
+        .disabled(!isEnabled)
+        .accessibilityLabel(label)
+    }
+
     var periodPickerButton: some View {
         Menu {
             ForEach(StatisticsPeriod.allCases) { period in
@@ -160,7 +210,7 @@ private extension StatisticsView {
                     .font(.system(size: AppSize.glyphMedium, weight: .medium))
                     .foregroundStyle(AppColor.textPrimary)
 
-                AppText(viewModel.selectedPeriod.displayName, style: .caption)
+                AppText(viewModel.periodTitle, style: .caption)
 
                 AppImage.chevronDown
                     .font(.system(size: AppSize.glyphTiny, weight: .semibold))

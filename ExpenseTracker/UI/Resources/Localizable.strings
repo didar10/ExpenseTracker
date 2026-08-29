@@ -94,12 +94,13 @@
 "total_expenses" = "Всего расходов";
 "no_transactions_for_period" = "За выбранный период нет транзакций в категории «%@»";
 "amount" = "Сумма";
+"statistics_period_day" = "День";
 "statistics_period_week" = "Неделя";
 "statistics_period_month" = "Месяц";
-"statistics_period_last_month" = "Прошлый месяц";
 "statistics_period_year" = "Год";
-"statistics_period_last_year" = "Прошлый год";
 "statistics_period_all_time" = "Все время";
+"statistics_previous_period" = "Предыдущий период";
+"statistics_next_period" = "Следующий период";
 
 /* Settings */
 "app_name" = "ExpenseTracker";

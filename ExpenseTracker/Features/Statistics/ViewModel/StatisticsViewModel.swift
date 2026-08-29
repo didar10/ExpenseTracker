@@ -17,6 +17,7 @@ final class StatisticsViewModel {
     // MARK: - Properties
     
     var selectedPeriod: StatisticsPeriod = .month
+    private(set) var periodOffset: Int = 0
     var selectedAccount: Account?
     var selectedType: TransactionType = .expense
     private(set) var statistics: [CategoryStatistic] = []
@@ -34,7 +35,22 @@ final class StatisticsViewModel {
     }
     
     var periodInterval: DateInterval {
-        selectedPeriod.dateInterval
+        selectedPeriod.dateInterval(offset: periodOffset)
+    }
+
+    /// Заголовок выбранного периода с учетом сдвига: «Сегодня», «Август», «2025», …
+    var periodTitle: String {
+        selectedPeriod.title(offset: periodOffset)
+    }
+
+    /// Доступны ли стрелки переключения периода
+    var isPeriodNavigable: Bool {
+        selectedPeriod.isNavigable
+    }
+
+    /// Вперед можно двигаться только до текущего периода
+    var canGoToNextPeriod: Bool {
+        isPeriodNavigable && periodOffset < 0
     }
     
     var totalBalance: Decimal {
@@ -80,15 +96,36 @@ final class StatisticsViewModel {
         calculateStatistics()
     }
     
+    /// Сбрасывает состояние после удаления всех данных и перезагружает справочники
+    func resetAfterDataReset() {
+        selectedAccount = nil
+        fetchData()
+    }
+    
     /// Изменяет выбранный счет
     func changeAccount(_ account: Account?) {
         selectedAccount = account
         calculateStatistics()
     }
     
-    /// Изменяет выбранный период
+    /// Изменяет выбранный период и сбрасывает сдвиг на текущий
     func changePeriod(_ period: StatisticsPeriod) {
         selectedPeriod = period
+        periodOffset = 0
+        calculateStatistics()
+    }
+
+    /// Переключает на предыдущий период: прошлый день, неделю, месяц или год
+    func goToPreviousPeriod() {
+        guard isPeriodNavigable else { return }
+        periodOffset -= 1
+        calculateStatistics()
+    }
+
+    /// Переключает на следующий период, но не дальше текущего
+    func goToNextPeriod() {
+        guard canGoToNextPeriod else { return }
+        periodOffset += 1
         calculateStatistics()
     }
     

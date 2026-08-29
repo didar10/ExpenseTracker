@@ -32,14 +32,14 @@ struct RootTabView: View {
                     PlansView()
                         .environment(\.tabBarVisibility, $isTabBarVisible)
                 case .settings:
-                    SettingsView()
+                    SettingsView(onDataReset: handleDataReset)
                         .environment(\.tabBarVisibility, $isTabBarVisible)
                 }
             }
             .frame(maxWidth: .infinity, maxHeight: .infinity)
             
             // Tab bar and add button
-            HStack(alignment: .center, spacing: 12) {
+            HStack(alignment: .center, spacing: AppSpacing.medium) {
                 // Modern floating tab bar
                 ModernTabBar(
                     selectedTab: $selectedTab,
@@ -51,12 +51,24 @@ struct RootTabView: View {
                     isAddPresented = true
                 }
             }
-            .padding(.horizontal, 16)
-            .padding(.bottom, 8)
+            .padding(.horizontal, AppSpacing.large)
+            .padding(.bottom, AppSpacing.small)
         }
         .ignoresSafeArea(.keyboard, edges: .bottom)
         .sheet(isPresented: $isAddPresented) {
             AddTransactionView()
+        }
+    }
+
+    // MARK: - Actions
+
+    /// После удаления всех данных возвращаем пользователя на главный экран
+    /// и сбрасываем состояние экранов, живущих дольше своей View
+    private func handleDataReset() {
+        statisticsViewModel.resetAfterDataReset()
+
+        withAnimation(.spring(response: 0.3, dampingFraction: 0.7)) {
+            selectedTab = .dashboard
         }
     }
 }

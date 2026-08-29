@@ -114,12 +114,13 @@ enum AppString {
     static let totalExpenses = String(localized: "total_expenses")
     static let noTransactionsForPeriod = String(localized: "no_transactions_for_period")
     static let amount = String(localized: "amount")
+    static let periodDay = String(localized: "statistics_period_day")
     static let periodWeek = String(localized: "statistics_period_week")
     static let periodMonth = String(localized: "statistics_period_month")
-    static let periodLastMonth = String(localized: "statistics_period_last_month")
     static let periodYear = String(localized: "statistics_period_year")
-    static let periodLastYear = String(localized: "statistics_period_last_year")
     static let periodAllTime = String(localized: "statistics_period_all_time")
+    static let previousPeriod = String(localized: "statistics_previous_period")
+    static let nextPeriod = String(localized: "statistics_next_period")
 
     static func noTransactionsForPeriod(category: String) -> String {
         String(format: noTransactionsForPeriod, category)

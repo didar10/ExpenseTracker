@@ -35,4 +35,6 @@ enum AppSize {
     // MARK: - Charts
 
     static let chartHeight: CGFloat = 300
+    /// Доля внутреннего радиуса «бублика» от внешнего
+    static let chartInnerRadiusRatio: CGFloat = 0.6
 }

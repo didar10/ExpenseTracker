@@ -7,7 +7,8 @@
 
 import SwiftUI
 
-/// Пустое состояние для экрана статистики
+/// Текстовая часть пустого состояния статистики —
+/// располагается под переключателем периода
 struct StatisticsEmptyStateView: View {
 
     // MARK: - Properties
@@ -17,24 +18,18 @@ struct StatisticsEmptyStateView: View {
     // MARK: - Body
 
     var body: some View {
-        VStack(spacing: AppSpacing.medium) {
-            AppImage.chartPie
-                .font(.system(size: AppSize.glyphEmptyState))
-                .foregroundStyle(AppColor.textTertiary)
-                .symbolRenderingMode(.hierarchical)
+        VStack(spacing: AppSpacing.smaller) {
+            AppText(AppString.noData, style: .section)
 
-            VStack(spacing: AppSpacing.smaller) {
-                AppText(AppString.noData, style: .section)
-
-                AppText(
-                    hint,
-                    style: .sectionHeader,
-                    color: AppColor.textSecondary,
-                    alignment: .center
-                )
-            }
+            AppText(
+                hint,
+                style: .sectionHeader,
+                color: AppColor.textSecondary,
+                alignment: .center
+            )
         }
-        .padding(.vertical, AppSpacing.xxxLarge)
+        .frame(maxWidth: .infinity)
+        .padding(.vertical, AppSpacing.small)
     }
 }
 

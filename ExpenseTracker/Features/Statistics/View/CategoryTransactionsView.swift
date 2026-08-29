@@ -13,7 +13,7 @@ struct CategoryTransactionsView: View {
     // MARK: - Properties
 
     let category: Category
-    let period: StatisticsPeriod
+    let periodTitle: String
     let transactions: [Transaction]
 
     @Environment(\.dismiss) private var dismiss
@@ -48,7 +48,7 @@ private extension CategoryTransactionsView {
             VStack(spacing: AppSpacing.xxSmall) {
                 AppText(category.name, style: .bodySmall)
 
-                AppText(period.displayName, style: .caption, color: AppColor.textSecondary)
+                AppText(periodTitle, style: .caption, color: AppColor.textSecondary)
             }
 
             HStack {

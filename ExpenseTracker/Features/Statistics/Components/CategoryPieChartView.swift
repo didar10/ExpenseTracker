@@ -25,7 +25,7 @@ struct CategoryPieChartView: View {
                 ForEach(statistics) { stat in
                     SectorMark(
                         angle: .value(AppString.amount, stat.amount),
-                        innerRadius: .ratio(0.6),
+                        innerRadius: .ratio(AppSize.chartInnerRadiusRatio),
                         angularInset: AppSpacing.xxSmall
                     )
                     .foregroundStyle(Color(hex: stat.category.colorHex).gradient)
