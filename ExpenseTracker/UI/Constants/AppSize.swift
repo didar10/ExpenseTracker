@@ -18,6 +18,8 @@ enum AppSize {
     static let iconXLarge: CGFloat = 50
     static let iconXXLarge: CGFloat = 56
     static let iconHuge: CGFloat = 100
+    /// Круглая кнопка в шапке экрана
+    static let toolbarButton: CGFloat = 40
 
     // MARK: - Icon glyphs (SF Symbol font sizes)
 

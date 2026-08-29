@@ -13,6 +13,8 @@ enum AppString {
 
     static let currencyCode = "KZT"
     static let currencySymbol = "₸"
+    /// Неразрывный пробел между разрядами суммы: 1 350 000
+    static let amountGroupingSeparator = "\u{00A0}"
     static let save = String(localized: "save")
     static let cancel = String(localized: "cancel")
     static let delete = String(localized: "delete")

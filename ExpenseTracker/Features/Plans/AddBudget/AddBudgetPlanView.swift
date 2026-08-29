@@ -13,6 +13,7 @@ struct AddBudgetPlanView: View {
     // MARK: - Properties
 
     let categories: [Category]
+    let existingPlans: [BudgetPlan]
 
     @Environment(\.dismiss) private var dismiss
     @Environment(\.modelContext) private var context
@@ -21,6 +22,19 @@ struct AddBudgetPlanView: View {
     @State private var amount: String = ""
     @State private var selectedPeriod: BudgetPeriod = .month
     @State private var showingCategoryPicker = false
+
+    // MARK: - Computed Properties
+
+    /// Категории, для которых в выбранном периоде ещё нет бюджета
+    private var availableCategories: [Category] {
+        let usedCategoryIDs = Set(
+            existingPlans
+                .filter { $0.period == selectedPeriod }
+                .map { $0.category.persistentModelID }
+        )
+
+        return categories.filter { !usedCategoryIDs.contains($0.persistentModelID) }
+    }
 
     // MARK: - Body
 
@@ -52,7 +66,7 @@ struct AddBudgetPlanView: View {
                     selectedCategory = category
                 },
                 initialType: .expense,
-                selectableCategoryIDs: Set(categories.map(\.persistentModelID))
+                selectableCategoryIDs: Set(availableCategories.map(\.persistentModelID))
             )
             .presentationDetents([.large])
             .presentationDragIndicator(.hidden)
@@ -215,9 +229,9 @@ private extension AddBudgetPlanView {
             HStack(spacing: AppSpacing.medium) {
                 ForEach(BudgetPeriod.allCases, id: \.self) { period in
                     Button {
-                        selectedPeriod = period
+                        changePeriod(to: period)
                     } label: {
-                        Text(period.rawValue)
+                        Text(period.displayName)
                             .font(.app(.bodySmall))
                             .foregroundStyle(
                                 selectedPeriod == period
@@ -279,6 +293,18 @@ private extension AddBudgetPlanView {
             return AppString.enterAmount
         }
         return AppString.createBudget
+    }
+
+    /// При смене периода сбрасывает категорию, если в новом периоде она уже занята
+    func changePeriod(to period: BudgetPeriod) {
+        selectedPeriod = period
+
+        guard let category = selectedCategory,
+              !availableCategories.contains(where: { $0.persistentModelID == category.persistentModelID }) else {
+            return
+        }
+
+        selectedCategory = nil
     }
 
     func savePlan() {

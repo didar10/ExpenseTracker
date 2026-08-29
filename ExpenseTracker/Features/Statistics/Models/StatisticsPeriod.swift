@@ -74,21 +74,21 @@ enum StatisticsPeriod: String, CaseIterable, Identifiable {
         case .day:
             if calendar.isDateInToday(start) { return AppString.today }
             if calendar.isDateInYesterday(start) { return AppString.yesterday }
-            let format: Date.FormatStyle = isCurrentYear(start)
+            let format: Date.FormatStyle = start.isInCurrentYear
                 ? .dateTime.day().month(.wide)
                 : .dateTime.day().month(.wide).year()
-            return capitalizingFirstLetter(start.formatted(format))
+            return start.formatted(format).capitalizingFirstLetter
 
         case .week:
             let lastDay = calendar.date(byAdding: .day, value: -1, to: interval.end) ?? start
             let range = start..<max(start, lastDay)
-            return capitalizingFirstLetter(range.formatted(.interval.day().month(.abbreviated)))
+            return range.formatted(.interval.day().month(.abbreviated)).capitalizingFirstLetter
 
         case .month:
-            let format: Date.FormatStyle = isCurrentYear(start)
+            let format: Date.FormatStyle = start.isInCurrentYear
                 ? .dateTime.month(.wide)
                 : .dateTime.month(.wide).year()
-            return capitalizingFirstLetter(start.formatted(format))
+            return start.formatted(format).capitalizingFirstLetter
 
         case .year:
             return start.formatted(.dateTime.year())
@@ -96,18 +96,5 @@ enum StatisticsPeriod: String, CaseIterable, Identifiable {
         case .allTime:
             return AppString.periodAllTime
         }
-    }
-
-    // MARK: - Private Methods
-
-    /// Поднимает регистр только первой буквы: «август» → «Август», «24—30 авг.» не меняется
-    private func capitalizingFirstLetter(_ text: String) -> String {
-        guard let first = text.first else { return text }
-        return first.uppercased() + text.dropFirst()
-    }
-
-    private func isCurrentYear(_ date: Date) -> Bool {
-        let calendar = Calendar.current
-        return calendar.component(.year, from: date) == calendar.component(.year, from: Date())
     }
 }

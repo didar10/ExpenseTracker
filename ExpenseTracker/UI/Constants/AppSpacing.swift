@@ -27,5 +27,7 @@ enum AppSpacing {
     // MARK: - Semantic
 
     static let listDividerIndent: CGFloat = 60
+    /// Отступ разделителя в компактных списках: иконка 24 + отступ 12
+    static let compactListDividerIndent: CGFloat = 36
     static let tabBarBottomInset: CGFloat = 100
 }

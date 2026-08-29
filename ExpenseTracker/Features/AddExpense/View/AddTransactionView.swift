@@ -51,7 +51,7 @@ struct AddTransactionView: View {
                     ScrollView {
                         VStack(spacing: 14) {
 
-                            TransactionAmountView(amount: viewModel.amount)
+                            TransactionAmountView(amount: viewModel.amountDisplay)
 
                             HStack(spacing: 20) {
                                 AccountPickerView(

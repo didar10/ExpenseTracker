@@ -43,33 +43,18 @@ struct BudgetPlanRow: View {
     // MARK: - Body
 
     var body: some View {
-        VStack(spacing: AppSpacing.medium) {
-            HStack(spacing: AppSpacing.medium) {
-                iconBadge
+        HStack(spacing: AppSpacing.medium) {
+            iconBadge
 
-                VStack(alignment: .leading, spacing: AppSpacing.xxSmall) {
-                    AppText(plan.category.name, style: .bodySmall)
+            VStack(spacing: AppSpacing.smaller) {
+                titleRow
 
-                    Text("\(spent.formatted(.currency(code: AppString.currencyCode))) \(AppString.outOf) \(plan.monthlyLimit.formatted(.currency(code: AppString.currencyCode)))")
-                        .font(.app(.microCaption))
-                        .fontDesign(.rounded)
-                        .foregroundStyle(AppColor.textSecondary)
-                }
+                progressBar
 
-                Spacer()
-
-                trailingAccessories
-            }
-
-            progressBar
-
-            HStack {
-                remainingLabel
-
-                Spacer()
+                amountsRow
             }
         }
-        .padding(.vertical, AppSpacing.medium)
+        .padding(.vertical, AppSpacing.mediumSmall)
         .contentShape(Rectangle())
     }
 }
@@ -79,21 +64,24 @@ private extension BudgetPlanRow {
 
     var iconBadge: some View {
         ZStack {
-            RoundedRectangle(cornerRadius: AppRadius.medium, style: .continuous)
+            RoundedRectangle(cornerRadius: AppRadius.small, style: .continuous)
                 .fill(Color(hex: plan.category.colorHex).opacity(0.2))
-                .frame(width: AppSize.iconMedium, height: AppSize.iconMedium)
+                .frame(width: AppSize.iconSmall, height: AppSize.iconSmall)
 
             Image(systemName: plan.category.icon)
-                .font(.system(size: AppSize.glyphLarge, weight: .semibold))
+                .font(.system(size: AppSize.glyphSmall, weight: .semibold))
                 .foregroundStyle(AppColor.textPrimary)
         }
     }
 
-    @ViewBuilder
-    var trailingAccessories: some View {
-        HStack(spacing: AppSpacing.medium) {
+    var titleRow: some View {
+        HStack(spacing: AppSpacing.small) {
+            AppText(plan.category.name, style: .captionMedium)
+
+            Spacer()
+
             Text("\(percentage)%")
-                .font(.app(.bodySmall))
+                .font(.app(.captionMedium))
                 .fontDesign(.rounded)
                 .foregroundStyle(progressColor)
 
@@ -103,14 +91,27 @@ private extension BudgetPlanRow {
         }
     }
 
+    var amountsRow: some View {
+        HStack(spacing: AppSpacing.small) {
+            Text("\(spent.formatted(.currency(code: AppString.currencyCode))) \(AppString.outOf) \(plan.monthlyLimit.formatted(.currency(code: AppString.currencyCode)))")
+                .font(.app(.microCaption))
+                .fontDesign(.rounded)
+                .foregroundStyle(AppColor.textSecondary)
+
+            Spacer()
+
+            remainingLabel
+        }
+    }
+
     var deleteButton: some View {
         Button(action: onDelete) {
             AppImage.trash
-                .font(.system(size: AppSize.glyphLarge, weight: .semibold))
+                .font(.system(size: AppSize.glyphSmall, weight: .semibold))
                 .foregroundStyle(AppColor.textPrimary)
-                .frame(width: AppSize.iconMedium, height: AppSize.iconMedium)
+                .frame(width: AppSize.iconSmall, height: AppSize.iconSmall)
                 .background(
-                    RoundedRectangle(cornerRadius: AppRadius.medium, style: .continuous)
+                    RoundedRectangle(cornerRadius: AppRadius.small, style: .continuous)
                         .fill(AppColor.expense.opacity(0.15))
                 )
         }
@@ -129,7 +130,7 @@ private extension BudgetPlanRow {
                     .animation(.spring(response: 0.5, dampingFraction: 0.8), value: progress)
             }
         }
-        .frame(height: AppSpacing.smaller)
+        .frame(height: AppSpacing.xSmall)
     }
 
     @ViewBuilder

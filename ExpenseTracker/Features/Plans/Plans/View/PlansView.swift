@@ -23,11 +23,7 @@ struct PlansView: View {
 
     @Environment(\.modelContext) private var context
 
-    @State private var showingAddPlan = false
-    @State private var selectedPeriod: BudgetPeriod = .month
-    @State private var isEditing = false
-    @State private var planToDelete: BudgetPlan?
-    @State private var showDeleteAlert = false
+    @State private var viewModel = PlansViewModel()
 
     // MARK: - Body
 
@@ -40,17 +36,15 @@ struct PlansView: View {
                 header
 
                 ScrollView {
-                    VStack(spacing: AppSpacing.large) {
-                        BudgetPeriodPickerView(selectedPeriod: $selectedPeriod)
-
-                        if filteredPlans.isEmpty {
-                            PlansEmptyStateView {
-                                showingAddPlan = true
+                    VStack(spacing: AppSpacing.xLarge) {
+                        if viewModel.hasPlans {
+                            ForEach(viewModel.sections) { section in
+                                periodSection(section)
                             }
                         } else {
-                            TotalBudgetCard(totalBudget: totalBudget, totalSpent: totalSpent)
-
-                            plansListCard
+                            PlansEmptyStateView {
+                                viewModel.showingAddPlan = true
+                            }
                         }
                     }
                     .padding(AppSpacing.large)
@@ -58,19 +52,23 @@ struct PlansView: View {
                 }
             }
         }
-        .onChange(of: selectedPeriod) {
-            isEditing = false
+        .onAppear(perform: syncData)
+        .onChange(of: budgetPlans) { _, _ in
+            syncData()
         }
-        .sheet(isPresented: $showingAddPlan) {
-            AddBudgetPlanView(categories: availableCategories)
+        .onChange(of: transactions) { _, _ in
+            syncData()
+        }
+        .sheet(isPresented: $viewModel.showingAddPlan) {
+            AddBudgetPlanView(categories: categories, existingPlans: viewModel.activePlans)
                 .environment(\.modelContext, context)
         }
-        .alert(AppString.deleteBudgetConfirm, isPresented: $showDeleteAlert) {
+        .alert(AppString.deleteBudgetConfirm, isPresented: $viewModel.showDeleteAlert) {
             Button(AppString.cancel, role: .cancel) {
-                planToDelete = nil
+                viewModel.planToDelete = nil
             }
             Button(AppString.delete, role: .destructive) {
-                deletePlan()
+                viewModel.deletePlan(context: context)
             }
         } message: {
             Text(AppString.cannotUndo)
@@ -78,53 +76,11 @@ struct PlansView: View {
     }
 }
 
-// MARK: - Computed Properties
+// MARK: - Actions
 private extension PlansView {
 
-    var filteredPlans: [BudgetPlan] {
-        budgetPlans.filter { $0.period == selectedPeriod && $0.isActive }
-    }
-
-    var availableCategories: [Category] {
-        let usedCategoryIDs = Set(budgetPlans
-            .filter { $0.period == selectedPeriod && $0.isActive }
-            .map { $0.category.persistentModelID })
-        return categories.filter { !usedCategoryIDs.contains($0.persistentModelID) }
-    }
-
-    var totalBudget: Decimal {
-        filteredPlans.reduce(0) { $0 + $1.monthlyLimit }
-    }
-
-    var totalSpent: Decimal {
-        filteredPlans.reduce(0) { $0 + spentAmount(for: $1) }
-    }
-
-    func spentAmount(for plan: BudgetPlan) -> Decimal {
-        let interval = selectedPeriod.dateInterval
-        return transactions
-            .filter { transaction in
-                transaction.type == .expense &&
-                transaction.category?.persistentModelID == plan.category.persistentModelID &&
-                interval.contains(transaction.date)
-            }
-            .reduce(0) { $0 + $1.amount }
-    }
-
-    func prepareDelete(_ plan: BudgetPlan) {
-        planToDelete = plan
-        showDeleteAlert = true
-    }
-
-    func deletePlan() {
-        guard let plan = planToDelete else { return }
-
-        withAnimation {
-            context.delete(plan)
-            try? context.save()
-        }
-
-        planToDelete = nil
+    func syncData() {
+        viewModel.updateData(budgetPlans: budgetPlans, transactions: transactions)
     }
 }
 
@@ -132,46 +88,54 @@ private extension PlansView {
 private extension PlansView {
 
     var header: some View {
-        ZStack {
-            AppText(AppString.budgets, style: .title)
-
-            HStack(spacing: AppSpacing.small) {
-                Spacer()
-
-                if !filteredPlans.isEmpty {
-                    EditToggleButton(isEditing: isEditing) {
-                        withAnimation(.easeInOut(duration: 0.2)) {
-                            isEditing.toggle()
-                        }
-                    }
-                }
-
-                ToolbarIconButton(icon: "plus", isOutlined: true) {
-                    UIImpactFeedbackGenerator(style: .light).impactOccurred()
-                    showingAddPlan = true
+        ScreenHeaderView(title: AppString.budgets) {
+            if viewModel.hasPlans {
+                EditToggleButton(isEditing: viewModel.isEditing) {
+                    viewModel.toggleEditing()
                 }
             }
+
+            ToolbarIconButton(icon: "plus", isOutlined: true) {
+                UIImpactFeedbackGenerator(style: .light).impactOccurred()
+                viewModel.showingAddPlan = true
+            }
         }
-        .padding(.horizontal, AppSpacing.large)
-        .padding(.vertical, AppSpacing.large)
     }
 
-    var plansListCard: some View {
-        AppCardView {
+    func periodSection(_ section: BudgetPeriodSection) -> some View {
+        VStack(spacing: AppSpacing.medium) {
+            BudgetPeriodHeaderView(
+                periodName: section.period.displayName,
+                intervalTitle: section.title,
+                isNextEnabled: section.isNextPeriodAvailable,
+                onPrevious: {
+                    viewModel.goToPreviousPeriod(section.period)
+                },
+                onNext: {
+                    viewModel.goToNextPeriod(section.period)
+                }
+            )
+
+            plansCard(for: section)
+        }
+    }
+
+    func plansCard(for section: BudgetPeriodSection) -> some View {
+        AppCardView(padding: AppSpacing.medium) {
             VStack(spacing: 0) {
-                ForEach(Array(filteredPlans.enumerated()), id: \.element.persistentModelID) { index, plan in
+                ForEach(Array(section.plans.enumerated()), id: \.element.persistentModelID) { index, plan in
                     BudgetPlanRow(
                         plan: plan,
-                        spent: spentAmount(for: plan),
-                        isEditing: isEditing,
+                        spent: viewModel.spentAmount(for: plan),
+                        isEditing: viewModel.isEditing,
                         onDelete: {
-                            prepareDelete(plan)
+                            viewModel.prepareDelete(plan)
                         }
                     )
 
-                    if index < filteredPlans.count - 1 {
+                    if index < section.plans.count - 1 {
                         Divider()
-                            .padding(.leading, AppSpacing.listDividerIndent)
+                            .padding(.leading, AppSpacing.compactListDividerIndent)
                     }
                 }
             }

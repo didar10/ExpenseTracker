@@ -35,22 +35,61 @@ enum BudgetPeriod: String, Codable, CaseIterable {
     case week = "Неделя"
     case month = "Месяц"
     case year = "Год"
-    
-    var dateInterval: DateInterval {
+
+    // MARK: - Computed Properties
+
+    var displayName: String {
+        switch self {
+        case .week: return AppString.periodWeek
+        case .month: return AppString.periodMonth
+        case .year: return AppString.periodYear
+        }
+    }
+
+    /// Календарная единица, на которую период сдвигается стрелками
+    var calendarComponent: Calendar.Component {
+        switch self {
+        case .week: return .weekOfYear
+        case .month: return .month
+        case .year: return .year
+        }
+    }
+
+    // MARK: - Methods
+
+    /// Интервал периода со сдвигом: 0 — текущий, -1 — предыдущий, 1 — следующий
+    func dateInterval(offset: Int = 0) -> DateInterval {
         let calendar = Calendar.current
         let now = Date()
-        
+
+        guard let shiftedDate = calendar.date(byAdding: calendarComponent, value: offset, to: now),
+              let interval = calendar.dateInterval(of: calendarComponent, for: shiftedDate) else {
+            return DateInterval(start: now, end: now)
+        }
+
+        return interval
+    }
+
+    /// Заголовок конкретного интервала со сдвигом: «24—30 авг.», «Август», «2026»
+    func title(offset: Int = 0) -> String {
+        let calendar = Calendar.current
+        let interval = dateInterval(offset: offset)
+        let start = interval.start
+
         switch self {
         case .week:
-            let start = calendar.date(from: calendar.dateComponents([.yearForWeekOfYear, .weekOfYear], from: now))!
-            let end = calendar.date(byAdding: .weekOfYear, value: 1, to: start)!
-            return DateInterval(start: start, end: end)
-            
+            let lastDay = calendar.date(byAdding: .day, value: -1, to: interval.end) ?? start
+            let range = start..<max(start, lastDay)
+            return range.formatted(.interval.day().month(.abbreviated)).capitalizingFirstLetter
+
         case .month:
-            return calendar.dateInterval(of: .month, for: now)!
-            
+            let format: Date.FormatStyle = start.isInCurrentYear
+                ? .dateTime.month(.wide)
+                : .dateTime.month(.wide).year()
+            return start.formatted(format).capitalizingFirstLetter
+
         case .year:
-            return calendar.dateInterval(of: .year, for: now)!
+            return start.formatted(.dateTime.year())
         }
     }
 }

@@ -36,10 +36,7 @@ struct SettingsView: View {
     var body: some View {
         NavigationStack {
             VStack(spacing: .zero) {
-                AppText(AppString.settings, style: .title)
-                    .frame(maxWidth: .infinity, alignment: .center)
-                    .padding(.vertical, AppSpacing.large)
-                    .background(AppColor.background)
+                ScreenHeaderView(title: AppString.settings)
 
                 ScrollView {
                     VStack(spacing: AppSpacing.xLarge) {

@@ -62,8 +62,16 @@ final class AddTransactionViewModel: ObservableObject {
         isSaved ? "" : amount
     }
 
+    /// Сумма с разделителями разрядов для отображения: 1350000 → 1 350 000
     var amountDisplay: String {
-        amount.isEmpty ? "0" : amount
+        guard !amount.isEmpty else { return "0" }
+
+        let parts = amount.split(separator: ".", maxSplits: 1, omittingEmptySubsequences: false)
+        let groupedInteger = Self.groupedDigits(String(parts[0]))
+
+        guard parts.count > 1 else { return groupedInteger }
+
+        return groupedInteger + "." + parts[1]
     }
 
     private var amountDecimal: Decimal? {
@@ -156,6 +164,24 @@ final class AddTransactionViewModel: ObservableObject {
         amount.removeLast()
     }
     
+    // MARK: - Amount Formatting
+
+    private static let amountGroupSize = 3
+
+    /// Разбивает целую часть суммы на группы по три цифры справа налево
+    private static func groupedDigits(_ digits: String) -> String {
+        var reversedGrouped = ""
+
+        for (offset, character) in digits.reversed().enumerated() {
+            if offset > 0, offset % amountGroupSize == 0 {
+                reversedGrouped.append(AppString.amountGroupingSeparator)
+            }
+            reversedGrouped.append(character)
+        }
+
+        return String(reversedGrouped.reversed())
+    }
+
     // MARK: - Haptic Feedback
     private func provideFeedback(_ style: UIImpactFeedbackGenerator.FeedbackStyle) {
         UIImpactFeedbackGenerator(style: style).impactOccurred()
