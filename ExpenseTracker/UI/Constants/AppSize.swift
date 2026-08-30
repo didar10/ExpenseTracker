@@ -39,4 +39,10 @@ enum AppSize {
     static let chartHeight: CGFloat = 300
     /// Доля внутреннего радиуса «бублика» от внешнего
     static let chartInnerRadiusRatio: CGFloat = 0.6
+    /// Доля внешнего радиуса невыделенного сектора
+    static let chartOuterRadiusRatio: CGFloat = 0.92
+    /// Доля внешнего радиуса выделенного сектора
+    static let chartSelectedOuterRadiusRatio: CGFloat = 1
+    /// Ширина контента в центре «бублика»
+    static let chartCenterContentWidth: CGFloat = 150
 }

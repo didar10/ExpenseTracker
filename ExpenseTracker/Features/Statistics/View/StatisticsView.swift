@@ -101,9 +101,9 @@ struct StatisticsView: View {
                 viewModel.changeType(newValue)
             }
             .onAppear {
-                if viewModel.modelContext == nil {
-                    viewModel.setup(with: modelContext)
-                }
+                // Экран пересоздается при каждом переключении вкладки, поэтому
+                // перезагружаем данные: пока вкладка неактивна, @Query не отслеживает изменения
+                viewModel.setup(with: modelContext)
             }
         }
     }

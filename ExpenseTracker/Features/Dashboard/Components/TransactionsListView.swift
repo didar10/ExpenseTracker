@@ -10,12 +10,13 @@ import SwiftUI
 /// Компонент списка транзакций, сгруппированных по датам
 struct TransactionsListView: View {
     let sections: [TransactionSection]
+    var emptyStateHint: String = AppString.noTransactionsHint
     let onTransactionTap: (Transaction) -> Void
     
     var body: some View {
         VStack(spacing: 0) {
             if sections.isEmpty {
-                EmptyStateView()
+                EmptyStateView(hint: emptyStateHint)
             } else {
                 ForEach(sections) { section in
                     TransactionSectionView(

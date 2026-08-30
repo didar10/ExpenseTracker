@@ -30,12 +30,19 @@ final class AddTransactionViewModel: ObservableObject {
 
     private(set) var editingTransaction: Transaction?
 
+    private let accountSelection: AccountSelectionStore
+
     // MARK: - Init
 
-    init(transaction: Transaction? = nil) {
+    init(transaction: Transaction? = nil, accountSelection: AccountSelectionStore) {
         self.editingTransaction = transaction
+        self.accountSelection = accountSelection
 
-        guard let transaction else { return }
+        guard let transaction else {
+            // Новая операция создается на счете, выбранном на других экранах
+            selectedAccount = accountSelection.selectedAccount
+            return
+        }
 
         amount = transaction.amount.description
         selectedCategory = transaction.category
@@ -121,8 +128,17 @@ final class AddTransactionViewModel: ObservableObject {
         }
 
         isSaved = true
+        syncSharedAccountSelection()
 
         return true
+    }
+
+    /// Общий выбор счета переходит на счет сохраненной операции.
+    /// Режим «Все счета» не трогаем — иначе другие экраны неожиданно окажутся отфильтрованы
+    private func syncSharedAccountSelection() {
+        guard accountSelection.selectedAccount != nil, let selectedAccount else { return }
+
+        accountSelection.selectedAccount = selectedAccount
     }
     
     func showSuccessAndDismiss(onDismiss: @escaping () -> Void) {

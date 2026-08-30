@@ -32,7 +32,12 @@ enum AppString {
     static let balance = String(localized: "balance")
     static let noTransactions = String(localized: "no_transactions")
     static let noTransactionsHint = String(localized: "no_transactions_hint")
+    static let noTransactionsInPeriod = String(localized: "no_transactions_in_period")
     static let deleteTransaction = String(localized: "delete_transaction")
+
+    static func noTransactionsInPeriod(_ period: String) -> String {
+        String(format: noTransactionsInPeriod, period)
+    }
 
     // MARK: - Accounts
 

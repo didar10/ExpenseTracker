@@ -12,20 +12,31 @@ struct BalanceCardView: View {
     // MARK: - Properties
 
     let balanceData: BalanceData
+    let periodFilter: PeriodFilter
+    let onSelectPeriod: (StatisticsPeriod) -> Void
+    let onPreviousPeriod: () -> Void
+    let onNextPeriod: () -> Void
 
     // MARK: - Body
 
     var body: some View {
-        VStack(spacing: 12) {
-            AppText(AppString.balance, style: .caption, color: AppColor.textSecondary)
+        VStack(spacing: AppSpacing.medium) {
+            BalancePeriodSelectorView(
+                filter: periodFilter,
+                onSelect: onSelectPeriod,
+                onPrevious: onPreviousPeriod,
+                onNext: onNextPeriod
+            )
 
             Text(balanceData.balance.formatted(.currency(code: AppString.currencyCode)))
                 .font(.app(.balance))
                 .fontDesign(.rounded)
                 .foregroundStyle(AppColor.textPrimary)
                 .contentTransition(.numericText())
+                .lineLimit(1)
+                .minimumScaleFactor(Constants.minAmountScaleFactor)
 
-            HStack(spacing: 24) {
+            HStack(spacing: AppSpacing.xxLarge) {
                 FinancialIndicatorView(
                     icon: AppImage.incomeArrow,
                     color: AppColor.income,
@@ -38,17 +49,29 @@ struct BalanceCardView: View {
                     amount: balanceData.totalExpenses
                 )
             }
-            .padding(.top, 4)
+            .padding(.top, AppSpacing.xSmall)
         }
-        .padding(.vertical, 24)
-        .padding(.horizontal)
+        .padding(.vertical, AppSpacing.xxLarge)
+        .padding(.horizontal, AppSpacing.large)
+    }
+}
+
+// MARK: - Constants
+
+private extension BalanceCardView {
+
+    enum Constants {
+        static let minAmountScaleFactor: CGFloat = 0.6
     }
 }
 
 #Preview {
-    let mockTransactions: [Transaction] = []
-    let balanceData = BalanceData(transactions: mockTransactions)
-
-    return BalanceCardView(balanceData: balanceData)
-        .background(AppColor.background)
+    BalanceCardView(
+        balanceData: BalanceData(transactions: []),
+        periodFilter: PeriodFilter(),
+        onSelectPeriod: { _ in },
+        onPreviousPeriod: {},
+        onNextPeriod: {}
+    )
+    .background(AppColor.background)
 }

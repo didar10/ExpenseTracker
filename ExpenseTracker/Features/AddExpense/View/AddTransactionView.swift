@@ -27,9 +27,12 @@ struct AddTransactionView: View {
 
     // MARK: - Init
 
-    init(transaction: Transaction? = nil) {
+    init(transaction: Transaction? = nil, accountSelection: AccountSelectionStore) {
         _viewModel = StateObject(
-            wrappedValue: AddTransactionViewModel(transaction: transaction)
+            wrappedValue: AddTransactionViewModel(
+                transaction: transaction,
+                accountSelection: accountSelection
+            )
         )
     }
 

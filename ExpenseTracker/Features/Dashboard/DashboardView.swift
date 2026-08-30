@@ -18,7 +18,21 @@ struct DashboardView: View {
     @Query(sort: \Account.createdAt, order: .forward)
     private var accounts: [Account]
 
-    @StateObject private var viewModel = DashboardViewModel()
+    @StateObject private var viewModel: DashboardViewModel
+
+    private let accountSelection: AccountSelectionStore
+
+    // MARK: - Init
+
+    init(accountSelection: AccountSelectionStore, periodStore: DashboardPeriodStore) {
+        self.accountSelection = accountSelection
+        _viewModel = StateObject(
+            wrappedValue: DashboardViewModel(
+                accountSelection: accountSelection,
+                periodStore: periodStore
+            )
+        )
+    }
 
     // MARK: - Body
 
@@ -33,21 +47,32 @@ struct DashboardView: View {
                             balanceData: viewModel.balanceData(
                                 accounts: accounts,
                                 transactions: transactions
-                            )
+                            ),
+                            periodFilter: viewModel.periodFilter,
+                            onSelectPeriod: viewModel.changePeriod,
+                            onPreviousPeriod: viewModel.goToPreviousPeriod,
+                            onNextPeriod: viewModel.goToNextPeriod
                         )
 
                         TransactionsListView(
                             sections: viewModel.groupedTransactions(from: transactions),
+                            emptyStateHint: viewModel.emptyStateHint,
                             onTransactionTap: viewModel.handleTransactionTap
                         )
                     }
-                    .padding(.bottom, 100)
+                    .padding(.bottom, AppSpacing.tabBarBottomInset)
                 }
             }
             .background(AppColor.background)
             .navigationBarHidden(true)
             .sheet(item: $viewModel.selectedTransaction) { transaction in
-                AddTransactionView(transaction: transaction)
+                AddTransactionView(transaction: transaction, accountSelection: accountSelection)
+            }
+            .onAppear {
+                viewModel.syncSelectedAccount(with: accounts)
+            }
+            .onChange(of: accounts) { _, newAccounts in
+                viewModel.syncSelectedAccount(with: newAccounts)
             }
             .sheet(isPresented: $viewModel.showingAccountsView) {
                 AccountSelectionSheet(
@@ -69,10 +94,10 @@ struct DashboardView: View {
 private extension DashboardView {
 
     var accountPickerHeader: some View {
-        HStack(spacing: 12) {
+        HStack(spacing: AppSpacing.medium) {
             AccountPickerButton(
                 selectedAccount: viewModel.selectedAccount,
-                totalBalance: viewModel.balanceData(
+                totalBalance: viewModel.totalBalanceData(
                     accounts: accounts,
                     transactions: transactions
                 ).balance,
@@ -82,8 +107,8 @@ private extension DashboardView {
             )
             Spacer()
         }
-        .padding(.horizontal, 16)
-        .padding(.vertical, 8)
+        .padding(.horizontal, AppSpacing.large)
+        .padding(.vertical, AppSpacing.small)
         .background(AppColor.background)
     }
 }

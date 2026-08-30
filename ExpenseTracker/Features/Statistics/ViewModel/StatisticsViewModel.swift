@@ -18,7 +18,6 @@ final class StatisticsViewModel {
     
     var selectedPeriod: StatisticsPeriod = .month
     private(set) var periodOffset: Int = 0
-    var selectedAccount: Account?
     var selectedType: TransactionType = .expense
     private(set) var statistics: [CategoryStatistic] = []
     private(set) var totalAmount: Decimal = 0
@@ -27,8 +26,22 @@ final class StatisticsViewModel {
     private(set) var accounts: [Account] = []
     
     var modelContext: ModelContext?
-    
+
+    private let accountSelection: AccountSelectionStore
+
+    // MARK: - Init
+
+    init(accountSelection: AccountSelectionStore) {
+        self.accountSelection = accountSelection
+    }
+
     // MARK: - Computed Properties
+
+    /// Выбранный счет общий для вкладок, поэтому хранится в AccountSelectionStore
+    var selectedAccount: Account? {
+        get { accountSelection.selectedAccount }
+        set { accountSelection.selectedAccount = newValue }
+    }
     
     var isEmpty: Bool {
         statistics.isEmpty
@@ -92,7 +105,10 @@ final class StatisticsViewModel {
             sortBy: [SortDescriptor(\.createdAt, order: .forward)]
         )
         accounts = (try? modelContext.fetch(accountDescriptor)) ?? []
-        
+
+        // Счет мог быть удален на другом экране, пока вкладка была неактивна
+        accountSelection.removeSelectionIfDeleted(from: accounts)
+
         calculateStatistics()
     }
     

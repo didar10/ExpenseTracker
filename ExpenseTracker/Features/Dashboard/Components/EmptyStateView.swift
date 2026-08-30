@@ -9,6 +9,10 @@ import SwiftUI
 
 struct EmptyStateView: View {
 
+    // MARK: - Properties
+
+    var hint: String = AppString.noTransactionsHint
+
     // MARK: - Body
 
     var body: some View {
@@ -20,7 +24,7 @@ struct EmptyStateView: View {
             VStack(spacing: 8) {
                 AppText(AppString.noTransactions, style: .title)
 
-                AppText(AppString.noTransactionsHint, style: .bodySmall, color: AppColor.textSecondary, alignment: .center)
+                AppText(hint, style: .bodySmall, color: AppColor.textSecondary, alignment: .center)
             }
         }
         .padding(40)

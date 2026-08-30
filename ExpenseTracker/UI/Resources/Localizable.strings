@@ -15,6 +15,7 @@
 "balance" = "Баланс";
 "no_transactions" = "Нет транзакций";
 "no_transactions_hint" = "Нажмите + чтобы добавить первую транзакцию";
+"no_transactions_in_period" = "За период «%@» операций не было";
 "delete_transaction" = "Удалить транзакцию?";
 
 /* Accounts */

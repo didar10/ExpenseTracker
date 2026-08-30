@@ -14,8 +14,20 @@ struct RootTabView: View {
     @State private var tabBarOffset: CGFloat = 0
     @State private var isTabBarVisible = true
     
-    // ViewModels на уровне RootTabView для сохранения состояния между переключениями табов
-    @State private var statisticsViewModel = StatisticsViewModel()
+    // Состояние на уровне RootTabView сохраняется между переключениями табов:
+    // выбранный счет общий для экранов, ViewModel статистики живет дольше своей View
+    @State private var accountSelection: AccountSelectionStore
+    @State private var dashboardPeriodStore = DashboardPeriodStore()
+    @State private var statisticsViewModel: StatisticsViewModel
+
+    init() {
+        let accountSelection = AccountSelectionStore()
+
+        _accountSelection = State(initialValue: accountSelection)
+        _statisticsViewModel = State(
+            initialValue: StatisticsViewModel(accountSelection: accountSelection)
+        )
+    }
     
     var body: some View {
         ZStack(alignment: .bottom) {
@@ -23,7 +35,10 @@ struct RootTabView: View {
             Group {
                 switch selectedTab {
                 case .dashboard:
-                    DashboardView()
+                    DashboardView(
+                        accountSelection: accountSelection,
+                        periodStore: dashboardPeriodStore
+                    )
                         .environment(\.tabBarVisibility, $isTabBarVisible)
                 case .statistics:
                     StatisticsView(viewModel: statisticsViewModel)
@@ -56,7 +71,7 @@ struct RootTabView: View {
         }
         .ignoresSafeArea(.keyboard, edges: .bottom)
         .sheet(isPresented: $isAddPresented) {
-            AddTransactionView()
+            AddTransactionView(accountSelection: accountSelection)
         }
     }
 
