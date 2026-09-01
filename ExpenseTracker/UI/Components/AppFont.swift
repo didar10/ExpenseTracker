@@ -20,6 +20,7 @@ enum AppFont {
     case caption
     case captionMedium
     case microCaption
+    case microCaptionStrong
 
     var font: Font {
         switch self {
@@ -56,6 +57,9 @@ enum AppFont {
             
         case .microCaption:
             return .custom("Montserrat-Medium", size: 10)
+
+        case .microCaptionStrong:
+            return .custom("Montserrat-SemiBold", size: 10)
         }
     }
 }

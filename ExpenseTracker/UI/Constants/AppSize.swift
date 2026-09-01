@@ -34,6 +34,38 @@ enum AppSize {
     static let glyphArrow: CGFloat = 28
     static let glyphHuge: CGFloat = 64
 
+    // MARK: - Controls
+
+    /// Высота клавиши цифровой клавиатуры
+    static let keypadKey: CGFloat = 54
+    /// Высота первичной кнопки экрана
+    static let primaryButton: CGFloat = 56
+    /// Высота плитки-поля в строке «счет + дата»
+    static let inlineTile: CGFloat = 60
+    /// Ширина плитки даты
+    static let dateTile: CGFloat = 92
+    /// Квадратная плитка иконки внутри карточки
+    static let tileIcon: CGFloat = 36
+    /// Переключатель «Расход / Доход» в шапке
+    static let typePickerWidth: CGFloat = 220
+    static let typePickerHeight: CGFloat = 34
+    /// Высота шапки экрана
+    static let screenHeader: CGFloat = 50
+    /// Размер цифры на клавиатуре ввода суммы
+    static let keypadDigit: CGFloat = 28
+    /// Иконка операции в строке списка
+    static let glyphRow: CGFloat = 18
+
+    // MARK: - Elevation
+
+    static let shadowRadius: CGFloat = 10
+    static let shadowOffsetY: CGFloat = 4
+
+    // MARK: - Display typography
+
+    /// Размер вводимой суммы на экране операции
+    static let amountDisplay: CGFloat = 52
+
     // MARK: - Charts
 
     static let chartHeight: CGFloat = 300

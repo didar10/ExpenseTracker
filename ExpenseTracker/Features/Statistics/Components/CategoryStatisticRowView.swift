@@ -15,6 +15,12 @@ struct CategoryStatisticRowView: View {
     let statistic: CategoryStatistic
     let totalAmount: Decimal
 
+    // MARK: - Computed Properties
+
+    private var amountText: String {
+        statistic.amount.formatted(.currency(code: AppString.currencyCode))
+    }
+
     // MARK: - Body
 
     var body: some View {
@@ -23,12 +29,15 @@ struct CategoryStatisticRowView: View {
 
             categoryInfo
 
-            Spacer()
+            Spacer(minLength: AppSpacing.small)
 
             amountInfo
         }
         .padding(.vertical, AppSpacing.smaller)
         .contentShape(Rectangle())
+        .accessibilityElement(children: .combine)
+        .accessibilityLabel(statistic.category.name)
+        .accessibilityValue("\(amountText), \(statistic.percentageString(of: totalAmount))")
     }
 }
 
@@ -52,6 +61,7 @@ private extension CategoryStatisticRowView {
     var categoryInfo: some View {
         VStack(alignment: .leading, spacing: AppSpacing.xxSmall) {
             AppText(statistic.category.name, style: .bodySmaller)
+                .lineLimit(1)
 
             AppText(
                 statistic.percentageString(of: totalAmount),
@@ -63,10 +73,13 @@ private extension CategoryStatisticRowView {
 
     var amountInfo: some View {
         HStack(spacing: AppSpacing.small) {
-            Text(statistic.amount.formatted(.currency(code: AppString.currencyCode)))
+            Text(amountText)
                 .font(.app(.bodySmaller))
                 .fontDesign(.rounded)
+                .monospacedDigit()
                 .foregroundStyle(AppColor.textPrimary)
+                .lineLimit(1)
+                .minimumScaleFactor(0.8)
 
             AppImage.chevronRight
                 .font(.system(size: AppSize.glyphSmall, weight: .semibold))

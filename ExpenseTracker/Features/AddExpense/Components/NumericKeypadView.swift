@@ -20,10 +20,12 @@ struct NumericKeypadView: View {
     // MARK: - Properties
 
     let isEnterEnabled: Bool
+    let enterTitle: String
+    /// Причина, по которой сохранение недоступно: показывается вместо названия кнопки
+    let disabledHint: String?
     let onKeyTap: (Key) -> Void
+    let onClearTap: () -> Void
     let onEnterTap: () -> Void
-
-    @State private var pressedKey: Key?
 
     private let rows: [[Key]] = [
         [.number("1"), .number("2"), .number("3")],
@@ -35,9 +37,9 @@ struct NumericKeypadView: View {
     // MARK: - Body
 
     var body: some View {
-        VStack(spacing: 8) {
+        VStack(spacing: AppSpacing.small) {
             ForEach(rows, id: \.self) { row in
-                HStack(spacing: 8) {
+                HStack(spacing: AppSpacing.small) {
                     ForEach(row, id: \.self) { key in
                         keyButton(key)
                     }
@@ -52,43 +54,63 @@ struct NumericKeypadView: View {
 // MARK: - Subviews
 private extension NumericKeypadView {
 
+    @ViewBuilder
     func keyButton(_ key: Key) -> some View {
-        Button {
-            UIImpactFeedbackGenerator(style: .medium).impactOccurred()
-
-            withAnimation(.easeInOut(duration: 0.1)) {
-                pressedKey = key
-            }
-
+        let button = Button {
             onKeyTap(key)
-
-            DispatchQueue.main.asyncAfter(deadline: .now() + 0.1) {
-                withAnimation {
-                    pressedKey = nil
-                }
-            }
         } label: {
-            Group {
-                switch key {
-                case .number(let value):
-                    Text(value)
-                        .font(.system(size: 28, weight: .semibold, design: .rounded))
-                        .foregroundColor(AppColor.textPrimary)
-                case .decimal:
-                    AppText(".", style: .title)
-                case .delete:
-                    AppImage.deleteBackward
-                        .font(.system(size: 24, weight: .semibold))
-                        .foregroundStyle(AppColor.expense)
-                        .symbolRenderingMode(.hierarchical)
-                }
-            }
-            .frame(maxWidth: .infinity)
-            .frame(height: 54)
-            .contentShape(Rectangle())
+            keyLabel(key)
         }
-        .scaleEffect(pressedKey == key ? 0.95 : 1.0)
-        .animation(.spring(response: 0.2, dampingFraction: 0.6), value: pressedKey == key)
+        .buttonStyle(KeypadKeyButtonStyle())
+        .accessibilityLabel(accessibilityLabel(for: key))
+        .accessibilityHint(accessibilityHint(for: key))
+
+        if case .delete = key {
+            // Долгое нажатие очищает всю сумму — быстрее, чем стирать по цифре
+            button.simultaneousGesture(
+                LongPressGesture(minimumDuration: 0.4).onEnded { _ in onClearTap() }
+            )
+        } else {
+            button
+        }
+    }
+
+    @ViewBuilder
+    func keyLabel(_ key: Key) -> some View {
+        switch key {
+        case .number(let value):
+            Text(value)
+                .font(.system(size: AppSize.keypadDigit, weight: .semibold, design: .rounded))
+                .monospacedDigit()
+                .foregroundStyle(AppColor.textPrimary)
+
+        case .decimal:
+            Text(AppString.amountDecimalSeparator)
+                .font(.system(size: AppSize.keypadDigit, weight: .semibold, design: .rounded))
+                .foregroundStyle(AppColor.textPrimary)
+
+        case .delete:
+            AppImage.deleteBackward
+                .font(.system(size: AppSize.glyphXXLarge, weight: .semibold))
+                .foregroundStyle(AppColor.expense)
+                .symbolRenderingMode(.hierarchical)
+        }
+    }
+
+    func accessibilityLabel(for key: Key) -> String {
+        switch key {
+        case .number(let value): value
+        case .decimal: AppString.accessibilityDecimalSeparator
+        case .delete: AppString.accessibilityDeleteDigit
+        }
+    }
+
+    func accessibilityHint(for key: Key) -> String {
+        if case .delete = key {
+            return AppString.accessibilityClearAmount
+        }
+
+        return ""
     }
 
     var enterButton: some View {
@@ -97,27 +119,53 @@ private extension NumericKeypadView {
                 UINotificationFeedbackGenerator().notificationOccurred(.success)
                 onEnterTap()
             } else {
-                UIImpactFeedbackGenerator(style: .light).impactOccurred()
+                UINotificationFeedbackGenerator().notificationOccurred(.warning)
             }
         } label: {
-            HStack(spacing: 10) {
-                AppText(AppString.save, style: .bodySmall)
-                    .color(AppColor.background)
-            }
-            .frame(maxWidth: .infinity)
-            .frame(height: 60)
-            .background {
-                RoundedRectangle(cornerRadius: 16, style: .continuous)
-                    .fill(AppColor.textPrimary)
-                    .shadow(
-                        color: AppColor.textPrimary.opacity(0.25),
-                        radius: 10,
-                        y: 4
-                    )
-            }
+            Text(isEnterEnabled ? enterTitle : (disabledHint ?? enterTitle))
+                .font(.app(.bodySmall))
+                .foregroundStyle(AppColor.background)
+                .lineLimit(1)
+                .minimumScaleFactor(0.8)
+                .padding(.horizontal, AppSpacing.large)
+                .frame(maxWidth: .infinity)
+                .frame(height: AppSize.primaryButton)
+                .background {
+                    RoundedRectangle(cornerRadius: AppRadius.card, style: .continuous)
+                        .fill(AppColor.textPrimary)
+                        .opacity(isEnterEnabled ? 1 : 0.35)
+                        .shadow(
+                            color: AppColor.textPrimary.opacity(isEnterEnabled ? 0.25 : 0),
+                            radius: AppSize.shadowRadius,
+                            y: AppSize.shadowOffsetY
+                        )
+                }
+                .contentShape(Rectangle())
         }
-        .disabled(!isEnterEnabled)
-        .padding(.top, 20)
-        .animation(.spring(response: 0.4, dampingFraction: 0.7), value: isEnterEnabled)
+        .buttonStyle(PressableScaleButtonStyle())
+        .padding(.top, AppSpacing.medium)
+        .animation(.snappy(duration: 0.25), value: isEnterEnabled)
+    }
+}
+
+// MARK: - Button Styles
+
+/// Клавиша реагирует на нажатие пальца, а не на таймер после отпускания
+private struct KeypadKeyButtonStyle: ButtonStyle {
+
+    @Environment(\.accessibilityReduceMotion) private var reduceMotion
+
+    func makeBody(configuration: Configuration) -> some View {
+        configuration.label
+            .frame(maxWidth: .infinity)
+            .frame(height: AppSize.keypadKey)
+            .background {
+                RoundedRectangle(cornerRadius: AppRadius.card, style: .continuous)
+                    .fill(AppColor.subtleFill)
+                    .opacity(configuration.isPressed ? 1 : 0)
+            }
+            .scaleEffect(configuration.isPressed && !reduceMotion ? 0.96 : 1)
+            .contentShape(Rectangle())
+            .animation(.easeOut(duration: 0.12), value: configuration.isPressed)
     }
 }

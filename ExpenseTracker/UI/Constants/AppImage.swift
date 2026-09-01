@@ -50,6 +50,7 @@ enum AppImage {
     // MARK: - Categories
 
     static let categoriesGrid = Image(systemName: "square.grid.2x2")
+    static let ellipsis = Image(systemName: "ellipsis")
     static let folder = Image(systemName: "folder")
 
     // MARK: - Statistics

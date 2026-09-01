@@ -7,9 +7,14 @@
 
 import SwiftUI
 
-/// Незаполненная диаграмма — серый «бублик» на месте круговой диаграммы.
-/// Занимает её высоту, чтобы переключатель периода не сдвигался при отсутствии данных
+/// Незаполненная диаграмма: серый «бублик» на месте круговой диаграммы,
+/// а объяснение — в его центре, где обычно стоит сумма. Занимает высоту диаграммы,
+/// чтобы переключатель периода не сдвигался при отсутствии данных
 struct StatisticsEmptyChartView: View {
+
+    // MARK: - Properties
+
+    let hint: String
 
     // MARK: - Body
 
@@ -18,10 +23,15 @@ struct StatisticsEmptyChartView: View {
             let diameter = min(geometry.size.width, geometry.size.height)
             let ringWidth = diameter * (1 - AppSize.chartInnerRadiusRatio) / 2
 
-            Circle()
-                .stroke(AppColor.subtleFill, lineWidth: ringWidth)
-                .frame(width: diameter - ringWidth, height: diameter - ringWidth)
-                .frame(maxWidth: .infinity, maxHeight: .infinity)
+            ZStack {
+                Circle()
+                    .stroke(AppColor.subtleFill, lineWidth: ringWidth)
+                    .frame(width: diameter - ringWidth, height: diameter - ringWidth)
+
+                StatisticsEmptyStateView(hint: hint)
+                    .frame(width: AppSize.chartCenterContentWidth)
+            }
+            .frame(maxWidth: .infinity, maxHeight: .infinity)
         }
         .frame(height: AppSize.chartHeight)
         .padding(.vertical, AppSpacing.small)
@@ -29,7 +39,7 @@ struct StatisticsEmptyChartView: View {
 }
 
 #Preview {
-    StatisticsEmptyChartView()
+    StatisticsEmptyChartView(hint: AppString.noDataHint)
         .padding(AppSpacing.large)
         .background(AppColor.background)
 }

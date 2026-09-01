@@ -14,26 +14,25 @@ struct CategoryStatisticsListView: View {
 
     let statistics: [CategoryStatistic]
     let totalAmount: Decimal
-    let selectedPeriod: StatisticsPeriod
     let onCategoryTap: (CategoryStatistic) -> Void
 
     // MARK: - Body
 
     var body: some View {
-        VStack(spacing: AppSpacing.small) {
-            ForEach(statistics) { stat in
+        LazyVStack(spacing: AppSpacing.small) {
+            ForEach(statistics) { statistic in
                 Button {
-                    onCategoryTap(stat)
+                    onCategoryTap(statistic)
                 } label: {
                     CategoryStatisticRowView(
-                        statistic: stat,
+                        statistic: statistic,
                         totalAmount: totalAmount
                     )
                     .padding(.horizontal, AppSpacing.large)
                     .padding(.vertical, AppSpacing.medium)
+                    .cardShadow(cornerRadius: AppRadius.card)
                 }
-                .buttonStyle(.plain)
-                .cardShadow(cornerRadius: AppRadius.card)
+                .buttonStyle(HighlightRowButtonStyle())
             }
         }
     }
@@ -54,7 +53,6 @@ struct CategoryStatisticsListView: View {
             )
         ],
         totalAmount: 450000,
-        selectedPeriod: .month,
         onCategoryTap: { _ in }
     )
     .padding(AppSpacing.large)

@@ -18,10 +18,22 @@ final class StatisticsViewModel {
     
     var selectedPeriod: StatisticsPeriod = .month
     private(set) var periodOffset: Int = 0
-    var selectedType: TransactionType = .expense
+
+    /// Тип операций меняется биндингом из переключателя в шапке,
+    /// поэтому пересчет статистики висит на самом свойстве
+    var selectedType: TransactionType = .expense {
+        didSet {
+            guard oldValue != selectedType else { return }
+            calculateStatistics()
+        }
+    }
+
     private(set) var statistics: [CategoryStatistic] = []
     private(set) var totalAmount: Decimal = 0
-    
+    /// Считается при загрузке данных: сумма балансов перебирает все операции счета,
+    /// а шапка обращается к ней на каждый проход body
+    private(set) var totalBalance: Decimal = 0
+
     private var transactions: [Transaction] = []
     private(set) var accounts: [Account] = []
     
@@ -66,10 +78,6 @@ final class StatisticsViewModel {
         isPeriodNavigable && periodOffset < 0
     }
     
-    var totalBalance: Decimal {
-        accounts.reduce(0) { $0 + $1.currentBalance }
-    }
-    
     /// Подпись в центре диаграммы — зависит от выбранного типа операций
     var totalTitle: String {
         selectedType == .income ? AppString.incomes : AppString.expenses
@@ -78,6 +86,12 @@ final class StatisticsViewModel {
     /// Подсказка пустого состояния — зависит от выбранного типа операций
     var emptyStateHint: String {
         selectedType == .income ? AppString.noDataHintIncome : AppString.noDataHint
+    }
+
+    /// Данных нет из-за фильтра периода, а не потому, что операций нет вовсе:
+    /// экран предлагает посмотреть за все время
+    var isFilteredByPeriod: Bool {
+        selectedPeriod != .allTime
     }
     
     // MARK: - Initialization
@@ -109,6 +123,8 @@ final class StatisticsViewModel {
         // Счет мог быть удален на другом экране, пока вкладка была неактивна
         accountSelection.removeSelectionIfDeleted(from: accounts)
 
+        totalBalance = accounts.reduce(0) { $0 + $1.currentBalance }
+
         calculateStatistics()
     }
     
@@ -118,9 +134,8 @@ final class StatisticsViewModel {
         fetchData()
     }
     
-    /// Изменяет выбранный счет
-    func changeAccount(_ account: Account?) {
-        selectedAccount = account
+    /// Счет хранится в общем сторе и меняется снаружи — экрану остается пересчитать статистику
+    func refreshStatistics() {
         calculateStatistics()
     }
     
@@ -129,6 +144,11 @@ final class StatisticsViewModel {
         selectedPeriod = period
         periodOffset = 0
         calculateStatistics()
+    }
+
+    /// Сброс фильтра из пустого состояния: показать статистику за все время
+    func resetPeriod() {
+        changePeriod(.allTime)
     }
 
     /// Переключает на предыдущий период: прошлый день, неделю, месяц или год
@@ -142,12 +162,6 @@ final class StatisticsViewModel {
     func goToNextPeriod() {
         guard canGoToNextPeriod else { return }
         periodOffset += 1
-        calculateStatistics()
-    }
-    
-    /// Изменяет тип операций: доходы или расходы
-    func changeType(_ type: TransactionType) {
-        selectedType = type
         calculateStatistics()
     }
     
@@ -168,24 +182,21 @@ final class StatisticsViewModel {
     }
     
     private func calculateStatistics() {
-        // Группируем операции по категориям
-        let grouped = Dictionary(grouping: filteredTransactions) { $0.category }
-        
-        // Создаем статистику для каждой категории
-        statistics = grouped.compactMap { category, transactions in
-            guard let category else { return nil }
-            
-            let sum = transactions.reduce(0) { $0 + $1.amount }
-            
-            return CategoryStatistic(
-                category: category,
-                amount: sum,
-                transactionCount: transactions.count
-            )
-        }
-        .sorted { $0.amount > $1.amount }
-        
-        // Считаем общую сумму за период
-        totalAmount = filteredTransactions.reduce(0) { $0 + $1.amount }
+        // Фильтр перебирает все операции, поэтому считаем его один раз на пересчет
+        let periodTransactions = filteredTransactions
+
+        statistics = Dictionary(grouping: periodTransactions) { $0.category }
+            .compactMap { category, transactions in
+                guard let category else { return nil }
+
+                return CategoryStatistic(
+                    category: category,
+                    amount: transactions.reduce(0) { $0 + $1.amount },
+                    transactionCount: transactions.count
+                )
+            }
+            .sorted { $0.amount > $1.amount }
+
+        totalAmount = periodTransactions.reduce(0) { $0 + $1.amount }
     }
 }

@@ -41,6 +41,18 @@
 "saved" = "Сохранено!";
 "enter_amount" = "Введите сумму";
 "add_comment" = "Добавить комментарий...";
+"new_transaction" = "Новая операция";
+"edit_transaction" = "Изменение операции";
+"discard_changes_title" = "Не сохранять операцию?";
+"discard_changes_message" = "Введённые данные будут потеряны";
+"discard_changes" = "Не сохранять";
+"keep_editing" = "Продолжить ввод";
+"no_categories_for_type" = "Нет категорий — создайте её через «Ещё»";
+"accessibility_close" = "Закрыть";
+"accessibility_delete_digit" = "Удалить цифру";
+"accessibility_clear_amount" = "Очистить сумму";
+"accessibility_decimal_separator" = "Запятая";
+"accessibility_amount" = "Сумма";
 "select_date" = "Выберите дату";
 "date" = "Дата";
 

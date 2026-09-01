@@ -15,6 +15,8 @@ enum AppString {
     static let currencySymbol = "₸"
     /// Неразрывный пробел между разрядами суммы: 1 350 000
     static let amountGroupingSeparator = "\u{00A0}"
+    /// Разделитель дробной части суммы на клавиатуре
+    static let amountDecimalSeparator = "."
     static let save = String(localized: "save")
     static let cancel = String(localized: "cancel")
     static let delete = String(localized: "delete")
@@ -66,6 +68,21 @@ enum AppString {
     static let addComment = String(localized: "add_comment")
     static let selectDate = String(localized: "select_date")
     static let date = String(localized: "date")
+    static let newTransaction = String(localized: "new_transaction")
+    static let editTransaction = String(localized: "edit_transaction")
+    static let discardChangesTitle = String(localized: "discard_changes_title")
+    static let discardChangesMessage = String(localized: "discard_changes_message")
+    static let discardChanges = String(localized: "discard_changes")
+    static let keepEditing = String(localized: "keep_editing")
+    static let noCategoriesForType = String(localized: "no_categories_for_type")
+
+    // MARK: - Accessibility
+
+    static let accessibilityClose = String(localized: "accessibility_close")
+    static let accessibilityDeleteDigit = String(localized: "accessibility_delete_digit")
+    static let accessibilityClearAmount = String(localized: "accessibility_clear_amount")
+    static let accessibilityDecimalSeparator = String(localized: "accessibility_decimal_separator")
+    static let accessibilityAmount = String(localized: "accessibility_amount")
 
     // MARK: - Categories
 

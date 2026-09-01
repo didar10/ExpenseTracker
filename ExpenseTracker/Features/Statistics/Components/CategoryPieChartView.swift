@@ -41,6 +41,8 @@ struct CategoryPieChartView: View {
                     )
                     .foregroundStyle(Color(hex: stat.category.colorHex).gradient)
                     .opacity(opacity(for: stat))
+                    .accessibilityLabel(stat.category.name)
+                    .accessibilityValue(accessibilityValue(for: stat))
                     .annotation(position: .overlay) {
                         if shouldShowAnnotation(for: stat) {
                             Image(systemName: stat.category.icon)
@@ -116,6 +118,12 @@ struct CategoryPieChartView: View {
     private func shouldShowAnnotation(for stat: CategoryStatistic) -> Bool {
         stat.percentage(of: totalAmount) > Constants.minAnnotationPercentage
     }
+
+    /// Сектор различается только цветом, поэтому VoiceOver читает сумму и долю
+    private func accessibilityValue(for stat: CategoryStatistic) -> String {
+        let amount = stat.amount.formatted(.currency(code: AppString.currencyCode))
+        return "\(amount), \(stat.percentageString(of: totalAmount))"
+    }
 }
 
 // MARK: - Constants
@@ -152,8 +160,12 @@ private extension CategoryPieChartView {
             Text(totalAmount.formatted(.currency(code: AppString.currencyCode)))
                 .font(.app(.title))
                 .fontDesign(.rounded)
+                .monospacedDigit()
                 .foregroundStyle(AppColor.textPrimary)
+                .lineLimit(1)
+                .minimumScaleFactor(Constants.minTextScaleFactor)
         }
+        .frame(width: AppSize.chartCenterContentWidth)
     }
 
     func selectedCategoryInfo(for statistic: CategoryStatistic) -> some View {
@@ -182,6 +194,7 @@ private extension CategoryPieChartView {
             Text(statistic.amount.formatted(.currency(code: AppString.currencyCode)))
                 .font(.app(.title))
                 .fontDesign(.rounded)
+                .monospacedDigit()
                 .foregroundStyle(AppColor.textPrimary)
                 .lineLimit(1)
                 .minimumScaleFactor(Constants.minTextScaleFactor)

@@ -13,9 +13,10 @@ struct StatisticsView: View {
     // MARK: - Properties
 
     @Bindable var viewModel: StatisticsViewModel
-    @State private var scrollOffset: CGFloat = 0
+
     @State private var selectedStatistic: CategoryStatistic?
     @State private var showingAccountsView = false
+    @State private var isContentScrolled = false
 
     @Query(sort: \Transaction.date, order: .reverse)
     private var transactionsTrigger: [Transaction]
@@ -24,7 +25,6 @@ struct StatisticsView: View {
     private var accountsTrigger: [Account]
 
     @Environment(\.modelContext) private var modelContext
-    @Environment(\.tabBarVisibility) private var isTabBarVisible
 
     // MARK: - Body
 
@@ -33,35 +33,7 @@ struct StatisticsView: View {
             VStack(spacing: 0) {
                 headerView
 
-                ScrollView {
-                    VStack(spacing: AppSpacing.large) {
-                        if viewModel.isEmpty {
-                            StatisticsEmptyChartView()
-                        } else {
-                            CategoryPieChartView(
-                                statistics: viewModel.statistics,
-                                totalAmount: viewModel.totalAmount,
-                                title: viewModel.totalTitle
-                            )
-                        }
-
-                        periodSelector
-                            .frame(maxWidth: .infinity, alignment: .center)
-
-                        if viewModel.isEmpty {
-                            StatisticsEmptyStateView(hint: viewModel.emptyStateHint)
-                        } else {
-                            CategoryStatisticsListView(
-                                statistics: viewModel.statistics,
-                                totalAmount: viewModel.totalAmount,
-                                selectedPeriod: viewModel.selectedPeriod,
-                                onCategoryTap: handleCategoryTap
-                            )
-                        }
-                    }
-                    .padding(AppSpacing.large)
-                    .padding(.bottom, AppSpacing.tabBarBottomInset)
-                }
+                content
             }
             .background(AppColor.background)
             .navigationBarHidden(true)
@@ -74,19 +46,7 @@ struct StatisticsView: View {
                 .presentationDragIndicator(.hidden)
             }
             .sheet(isPresented: $showingAccountsView) {
-                AccountSelectionSheet(
-                    accounts: viewModel.accounts,
-                    selectedAccount: viewModel.selectedAccount,
-                    onSelect: { account in
-                        withAnimation(.spring(response: 0.3, dampingFraction: 0.7)) {
-                            viewModel.selectedAccount = account
-                        }
-                        showingAccountsView = false
-                    },
-                    onShowAll: {
-                        showingAccountsView = false
-                    }
-                )
+                accountSelectionSheet
             }
             .onChange(of: transactionsTrigger) { _, _ in
                 viewModel.fetchData()
@@ -94,11 +54,8 @@ struct StatisticsView: View {
             .onChange(of: accountsTrigger) { _, _ in
                 viewModel.fetchData()
             }
-            .onChange(of: viewModel.selectedAccount) { _, newValue in
-                viewModel.changeAccount(newValue)
-            }
-            .onChange(of: viewModel.selectedType) { _, newValue in
-                viewModel.changeType(newValue)
+            .onChange(of: viewModel.selectedAccount) { _, _ in
+                viewModel.refreshStatistics()
             }
             .onAppear {
                 // Экран пересоздается при каждом переключении вкладки, поэтому
@@ -111,6 +68,7 @@ struct StatisticsView: View {
     // MARK: - Actions
 
     private func handleCategoryTap(_ statistic: CategoryStatistic) {
+        UIImpactFeedbackGenerator(style: .light).impactOccurred()
         selectedStatistic = statistic
     }
 }
@@ -136,6 +94,75 @@ private extension StatisticsView {
         .padding(.horizontal, AppSpacing.large)
         .padding(.vertical, AppSpacing.small)
         .background(AppColor.background)
+        // Контент, уехавший под шапку, отделяется линией
+        .overlay(alignment: .bottom) {
+            Divider()
+                .opacity(isContentScrolled ? 1 : 0)
+                .animation(.easeOut(duration: 0.15), value: isContentScrolled)
+        }
+    }
+
+    @ViewBuilder
+    var content: some View {
+        if #available(iOS 18.0, *) {
+            scrollContent
+                .onScrollGeometryChange(for: Bool.self) { geometry in
+                    geometry.contentOffset.y > geometry.contentInsets.top
+                } action: { _, isScrolled in
+                    isContentScrolled = isScrolled
+                }
+        } else {
+            scrollContent
+        }
+    }
+
+    var scrollContent: some View {
+        ScrollView {
+            VStack(spacing: AppSpacing.large) {
+                chartSection
+
+                periodSelector
+                    .frame(maxWidth: .infinity, alignment: .center)
+
+                listSection
+            }
+            .padding(AppSpacing.large)
+            .padding(.bottom, AppSpacing.tabBarBottomInset)
+        }
+        .scrollBounceBehavior(.basedOnSize)
+    }
+
+    @ViewBuilder
+    var chartSection: some View {
+        if viewModel.isEmpty {
+            StatisticsEmptyChartView(hint: viewModel.emptyStateHint)
+        } else {
+            CategoryPieChartView(
+                statistics: viewModel.statistics,
+                totalAmount: viewModel.totalAmount,
+                title: viewModel.totalTitle
+            )
+        }
+    }
+
+    /// Под переключателем — список категорий, а в пустом состоянии
+    /// предложение снять фильтр периода, если данные скрыл именно он
+    @ViewBuilder
+    var listSection: some View {
+        if viewModel.isEmpty {
+            if viewModel.isFilteredByPeriod {
+                PillActionButton(title: AppString.periodAllTime) {
+                    UIImpactFeedbackGenerator(style: .light).impactOccurred()
+                    viewModel.resetPeriod()
+                }
+            }
+        } else {
+            CategoryStatisticsListView(
+                statistics: viewModel.statistics,
+                totalAmount: viewModel.totalAmount,
+                onCategoryTap: handleCategoryTap
+            )
+        }
     }
 
     /// Выбор периода со стрелками переключения на соседний период
@@ -175,15 +202,15 @@ private extension StatisticsView {
         } label: {
             image
                 .font(.system(size: AppSize.glyphMedium, weight: .semibold))
-                .foregroundStyle(isEnabled ? AppColor.textPrimary : AppColor.textSecondary.opacity(0.4))
+                .foregroundStyle(isEnabled ? AppColor.textPrimary : AppColor.textSecondary.opacity(Constants.disabledArrowOpacity))
                 .frame(width: AppSize.iconMedium, height: AppSize.iconMedium)
                 .background {
                     Circle()
                         .fill(AppColor.cardBackground)
-                        .shadow(color: AppColor.textPrimary.opacity(0.04), radius: AppSpacing.xSmall, y: 1)
+                        .shadow(color: AppColor.textPrimary.opacity(Constants.controlShadowOpacity), radius: AppSpacing.xSmall, y: AppSpacing.hairline)
                 }
         }
-        .buttonStyle(.plain)
+        .buttonStyle(PressableScaleButtonStyle())
         .disabled(!isEnabled)
         .accessibilityLabel(label)
     }
@@ -221,10 +248,38 @@ private extension StatisticsView {
             .background {
                 Capsule()
                     .fill(AppColor.cardBackground)
-                    .shadow(color: AppColor.textPrimary.opacity(0.04), radius: AppSpacing.xSmall, y: 1)
+                    .shadow(color: AppColor.textPrimary.opacity(Constants.controlShadowOpacity), radius: AppSpacing.xSmall, y: AppSpacing.hairline)
             }
         }
         .buttonStyle(.plain)
+        .accessibilityLabel(AppString.period)
+        .accessibilityValue(viewModel.periodTitle)
+    }
+
+    var accountSelectionSheet: some View {
+        AccountSelectionSheet(
+            accounts: viewModel.accounts,
+            selectedAccount: viewModel.selectedAccount,
+            onSelect: { account in
+                withAnimation(.spring(response: 0.3, dampingFraction: 0.7)) {
+                    viewModel.selectedAccount = account
+                }
+                showingAccountsView = false
+            },
+            onShowAll: {
+                showingAccountsView = false
+            }
+        )
+    }
+}
+
+// MARK: - Constants
+
+private extension StatisticsView {
+
+    enum Constants {
+        static let disabledArrowOpacity: Double = 0.4
+        static let controlShadowOpacity: Double = 0.04
     }
 }
 

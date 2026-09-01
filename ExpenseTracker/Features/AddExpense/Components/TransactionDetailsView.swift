@@ -7,23 +7,6 @@
 
 import SwiftUI
 
-struct TransactionDetailsView: View {
-
-    // MARK: - Properties
-
-    @Binding var date: Date
-    @Binding var note: String
-
-    // MARK: - Body
-
-    var body: some View {
-        VStack(spacing: 16) {
-            DateSelectionView(date: $date)
-            NoteInputView(note: $note)
-        }
-    }
-}
-
 // MARK: - Date Selection View
 
 struct DateSelectionView: View {
@@ -31,6 +14,9 @@ struct DateSelectionView: View {
     // MARK: - Properties
 
     @Binding var date: Date
+    /// Вызывается перед открытием календаря: экран убирает клавиатуру заметки
+    var onOpen: () -> Void = {}
+
     @State private var showingDatePicker = false
 
     // MARK: - Computed Properties
@@ -40,61 +26,73 @@ struct DateSelectionView: View {
 
         if calendar.isDateInToday(date) {
             return AppString.today
-        } else if calendar.isDateInYesterday(date) {
-            return AppString.yesterday
-        } else {
-            let formatter = DateFormatter()
-            formatter.dateFormat = "dd.MM.yy"
-            return formatter.string(from: date)
         }
+
+        if calendar.isDateInYesterday(date) {
+            return AppString.yesterday
+        }
+
+        return date.isInCurrentYear
+            ? date.formatted(.dateTime.day().month(.abbreviated))
+            : date.formatted(.dateTime.day().month(.twoDigits).year(.twoDigits))
     }
 
     // MARK: - Body
 
     var body: some View {
         Button {
+            onOpen()
             showingDatePicker = true
         } label: {
-            VStack(spacing: 4) {
+            VStack(spacing: AppSpacing.xSmall) {
                 AppImage.calendar
-                    .font(.system(size: 18))
+                    .font(.system(size: AppSize.glyphLarge))
                     .foregroundStyle(AppColor.textSecondary)
 
                 Text(dateText)
                     .font(.app(.caption))
                     .foregroundStyle(AppColor.textPrimary)
                     .lineLimit(1)
+                    .minimumScaleFactor(0.8)
+                    .padding(.horizontal, AppSpacing.smaller)
             }
-            .frame(width: 90)
-            .frame(height: 60)
-            .background {
-                RoundedRectangle(cornerRadius: 12, style: .continuous)
-                    .fill(AppColor.cardBackground)
-            }
+            .frame(width: AppSize.dateTile)
+            .frame(height: AppSize.inlineTile)
+            .card(cornerRadius: AppRadius.card)
         }
         .buttonStyle(.plain)
+        .accessibilityLabel(AppString.date)
+        .accessibilityValue(dateText)
+        .accessibilityHint(AppString.selectDate)
         .sheet(isPresented: $showingDatePicker) {
-            NavigationStack {
-                DatePicker(
-                    AppString.selectDate,
-                    selection: $date,
-                    displayedComponents: .date
-                )
-                .datePickerStyle(.graphical)
-                .padding()
-                .navigationTitle(AppString.date)
-                .navigationBarTitleDisplayMode(.inline)
-                .toolbar {
-                    ToolbarItem(placement: .confirmationAction) {
-                        Button(AppString.done) {
-                            showingDatePicker = false
-                        }
+            datePickerSheet
+        }
+    }
+
+    // MARK: - Subviews
+
+    private var datePickerSheet: some View {
+        NavigationStack {
+            DatePicker(
+                AppString.selectDate,
+                selection: $date,
+                in: ...Date.now,
+                displayedComponents: .date
+            )
+            .datePickerStyle(.graphical)
+            .padding(AppSpacing.large)
+            .navigationTitle(AppString.date)
+            .navigationBarTitleDisplayMode(.inline)
+            .toolbar {
+                ToolbarItem(placement: .confirmationAction) {
+                    Button(AppString.done) {
+                        showingDatePicker = false
                     }
                 }
             }
-            .presentationDetents([.medium])
-            .presentationBackground(AppColor.background)
         }
+        .presentationDetents([.medium])
+        .presentationBackground(AppColor.background)
     }
 }
 
@@ -105,25 +103,26 @@ struct NoteInputView: View {
     // MARK: - Properties
 
     @Binding var note: String
+    @FocusState.Binding var isFocused: Bool
 
     // MARK: - Body
 
     var body: some View {
-        HStack(alignment: .top, spacing: 12) {
+        HStack(alignment: .top, spacing: AppSpacing.medium) {
             AppImage.textAlign
+                .font(.system(size: AppSize.glyphLarge))
                 .foregroundStyle(AppColor.textSecondary)
-                .font(.system(size: 18))
-                .padding(.top, 14)
+                .padding(.top, AppSpacing.large)
 
             TextField(AppString.addComment, text: $note, axis: .vertical)
                 .font(.app(.body))
                 .lineLimit(2...4)
-                .padding(.vertical, 14)
+                .focused($isFocused)
+                .padding(.vertical, AppSpacing.large)
         }
-        .padding(.horizontal, 16)
-        .background {
-            RoundedRectangle(cornerRadius: 16, style: .continuous)
-                .fill(AppColor.cardBackground)
-        }
+        .padding(.horizontal, AppSpacing.large)
+        .card(cornerRadius: AppRadius.card)
+        .contentShape(Rectangle())
+        .onTapGesture { isFocused = true }
     }
 }

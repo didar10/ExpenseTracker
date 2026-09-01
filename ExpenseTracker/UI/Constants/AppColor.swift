@@ -18,6 +18,10 @@ enum AppColor {
     static let subtleFill = Color.primary.opacity(0.08)
     /// Светлая нейтральная заливка полей ввода и секций формы
     static let fieldFill = Color.primary.opacity(0.04)
+    /// Заливка нейтральных круглых элементов: кнопка «Ещё», плейсхолдеры
+    static let neutralFill = Color(uiColor: .systemGray5)
+    /// Затемнение под модальными оверлеями
+    static let scrim = Color.black.opacity(0.35)
 
     // MARK: - Semantic
 

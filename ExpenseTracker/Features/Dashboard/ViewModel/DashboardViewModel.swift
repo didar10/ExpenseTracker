@@ -47,11 +47,31 @@ final class DashboardViewModel: ObservableObject {
         return transactions.filter { $0.account?.id == selectedAccount.id }
     }
 
+    /// Все данные экрана считаются за один проход: раньше список операций
+    /// фильтровался заново для баланса, для шапки и для секций
+    func makeSnapshot(accounts: [Account], transactions: [Transaction]) -> DashboardSnapshot {
+        let periodTransactions = periodTransactions(from: transactions)
+
+        return DashboardSnapshot(
+            periodBalance: balanceData(
+                accounts: accounts,
+                transactions: transactions,
+                periodTransactions: periodTransactions
+            ),
+            totalBalance: totalBalanceData(accounts: accounts, transactions: transactions).balance,
+            sections: TransactionSection.group(periodTransactions)
+        )
+    }
+
     /// За «Все время» баланс берется со счетов (учитывает начальный остаток),
     /// за конкретный период — считается по операциям этого периода
-    func balanceData(accounts: [Account], transactions: [Transaction]) -> BalanceData {
+    func balanceData(
+        accounts: [Account],
+        transactions: [Transaction],
+        periodTransactions: [Transaction]
+    ) -> BalanceData {
         guard periodFilter.period == .allTime else {
-            return BalanceData(transactions: periodTransactions(from: transactions))
+            return BalanceData(transactions: periodTransactions)
         }
 
         return totalBalanceData(accounts: accounts, transactions: transactions)
@@ -71,22 +91,24 @@ final class DashboardViewModel: ObservableObject {
     /// Подсказка для пустого списка: за конкретный период предлагать добавить
     /// первую транзакцию некорректно — операций нет только в этом периоде
     var emptyStateHint: String {
-        periodFilter.period == .allTime
-            ? AppString.noTransactionsHint
-            : AppString.noTransactionsInPeriod(periodFilter.title)
+        isFilteredByPeriod
+            ? AppString.noTransactionsInPeriod(periodFilter.title)
+            : AppString.noTransactionsHint
     }
 
-    func groupedTransactions(from transactions: [Transaction]) -> [TransactionSection] {
-        TransactionSection.group(periodTransactions(from: transactions))
+    /// Пустой список из-за фильтра, а не из-за отсутствия операций:
+    /// экран предлагает сбросить период, а не добавить первую операцию
+    var isFilteredByPeriod: Bool {
+        periodFilter.period != .allTime
     }
 
     // MARK: - Actions
 
+    /// Открывает операцию на редактирование. Анимация не нужна:
+    /// у модального экрана своя, а состояние листа анимировать нечем
     func handleTransactionTap(_ transaction: Transaction) {
         UIImpactFeedbackGenerator(style: .light).impactOccurred()
-        withAnimation {
-            selectedTransaction = transaction
-        }
+        selectedTransaction = transaction
     }
 
     /// Сбрасывает выбор, если выбранный счет удалили на другом экране
@@ -107,6 +129,11 @@ final class DashboardViewModel: ObservableObject {
 
     func hideAccounts() {
         showingAccountsView = false
+    }
+
+    /// Сброс фильтра из пустого состояния: показать операции за все время
+    func resetPeriod() {
+        changePeriod(.allTime)
     }
 
     func changePeriod(_ period: StatisticsPeriod) {

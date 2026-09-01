@@ -9,20 +9,29 @@ import Foundation
 
 /// Модель для хранения статистики по категории
 struct CategoryStatistic: Identifiable {
-    let id = UUID()
+
+    // MARK: - Properties
+
+    /// Идентификатор категории, а не новый UUID: иначе пересчет статистики
+    /// подменяет все строки списка и сбрасывает выделенный сектор диаграммы
+    var id: UUID { category.id }
+
     let category: Category
     let amount: Decimal
     let transactionCount: Int
-    
-    /// Процент от общей суммы
+
+    // MARK: - Methods
+
+    /// Доля от общей суммы: 0…1
     func percentage(of total: Decimal) -> Double {
         guard total > 0 else { return 0 }
         return ((amount / total) as NSDecimalNumber).doubleValue
     }
-    
-    /// Процент в виде строки
+
+    /// Процент для показа. Округляем, а не отбрасываем дробную часть:
+    /// иначе 35,99 % превращается в 35 %, и сумма долей не дотягивает до 100 %
     func percentageString(of total: Decimal) -> String {
-        let value = Int(percentage(of: total) * 100)
+        let value = Int((percentage(of: total) * 100).rounded())
         return "\(value)%"
     }
 }

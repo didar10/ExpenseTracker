@@ -13,56 +13,39 @@ struct TransactionRowView: View {
     // MARK: - Properties
 
     let transaction: Transaction
+    /// Не задан там, где строка только показывает операцию (список категории):
+    /// тогда она не кнопка и не предлагает редактирование
+    var onTap: (() -> Void)?
 
     @Environment(\.modelContext) private var context
-    @State private var showDeleteConfirmation = false
+
+    @State private var showingDeleteConfirmation = false
 
     // MARK: - Body
 
     var body: some View {
-        HStack(spacing: 12) {
-            iconView
-
-            VStack(alignment: .leading, spacing: 4) {
-                HStack(spacing: 6) {
-                    AppText(title, style: .bodySmaller)
-
-                    if let note = transaction.note, !note.isEmpty {
-                        AppImage.noteBubble
-                            .font(.system(size: 10))
-                            .foregroundStyle(.tertiary)
+        row
+            .accessibilityElement(children: .combine)
+            .accessibilityLabel(accessibilityLabel)
+            .contextMenu {
+                if let onTap {
+                    Button(action: onTap) {
+                        Label { Text(AppString.edit) } icon: { AppImage.pencil }
                     }
                 }
 
-                if let note = transaction.note, !note.isEmpty {
-                    AppText(note, style: .microCaption, color: AppColor.textSecondary)
-                        .lineLimit(1)
+                Button(role: .destructive) {
+                    showingDeleteConfirmation = true
+                } label: {
+                    Label { Text(AppString.delete) } icon: { AppImage.trash }
                 }
             }
-
-            Spacer()
-
-            Text(amountText)
-                .font(.app(.bodySmaller))
-                .fontDesign(.rounded)
-                .foregroundStyle(amountColor)
-        }
-        .padding(.vertical, 8)
-        .padding(.horizontal, 2)
-        .contentShape(Rectangle())
-        .contextMenu {
-            Button {
-                showDeleteConfirmation = true
-            } label: {
-                Label(AppString.delete, systemImage: "trash")
+            .alert(AppString.deleteTransaction, isPresented: $showingDeleteConfirmation) {
+                Button(AppString.delete, role: .destructive) { delete() }
+                Button(AppString.cancel, role: .cancel) {}
+            } message: {
+                Text(AppString.cannotUndo)
             }
-        }
-        .confirmationDialog(AppString.deleteTransaction, isPresented: $showDeleteConfirmation, titleVisibility: .visible) {
-            Button(AppString.delete, role: .destructive) {
-                delete()
-            }
-            Button(AppString.cancel, role: .cancel) { }
-        }
     }
 }
 
@@ -72,7 +55,7 @@ private extension TransactionRowView {
     func delete() {
         UINotificationFeedbackGenerator().notificationOccurred(.warning)
 
-        withAnimation {
+        withAnimation(.easeOut(duration: 0.2)) {
             context.delete(transaction)
         }
 
@@ -87,15 +70,66 @@ private extension TransactionRowView {
 // MARK: - Subviews
 private extension TransactionRowView {
 
+    @ViewBuilder
+    var row: some View {
+        if let onTap {
+            Button(action: onTap) {
+                rowContent
+            }
+            .buttonStyle(HighlightRowButtonStyle())
+            .accessibilityHint(AppString.edit)
+        } else {
+            rowContent
+        }
+    }
+
+    var rowContent: some View {
+        HStack(spacing: AppSpacing.medium) {
+            iconView
+
+            VStack(alignment: .leading, spacing: AppSpacing.xSmall) {
+                HStack(spacing: AppSpacing.smaller) {
+                    AppText(title, style: .bodySmaller)
+                        .lineLimit(1)
+
+                    if hasNote {
+                        AppImage.noteBubble
+                            .font(.system(size: AppSize.glyphTiny))
+                            .foregroundStyle(AppColor.textTertiary)
+                    }
+                }
+
+                if let note = transaction.note, !note.isEmpty {
+                    AppText(note, style: .microCaption, color: AppColor.textSecondary)
+                        .lineLimit(1)
+                }
+            }
+
+            Spacer(minLength: AppSpacing.small)
+
+            Text(amountText)
+                .font(.app(.bodySmaller))
+                .fontDesign(.rounded)
+                .monospacedDigit()
+                .foregroundStyle(amountColor)
+                .lineLimit(1)
+                .minimumScaleFactor(0.8)
+        }
+        .padding(.horizontal, AppSpacing.mediumSmall)
+        .padding(.vertical, AppSpacing.medium)
+        .contentShape(Rectangle())
+        .cardShadow(cornerRadius: AppRadius.card)
+    }
+
     var iconView: some View {
         ZStack {
             Circle()
-                .fill(iconBackgroundColor.opacity(0.15))
-                .frame(width: 38, height: 38)
+                .fill(iconColor.opacity(0.15))
+                .frame(width: AppSize.iconMedium, height: AppSize.iconMedium)
 
             transactionIcon
-                .foregroundStyle(iconBackgroundColor)
-                .font(.system(size: 18, weight: .semibold))
+                .foregroundStyle(iconColor)
+                .font(.system(size: AppSize.glyphRow, weight: .semibold))
                 .symbolRenderingMode(.hierarchical)
         }
         .circleShadow()
@@ -111,24 +145,47 @@ private extension TransactionRowView {
         : transaction.category?.name ?? AppString.noCategory
     }
 
+    var hasNote: Bool {
+        !(transaction.note ?? "").isEmpty
+    }
+
     var transactionIcon: Image {
         transaction.type == .income
         ? AppImage.incomeArrow
-        : Image(systemName: transaction.category?.icon ?? "minus")
+        : Image(systemName: transaction.category?.icon ?? Constants.fallbackIcon)
     }
 
-    var iconBackgroundColor: Color {
+    var iconColor: Color {
         transaction.type == .income
         ? AppColor.income
-        : Color(hex: transaction.category?.colorHex ?? "#8E8E93")
+        : Color(hex: transaction.category?.colorHex ?? Constants.fallbackColorHex)
     }
 
     var amountText: String {
-        let sign = transaction.type == .income ? "+" : "−"
+        let sign = transaction.type == .income ? Constants.plusSign : Constants.minusSign
         return "\(sign) \(transaction.amount.formatted(.currency(code: AppString.currencyCode)))"
     }
 
     var amountColor: Color {
         transaction.type == .income ? AppColor.income : AppColor.textPrimary
+    }
+
+    /// VoiceOver читает строку целиком: категория, сумма и комментарий
+    var accessibilityLabel: String {
+        [title, amountText, transaction.note ?? ""]
+            .filter { !$0.isEmpty }
+            .joined(separator: ", ")
+    }
+}
+
+// MARK: - Constants
+private extension TransactionRowView {
+
+    enum Constants {
+        static let fallbackIcon = "minus"
+        static let fallbackColorHex = "#8E8E93"
+        static let plusSign = "+"
+        /// Минус для сумм — типографский, а не дефис
+        static let minusSign = "−"
     }
 }

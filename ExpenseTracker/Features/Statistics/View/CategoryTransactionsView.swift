@@ -79,9 +79,6 @@ private extension CategoryTransactionsView {
 
                             ForEach(group.transactions) { transaction in
                                 TransactionRowView(transaction: transaction)
-                                    .padding(.horizontal, AppSpacing.mediumSmall)
-                                    .padding(.vertical, AppSpacing.xSmall)
-                                    .cardShadow(cornerRadius: AppRadius.large)
                             }
                         }
                         .padding(.horizontal, AppSpacing.large)

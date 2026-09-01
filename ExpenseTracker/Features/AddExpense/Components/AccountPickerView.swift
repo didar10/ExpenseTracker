@@ -6,97 +6,103 @@
 //
 
 import SwiftUI
-import SwiftData
 
 struct AccountPickerView: View {
 
     // MARK: - Properties
 
-    @Binding var selectedAccount: Account?
-    let transactionAmount: String
-    let transactionType: TransactionType
-    @Binding var showingAccountPicker: Bool
-
-    @Query(sort: \Account.createdAt, order: .forward) private var accounts: [Account]
+    let account: Account?
+    /// Баланс счета после этой операции; nil — сумма еще не введена, показываем текущий баланс
+    let predictedBalance: Decimal?
+    let onTap: () -> Void
 
     // MARK: - Computed Properties
 
-    private var amountDecimal: Decimal {
-        Decimal(string: transactionAmount.replacingOccurrences(of: ",", with: ".")) ?? 0
+    private var balance: Decimal? {
+        predictedBalance ?? account?.currentBalance
     }
 
-    private var predictedBalance: Decimal? {
-        guard let account = selectedAccount, amountDecimal > 0 else { return nil }
+    private var balanceText: String {
+        balance?.formatted(.currency(code: AppString.currencyCode)) ?? ""
+    }
 
-        if transactionType == .income {
-            return account.currentBalance + amountDecimal
-        } else {
-            return account.currentBalance - amountDecimal
-        }
+    /// Уход счета в минус — единственное, что подсвечивается цветом в этой плитке
+    private var balanceColor: Color {
+        (balance ?? 0) < 0 ? AppColor.expense : AppColor.textPrimary
     }
 
     // MARK: - Body
 
     var body: some View {
-        Button {
-            showingAccountPicker = true
-        } label: {
-            HStack(spacing: 10) {
-                if let account = selectedAccount {
-                    ZStack {
-                        RoundedRectangle(cornerRadius: 8, style: .continuous)
-                            .fill(account.swiftUIColor.opacity(0.2))
-                            .frame(width: 36, height: 36)
-
-                        Image(systemName: account.icon)
-                            .font(.system(size: 15))
-                            .foregroundStyle(account.swiftUIColor)
-                    }
-
-                    VStack(alignment: .leading, spacing: 2) {
-                        Text(account.name)
-                            .font(.app(.microCaption))
-                            .foregroundStyle(AppColor.textSecondary)
-
-                        if let predicted = predictedBalance, amountDecimal > 0 {
-                            Text(predicted.formatted(.currency(code: AppString.currencyCode)))
-                                .font(.app(.bodySmall))
-                                .fontDesign(.rounded)
-                                .foregroundStyle(AppColor.textPrimary)
-                        } else {
-                            Text(account.currentBalance.formatted(.currency(code: AppString.currencyCode)))
-                                .font(.app(.bodySmall))
-                                .fontDesign(.rounded)
-                                .foregroundStyle(AppColor.textPrimary)
-                        }
-                    }
-                    .frame(maxWidth: .infinity, alignment: .leading)
+        Button(action: onTap) {
+            HStack(spacing: AppSpacing.mediumSmall) {
+                if let account {
+                    accountIcon(for: account)
+                    accountDetails(for: account)
                 } else {
-                    AppImage.creditcard
-                        .foregroundStyle(AppColor.textSecondary)
-                        .font(.system(size: 18))
-
-                    Text(AppString.chooseAccount)
-                        .font(.app(.bodySmaller))
-                        .foregroundStyle(AppColor.textSecondary)
-
-                    Spacer()
+                    placeholder
                 }
             }
-            .padding(.horizontal, 12)
-            .padding(.vertical, 10)
+            .padding(.horizontal, AppSpacing.medium)
             .frame(maxWidth: .infinity, alignment: .leading)
-            .frame(height: 60)
-            .background {
-                RoundedRectangle(cornerRadius: 12, style: .continuous)
-                    .fill(AppColor.cardBackground)
-            }
+            .frame(height: AppSize.inlineTile)
+            .card(cornerRadius: AppRadius.card)
         }
         .buttonStyle(.plain)
-        .onAppear {
-            if selectedAccount == nil {
-                selectedAccount = accounts.first { $0.isDefault } ?? accounts.first
-            }
+        .accessibilityLabel(account?.name ?? AppString.chooseAccount)
+        .accessibilityValue(balanceText)
+        .accessibilityHint(AppString.selectAccount)
+    }
+}
+
+// MARK: - Subviews
+private extension AccountPickerView {
+
+    func accountIcon(for account: Account) -> some View {
+        ZStack {
+            RoundedRectangle(cornerRadius: AppRadius.small, style: .continuous)
+                .fill(account.swiftUIColor.opacity(0.2))
+                .frame(width: AppSize.tileIcon, height: AppSize.tileIcon)
+
+            Image(systemName: account.icon)
+                .font(.system(size: AppSize.glyphMedium))
+                .foregroundStyle(account.swiftUIColor)
+        }
+    }
+
+    func accountDetails(for account: Account) -> some View {
+        VStack(alignment: .leading, spacing: AppSpacing.xxSmall) {
+            Text(account.name)
+                .font(.app(.microCaption))
+                .foregroundStyle(AppColor.textSecondary)
+                .lineLimit(1)
+
+            Text(balanceText)
+                .font(.app(.bodySmall))
+                .fontDesign(.rounded)
+                .monospacedDigit()
+                .foregroundStyle(balanceColor)
+                .lineLimit(1)
+                .minimumScaleFactor(0.8)
+                .contentTransition(.numericText())
+                .animation(.snappy(duration: 0.2), value: balance)
+        }
+        .frame(maxWidth: .infinity, alignment: .leading)
+    }
+
+    var placeholder: some View {
+        HStack(spacing: AppSpacing.mediumSmall) {
+            AppImage.creditcard
+                .font(.system(size: AppSize.glyphXLarge))
+                .foregroundStyle(AppColor.textSecondary)
+
+            Text(AppString.chooseAccount)
+                .font(.app(.bodySmaller))
+                .foregroundStyle(AppColor.textSecondary)
+                .lineLimit(1)
+                .minimumScaleFactor(0.8)
+
+            Spacer(minLength: 0)
         }
     }
 }

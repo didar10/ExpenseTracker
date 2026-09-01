@@ -17,6 +17,17 @@ struct BalanceCardView: View {
     let onPreviousPeriod: () -> Void
     let onNextPeriod: () -> Void
 
+    // MARK: - Computed Properties
+
+    private var balanceText: String {
+        balanceData.balance.formatted(.currency(code: AppString.currencyCode))
+    }
+
+    /// Минус в балансе — единственное, что подсвечивается цветом в карточке
+    private var balanceColor: Color {
+        balanceData.balance < 0 ? AppColor.expense : AppColor.textPrimary
+    }
+
     // MARK: - Body
 
     var body: some View {
@@ -28,25 +39,30 @@ struct BalanceCardView: View {
                 onNext: onNextPeriod
             )
 
-            Text(balanceData.balance.formatted(.currency(code: AppString.currencyCode)))
+            Text(balanceText)
                 .font(.app(.balance))
                 .fontDesign(.rounded)
-                .foregroundStyle(AppColor.textPrimary)
+                .monospacedDigit()
+                .foregroundStyle(balanceColor)
                 .contentTransition(.numericText())
                 .lineLimit(1)
                 .minimumScaleFactor(Constants.minAmountScaleFactor)
+                .accessibilityLabel(AppString.balance)
+                .accessibilityValue(balanceText)
 
             HStack(spacing: AppSpacing.xxLarge) {
                 FinancialIndicatorView(
                     icon: AppImage.incomeArrow,
                     color: AppColor.income,
-                    amount: balanceData.totalIncome
+                    amount: balanceData.totalIncome,
+                    accessibilityTitle: AppString.incomes
                 )
 
                 FinancialIndicatorView(
                     icon: AppImage.expenseArrow,
                     color: AppColor.expense,
-                    amount: balanceData.totalExpenses
+                    amount: balanceData.totalExpenses,
+                    accessibilityTitle: AppString.expenses
                 )
             }
             .padding(.top, AppSpacing.xSmall)

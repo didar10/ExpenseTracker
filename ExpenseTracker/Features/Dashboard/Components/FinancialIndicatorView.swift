@@ -14,35 +14,48 @@ struct FinancialIndicatorView: View {
     let icon: Image
     let color: Color
     let amount: Decimal
+    /// Подпись для VoiceOver: на экране показателя различает только цвет стрелки
+    let accessibilityTitle: String
 
     // MARK: - Body
 
     var body: some View {
-        HStack(spacing: 6) {
+        HStack(spacing: AppSpacing.smaller) {
             icon
-                .font(.system(size: 16))
+                .font(.system(size: AppSize.glyphLarge))
                 .foregroundStyle(color)
 
             Text(amount.formatted(.currency(code: AppString.currencyCode)))
                 .font(.app(.bodySmall))
                 .fontDesign(.rounded)
+                .monospacedDigit()
                 .foregroundStyle(AppColor.textPrimary)
+                .lineLimit(1)
+                .minimumScaleFactor(0.7)
+                .contentTransition(.numericText())
         }
+        .accessibilityElement(children: .combine)
+        .accessibilityLabel(accessibilityTitle)
+        .accessibilityValue(amount.formatted(.currency(code: AppString.currencyCode)))
     }
 }
 
-#Preview("Income") {
-    FinancialIndicatorView(
-        icon: AppImage.incomeArrow,
-        color: AppColor.income,
-        amount: 150000
-    )
-}
+#Preview {
+    HStack(spacing: AppSpacing.xxLarge) {
+        FinancialIndicatorView(
+            icon: AppImage.incomeArrow,
+            color: AppColor.income,
+            amount: 150000,
+            accessibilityTitle: AppString.incomes
+        )
 
-#Preview("Expense") {
-    FinancialIndicatorView(
-        icon: AppImage.expenseArrow,
-        color: AppColor.expense,
-        amount: 75000
-    )
+        FinancialIndicatorView(
+            icon: AppImage.expenseArrow,
+            color: AppColor.expense,
+            amount: 75000,
+            accessibilityTitle: AppString.expenses
+        )
+    }
+    .padding(AppSpacing.large)
+    .background(AppColor.background)
 }

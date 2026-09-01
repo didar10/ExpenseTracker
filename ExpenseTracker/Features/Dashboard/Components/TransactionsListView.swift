@@ -7,30 +7,48 @@
 
 import SwiftUI
 
-/// Компонент списка транзакций, сгруппированных по датам
+/// Список операций, сгруппированных по дням. Строки создаются лениво,
+/// заголовки дней прилипают к верху при прокрутке
 struct TransactionsListView: View {
+
+    // MARK: - Properties
+
     let sections: [TransactionSection]
     var emptyStateHint: String = AppString.noTransactionsHint
+    var isFilteredByPeriod = false
     let onTransactionTap: (Transaction) -> Void
-    
+    var onResetPeriod: () -> Void = {}
+
+    // MARK: - Body
+
     var body: some View {
-        VStack(spacing: 0) {
+        LazyVStack(spacing: AppSpacing.small, pinnedViews: [.sectionHeaders]) {
             if sections.isEmpty {
-                EmptyStateView(hint: emptyStateHint)
+                EmptyStateView(
+                    hint: emptyStateHint,
+                    resetAction: isFilteredByPeriod ? onResetPeriod : nil
+                )
             } else {
                 ForEach(sections) { section in
-                    TransactionSectionView(
-                        section: section,
-                        onTransactionTap: onTransactionTap
-                    )
-                    .padding(.horizontal)
-                    .padding(.bottom, 12)
+                    Section {
+                        ForEach(section.transactions) { transaction in
+                            TransactionRowView(transaction: transaction) {
+                                onTransactionTap(transaction)
+                            }
+                        }
+                    } header: {
+                        SectionHeaderView(date: section.date)
+                    }
                 }
             }
         }
+        .padding(.horizontal, AppSpacing.large)
     }
 }
 
 #Preview {
-    TransactionsListView(sections: []) { _ in }
+    ScrollView {
+        TransactionsListView(sections: []) { _ in }
+    }
+    .background(AppColor.background)
 }
