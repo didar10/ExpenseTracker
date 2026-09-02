@@ -40,6 +40,12 @@ struct CategoriesListView: View {
         }
     }
 
+    /// Категории этого типа есть, но все заняты фильтром выбора — например,
+    /// на каждую из них уже заведен бюджет
+    private var isFilteredOutByPicker: Bool {
+        selectableCategoryIDs != nil && categories.contains { $0.type == selectedType }
+    }
+
     // MARK: - Body
 
     var body: some View {
@@ -50,30 +56,16 @@ struct CategoriesListView: View {
             VStack(spacing: 0) {
                 header
 
-                ScrollView {
-                    VStack(spacing: AppSpacing.large) {
-                        TransactionTypePickerView(selectedType: $selectedType)
-
-                        if filteredCategories.isEmpty {
-                            EmptyCategoriesView()
-                        } else {
-                            categoriesList
-                        }
-                    }
-                    .padding(AppSpacing.large)
-                    .padding(.bottom, AppSpacing.xxxLarge)
-                }
+                content
             }
 
             if !isEditing {
-                Button {
-                    UIImpactFeedbackGenerator(style: .light).impactOccurred()
+                AddFloatingButton(title: AppString.addNew) {
                     showingAddCategory = true
-                } label: {
-                    CategoryAddFloatingButton()
                 }
                 .padding(.trailing, AppSpacing.large)
                 .padding(.bottom, AppSpacing.xxxLarge)
+                .transition(.scale(scale: 0.9).combined(with: .opacity))
             }
         }
         .onAppear {
@@ -81,6 +73,12 @@ struct CategoriesListView: View {
         }
         .onChange(of: selectedType) {
             isEditing = false
+        }
+        // Список опустел — редактировать больше нечего
+        .onChange(of: filteredCategories.isEmpty) { _, isEmpty in
+            if isEmpty {
+                isEditing = false
+            }
         }
         .sheet(isPresented: $showingAddCategory) {
             AddEditCategoryView()
@@ -94,9 +92,10 @@ struct CategoriesListView: View {
             }
             Button(AppString.delete, role: .destructive) {
                 viewModel.confirmDelete(context: context)
+                UINotificationFeedbackGenerator().notificationOccurred(.success)
             }
         } message: {
-            Text(AppString.cannotUndo)
+            Text(viewModel.deleteMessage)
         }
     }
 }
@@ -105,80 +104,106 @@ struct CategoriesListView: View {
 private extension CategoriesListView {
 
     var header: some View {
-        ZStack {
-            AppText(AppString.categories, style: .bodySmall)
-
-            HStack {
-                ToolbarIconButton(icon: "xmark", isOutlined: true) {
-                    dismiss()
-                }
-
-                Spacer()
-
-                if !filteredCategories.isEmpty {
-                    CategoryEditToggleButton(isEditing: isEditing) {
-                        withAnimation(.easeInOut(duration: 0.2)) {
-                            isEditing.toggle()
-                        }
+        SheetHeaderView(title: AppString.categories) {
+            dismiss()
+        } trailing: {
+            // В режиме выбора категории не редактируются: это чужой экран, открытый ради выбора
+            if onSelect == nil && !filteredCategories.isEmpty {
+                EditToggleButton(isEditing: isEditing) {
+                    withAnimation(.easeInOut(duration: 0.2)) {
+                        isEditing.toggle()
                     }
                 }
+                .accessibilityLabel(isEditing ? AppString.done : AppString.edit)
             }
         }
-        .padding(.horizontal, AppSpacing.large)
-        .padding(.vertical, AppSpacing.small)
-        .padding(.top, AppSpacing.medium)
+    }
+
+    var content: some View {
+        ScrollView {
+            VStack(spacing: AppSpacing.large) {
+                TransactionTypePickerView(selectedType: $selectedType)
+
+                if filteredCategories.isEmpty {
+                    emptyState
+                } else {
+                    categoriesList
+                }
+            }
+            .padding(AppSpacing.large)
+            // Плавающая кнопка не должна перекрывать последнюю строку списка
+            .padding(.bottom, AppSpacing.huge + AppSpacing.xxxLarge)
+        }
+        .scrollBounceBehavior(.basedOnSize)
+    }
+
+    @ViewBuilder
+    var emptyState: some View {
+        if isFilteredOutByPicker {
+            EmptyCategoriesView(
+                title: AppString.allCategoriesUsed,
+                hint: AppString.allCategoriesUsedHint
+            ) {
+                showingAddCategory = true
+            }
+        } else {
+            EmptyCategoriesView {
+                showingAddCategory = true
+            }
+        }
     }
 
     var categoriesList: some View {
-        CategoriesCardView {
-            VStack(spacing: 0) {
-                ForEach(Array(filteredCategories.enumerated()), id: \.element.id) { index, category in
-                    rowContent(for: category)
+        // Отступы совпадают со строкой списка счетов: одинаковые карточки на всех экранах
+        VStack(spacing: 0) {
+            ForEach(Array(filteredCategories.enumerated()), id: \.element.id) { index, category in
+                rowContent(for: category)
 
-                    if index < filteredCategories.count - 1 {
-                        Divider()
-                            .padding(.leading, AppSpacing.listDividerIndent)
-                    }
+                if index < filteredCategories.count - 1 {
+                    Divider()
+                        .padding(.leading, AppSize.iconLarge + AppSpacing.medium)
                 }
             }
         }
+        .padding(.vertical, AppSpacing.small)
+        .padding(.horizontal, AppSpacing.large)
+        .card(cornerRadius: AppRadius.xLarge)
     }
 
     @ViewBuilder
     func rowContent(for category: Category) -> some View {
         if isEditing {
-            CategoryRowView(
-                category: category,
-                isEditing: true,
-                onDelete: {
-                    viewModel.prepareDelete(category)
-                }
-            )
+            CategoryRowView(category: category, isEditing: true) {
+                viewModel.prepareDelete(category, context: context)
+            }
         } else {
             Button {
-                UIImpactFeedbackGenerator(style: .light).impactOccurred()
-                if let onSelect {
-                    onSelect(category)
-                    dismiss()
-                } else {
-                    editingCategory = category
-                }
+                handleTap(on: category)
             } label: {
-                CategoryRowView(
-                    category: category,
-                    isEditing: false,
-                    onDelete: {
-                        viewModel.prepareDelete(category)
-                    }
-                )
+                CategoryRowView(category: category, isEditing: false, onDelete: {})
             }
-            .buttonStyle(.plain)
+            .buttonStyle(HighlightRowButtonStyle(cornerRadius: AppRadius.medium))
         }
     }
 }
 
-#Preview {
-    NavigationStack {
-        CategoriesListView()
+// MARK: - Actions
+private extension CategoriesListView {
+
+    func handleTap(on category: Category) {
+        UIImpactFeedbackGenerator(style: .light).impactOccurred()
+
+        guard let onSelect else {
+            editingCategory = category
+            return
+        }
+
+        onSelect(category)
+        dismiss()
     }
+}
+
+#Preview {
+    CategoriesListView()
+        .modelContainer(for: [Category.self], inMemory: true)
 }

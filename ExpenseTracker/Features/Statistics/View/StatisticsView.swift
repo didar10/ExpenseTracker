@@ -258,15 +258,11 @@ private extension StatisticsView {
 
     var accountSelectionSheet: some View {
         AccountSelectionSheet(
-            accounts: viewModel.accounts,
             selectedAccount: viewModel.selectedAccount,
             onSelect: { account in
                 withAnimation(.spring(response: 0.3, dampingFraction: 0.7)) {
                     viewModel.selectedAccount = account
                 }
-                showingAccountsView = false
-            },
-            onShowAll: {
                 showingAccountsView = false
             }
         )

@@ -127,10 +127,6 @@ final class DashboardViewModel: ObservableObject {
         showingAccountsView = true
     }
 
-    func hideAccounts() {
-        showingAccountsView = false
-    }
-
     /// Сброс фильтра из пустого состояния: показать операции за все время
     func resetPeriod() {
         changePeriod(.allTime)

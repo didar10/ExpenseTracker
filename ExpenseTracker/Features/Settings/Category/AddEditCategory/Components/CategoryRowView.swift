@@ -22,13 +22,16 @@ struct CategoryRowView: View {
             iconBadge
 
             AppText(category.name, style: .bodySmall)
+                .lineLimit(1)
+                .truncationMode(.tail)
 
-            Spacer()
+            Spacer(minLength: AppSpacing.small)
 
             trailingAccessories
         }
         .padding(.vertical, AppSpacing.small)
         .contentShape(Rectangle())
+        .accessibilityElement(children: isEditing ? .contain : .combine)
     }
 }
 
@@ -43,17 +46,15 @@ private extension CategoryRowView {
 
             Image(systemName: category.icon)
                 .font(.system(size: AppSize.glyphLarge, weight: .semibold))
-                .foregroundStyle(AppColor.textPrimary)
+                .foregroundStyle(Color(hex: category.colorHex))
         }
+        .accessibilityHidden(true)
     }
 
     @ViewBuilder
     var trailingAccessories: some View {
         if isEditing {
-            HStack(spacing: AppSpacing.medium) {
-                deleteButton
-                dragHandle
-            }
+            deleteButton
         } else {
             AppImage.chevronRight
                 .font(.system(size: AppSize.glyphMedium, weight: .semibold))
@@ -65,45 +66,36 @@ private extension CategoryRowView {
         Button(action: onDelete) {
             AppImage.trash
                 .font(.system(size: AppSize.glyphLarge, weight: .semibold))
-                .foregroundStyle(AppColor.textPrimary)
-                .frame(width: AppSize.iconMedium, height: AppSize.iconMedium)
+                .foregroundStyle(AppColor.expense)
+                .frame(width: AppSize.iconLarge, height: AppSize.iconLarge)
                 .background(
                     RoundedRectangle(cornerRadius: AppRadius.medium, style: .continuous)
                         .fill(AppColor.expense.opacity(0.15))
                 )
         }
-        .buttonStyle(.plain)
-    }
-
-    var dragHandle: some View {
-        VStack(spacing: AppSpacing.xxSmall) {
-            ForEach(0..<2, id: \.self) { _ in
-                HStack(spacing: AppSpacing.xSmall) {
-                    Circle()
-                        .fill(AppColor.textSecondary)
-                        .frame(width: AppSpacing.xSmall, height: AppSpacing.xSmall)
-                    Circle()
-                        .fill(AppColor.textSecondary)
-                        .frame(width: AppSpacing.xSmall, height: AppSpacing.xSmall)
-                }
-            }
-        }
-        .padding(.horizontal, AppSpacing.xSmall)
+        .buttonStyle(PressableScaleButtonStyle())
+        .accessibilityLabel(AppString.delete)
     }
 }
 
 #Preview {
-    VStack {
+    VStack(spacing: 0) {
         CategoryRowView(
             category: Category(name: "Продукты", icon: "cart.fill", colorHex: "#FF6B6B"),
             isEditing: false,
             onDelete: {}
         )
+
+        Divider()
+
         CategoryRowView(
-            category: Category(name: "Продукты", icon: "cart.fill", colorHex: "#FF6B6B"),
+            category: Category(name: "Кафе, рестораны и доставка еды", icon: "fork.knife", colorHex: "#F5A623"),
             isEditing: true,
             onDelete: {}
         )
     }
     .padding(AppSpacing.large)
+    .card(cornerRadius: AppRadius.xLarge)
+    .padding(AppSpacing.large)
+    .background(AppColor.background)
 }

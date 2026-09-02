@@ -17,6 +17,15 @@ final class SettingsViewModel {
 
     var showingDeleteAllDataAlert = false
 
+    // MARK: - Computed Properties
+
+    /// Версия берется из бандла: строка в ресурсах устаревала бы при каждом релизе
+    var appVersionTitle: String {
+        let version = Bundle.main.infoDictionary?["CFBundleShortVersionString"] as? String
+
+        return AppString.appVersion(version ?? "")
+    }
+
     // MARK: - Actions
 
     func prepareDeleteAllData() {

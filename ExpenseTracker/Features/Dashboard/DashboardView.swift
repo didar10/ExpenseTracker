@@ -130,13 +130,9 @@ private extension DashboardView {
 
     var accountSelectionSheet: some View {
         AccountSelectionSheet(
-            accounts: accounts,
             selectedAccount: viewModel.selectedAccount,
             onSelect: { account in
                 viewModel.selectAccount(account)
-            },
-            onShowAll: {
-                viewModel.hideAccounts()
             }
         )
     }

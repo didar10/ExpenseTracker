@@ -19,6 +19,9 @@ final class AddEditCategoryViewModel {
 
     private let category: Category?
 
+    /// Состояние формы на момент открытия: по нему определяется, есть ли несохраненные правки
+    private let initialFormData: CategoryFormData
+
     // MARK: - Computed Properties
 
     var isEditMode: Bool {
@@ -40,16 +43,20 @@ final class AddEditCategoryViewModel {
         return isEditMode ? AppString.saveChanges : AppString.createCategory
     }
 
+    /// Закрытие формы с правками проходит через подтверждение
+    var hasUnsavedChanges: Bool {
+        formData != initialFormData
+    }
+
     // MARK: - Init
 
     init(category: Category? = nil) {
         self.category = category
 
-        if let category {
-            self.formData = CategoryFormData(from: category)
-        } else {
-            self.formData = CategoryFormData()
-        }
+        let formData = category.map(CategoryFormData.init(from:)) ?? CategoryFormData()
+
+        self.formData = formData
+        self.initialFormData = formData
     }
 
     // MARK: - Actions

@@ -244,13 +244,9 @@ private extension AddTransactionView {
 
     var accountSelectionSheet: some View {
         AccountSelectionSheet(
-            accounts: accounts,
             selectedAccount: viewModel.selectedAccount,
             onSelect: { account in
                 viewModel.selectedAccount = account
-                showingAccountPicker = false
-            },
-            onShowAll: {
                 showingAccountPicker = false
             },
             allowsAllAccounts: false

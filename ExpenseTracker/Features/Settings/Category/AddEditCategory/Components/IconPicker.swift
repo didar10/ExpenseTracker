@@ -7,12 +7,13 @@
 
 import SwiftUI
 
+/// Палитра иконок категории: горизонтальная сетка из четырех рядов
 struct IconPicker: View {
 
     // MARK: - Properties
 
     @Binding var selectedIcon: String
-    let colorHex: String
+    let color: Color
 
     private let icons: [String] = [
         "cart", "cart.fill", "bag", "bag.fill",
@@ -57,6 +58,8 @@ struct IconPicker: View {
             RoundedRectangle(cornerRadius: AppRadius.card, style: .continuous)
                 .fill(AppColor.fieldFill)
         )
+        .accessibilityElement(children: .contain)
+        .accessibilityLabel(AppString.selectIcon)
     }
 }
 
@@ -64,26 +67,41 @@ struct IconPicker: View {
 private extension IconPicker {
 
     func iconCell(_ icon: String) -> some View {
-        let color = Color(hex: colorHex)
         let isSelected = selectedIcon == icon
 
-        return Image(systemName: icon)
-            .font(.system(size: AppSize.glyphLarge, weight: .semibold))
-            .foregroundStyle(AppColor.textPrimary)
-            .frame(width: AppSize.iconLarge, height: AppSize.iconLarge)
-            .background(
-                RoundedRectangle(cornerRadius: AppRadius.medium, style: .continuous)
-                    .fill(isSelected ? color : color.opacity(0.2))
-            )
-            .contentShape(Rectangle())
-            .onTapGesture {
-                selectedIcon = icon
-            }
+        return Button {
+            guard !isSelected else { return }
+
+            UIImpactFeedbackGenerator(style: .light).impactOccurred()
+            selectedIcon = icon
+        } label: {
+            Image(systemName: icon)
+                .font(.system(size: AppSize.glyphLarge, weight: .semibold))
+                .foregroundStyle(AppColor.textPrimary)
+                .frame(width: AppSize.iconLarge, height: AppSize.iconLarge)
+                .background(
+                    RoundedRectangle(cornerRadius: AppRadius.medium, style: .continuous)
+                        .fill(isSelected ? color : color.opacity(0.2))
+                )
+                // Выбранная плитка обводится: отличать её только по насыщенности
+                // заливки на светлых цветах палитры тяжело
+                .overlay(
+                    RoundedRectangle(cornerRadius: AppRadius.medium, style: .continuous)
+                        .strokeBorder(
+                            isSelected ? AppColor.textPrimary.opacity(0.35) : Color.clear,
+                            lineWidth: AppSpacing.hairline
+                        )
+                )
+                .contentShape(Rectangle())
+        }
+        .buttonStyle(PressableScaleButtonStyle())
+        .animation(.easeOut(duration: 0.15), value: isSelected)
+        .accessibilityAddTraits(isSelected ? .isSelected : [])
     }
 }
 
 #Preview {
-    IconPicker(selectedIcon: .constant("cart"), colorHex: "#F5A623")
+    IconPicker(selectedIcon: .constant("cart"), color: Color(hex: "#F5A623"))
         .padding(AppSpacing.large)
         .background(AppColor.background)
 }

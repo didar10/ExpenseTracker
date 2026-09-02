@@ -28,6 +28,7 @@ enum AppString {
     static let noCategory = String(localized: "no_category")
     static let cannotUndo = String(localized: "cannot_undo")
     static let more = String(localized: "more")
+    static let copy = String(localized: "copy")
 
     // MARK: - Dashboard
 
@@ -60,6 +61,11 @@ enum AppString {
     static let deleteAccountMessage = String(localized: "delete_account_message")
     static let editAccount = String(localized: "edit_account")
     static let newAccount = String(localized: "new_account")
+    /// Короткая подпись плавающей кнопки в списке счетов
+    static let newAccountShort = String(localized: "new_account_short")
+    static let createAccount = String(localized: "create_account")
+    static let addAccount = String(localized: "add_account")
+    static let addAccountHint = String(localized: "add_account_hint")
 
     // MARK: - AddExpense
 
@@ -73,6 +79,8 @@ enum AppString {
     static let discardChangesTitle = String(localized: "discard_changes_title")
     static let discardChangesMessage = String(localized: "discard_changes_message")
     static let discardChanges = String(localized: "discard_changes")
+    static let discardAccountTitle = String(localized: "discard_account_title")
+    static let discardCategoryTitle = String(localized: "discard_category_title")
     static let keepEditing = String(localized: "keep_editing")
     static let noCategoriesForType = String(localized: "no_categories_for_type")
 
@@ -92,6 +100,8 @@ enum AppString {
     static let createCategoryHint = String(localized: "create_category_hint")
     static let categories = String(localized: "categories")
     static let deleteCategoryConfirm = String(localized: "delete_category_confirm")
+    static let deleteCategoryMessage = String(localized: "delete_category_message")
+    static let deleteCategoryWithBudgetMessage = String(localized: "delete_category_with_budget_message")
     static let categoryName = String(localized: "category_name")
     static let enterName = String(localized: "enter_name")
     static let selectIcon = String(localized: "select_icon")
@@ -123,6 +133,7 @@ enum AppString {
     static let limit = String(localized: "limit")
     static let period = String(localized: "period")
     static let allCategoriesUsed = String(localized: "all_categories_used")
+    static let allCategoriesUsedHint = String(localized: "all_categories_used_hint")
     static let selectCategory = String(localized: "select_category")
     static let searchCategory = String(localized: "search_category")
     static let chooseCategory = String(localized: "choose_category")
@@ -163,12 +174,18 @@ enum AppString {
     static let helpShort = String(localized: "help_short")
     static let termsOfService = String(localized: "terms_of_service")
     static let appVersion = String(localized: "app_version")
+
+    static func appVersion(_ version: String) -> String {
+        String(format: appVersion, version)
+    }
     static let contactSupport = String(localized: "contact_support")
     static let quickActions = String(localized: "quick_actions")
     static let faq = String(localized: "faq")
     static let noAnswerFound = String(localized: "no_answer_found")
     static let supportAvailable = String(localized: "support_available")
     static let helpSupportIntro = String(localized: "help_support_intro")
+    static let expandAnswer = String(localized: "expand_answer")
+    static let collapseAnswer = String(localized: "collapse_answer")
     static let writeToUs = String(localized: "write_to_us")
     static let website = String(localized: "website")
     static let telegram = String(localized: "telegram")

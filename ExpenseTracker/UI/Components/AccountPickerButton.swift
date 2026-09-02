@@ -43,6 +43,8 @@ struct AccountPickerButton: View {
             }
         }
         .buttonStyle(.plain)
+        .accessibilityLabel(AppString.selectAccount)
+        .accessibilityValue(selectedAccount?.name ?? AppString.allAccounts)
     }
 }
 

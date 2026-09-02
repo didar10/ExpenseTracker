@@ -27,6 +27,9 @@ struct TabBarButton: View {
                 .contentShape(Rectangle())
         }
         .buttonStyle(TabBarButtonStyle())
+        // Иконка без подписи: VoiceOver иначе читает имя SF Symbol
+        .accessibilityLabel(tab.title)
+        .accessibilityAddTraits(isSelected ? [.isButton, .isSelected] : .isButton)
     }
 }
 

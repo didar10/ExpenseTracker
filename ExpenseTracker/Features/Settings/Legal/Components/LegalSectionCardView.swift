@@ -28,7 +28,9 @@ struct LegalSectionCardView: View {
                     AppText(title, style: .bodySmall)
                 }
 
+                // Внутри разделов есть адреса поддержки — их должно быть можно скопировать
                 AppText(content, style: .bodySmaller, color: AppColor.textSecondary)
+                    .textSelection(.enabled)
             }
             .frame(maxWidth: .infinity, alignment: .leading)
         }

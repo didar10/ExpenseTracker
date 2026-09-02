@@ -41,6 +41,10 @@ struct TransactionTypePickerView: View {
                 )
             }
             .buttonStyle(.plain)
+            // Невыбранная половина показывает только иконку: без подписи
+            // VoiceOver прочитал бы имя SF Symbol
+            .accessibilityLabel(AppString.expense)
+            .accessibilityAddTraits(selectedType == .expense ? [.isButton, .isSelected] : .isButton)
 
             Button {
                 UIImpactFeedbackGenerator(style: .medium).impactOccurred()
@@ -65,6 +69,8 @@ struct TransactionTypePickerView: View {
                 )
             }
             .buttonStyle(.plain)
+            .accessibilityLabel(AppString.income)
+            .accessibilityAddTraits(selectedType == .income ? [.isButton, .isSelected] : .isButton)
         }
         .padding(6)
         .background(

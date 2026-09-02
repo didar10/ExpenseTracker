@@ -19,7 +19,10 @@ struct AccountFormView: View {
 
     @StateObject private var viewModel: AccountFormViewModel
 
+    @FocusState private var isBalanceFocused: Bool
+
     @State private var showingDeleteAlert = false
+    @State private var showingDiscardConfirmation = false
 
     // MARK: - Init
 
@@ -37,30 +40,22 @@ struct AccountFormView: View {
             VStack(spacing: 0) {
                 header
 
-                ScrollView {
-                    VStack(spacing: AppSpacing.xLarge) {
-                        NamePreviewCardView(
-                            name: $viewModel.name,
-                            icon: viewModel.selectedIcon,
-                            color: Color(named: viewModel.selectedColor),
-                            placeholder: AppString.accountName
-                        )
-
-                        colorSection
-                        iconSection
-                        balanceSection
-                        defaultSection
-
-                        if viewModel.isEditMode {
-                            deleteSection
-                        }
-                    }
-                    .padding(AppSpacing.large)
-                    .padding(.bottom, AppSpacing.huge + AppSpacing.xxxLarge)
-                }
+                form
             }
 
             saveBar
+        }
+        // Введенные данные не теряются молча: закрытие проходит через подтверждение
+        .interactiveDismissDisabled(viewModel.hasUnsavedChanges)
+        .toolbar {
+            ToolbarItemGroup(placement: .keyboard) {
+                Spacer()
+
+                Button(AppString.done) {
+                    isBalanceFocused = false
+                    dismissKeyboard()
+                }
+            }
         }
         .alert(AppString.deleteAccountConfirm, isPresented: $showingDeleteAlert) {
             Button(AppString.cancel, role: .cancel) { }
@@ -69,7 +64,14 @@ struct AccountFormView: View {
                 dismiss()
             }
         } message: {
-            Text(AppString.cannotUndo)
+            // Вместе со счетом каскадом удаляются его операции — предупреждаем об этом явно
+            Text(AppString.deleteAccountMessage)
+        }
+        .alert(AppString.discardAccountTitle, isPresented: $showingDiscardConfirmation) {
+            Button(AppString.discardChanges, role: .destructive) { dismiss() }
+            Button(AppString.keepEditing, role: .cancel) { }
+        } message: {
+            Text(AppString.discardChangesMessage)
         }
     }
 }
@@ -78,20 +80,44 @@ struct AccountFormView: View {
 private extension AccountFormView {
 
     var header: some View {
-        ZStack {
-            AppText(viewModel.navigationTitle, style: .bodySmall)
+        SheetHeaderView(title: viewModel.navigationTitle, onClose: handleClose)
+    }
 
-            HStack {
-                ToolbarIconButton(icon: "xmark", isOutlined: true) {
-                    dismiss()
+    var form: some View {
+        ScrollView {
+            VStack(spacing: AppSpacing.xLarge) {
+                NamePreviewCardView(
+                    name: $viewModel.name,
+                    icon: viewModel.selectedIcon,
+                    color: Color(named: viewModel.selectedColor),
+                    placeholder: AppString.accountName
+                )
+
+                colorSection
+                iconSection
+                balanceSection
+                defaultSection
+
+                if viewModel.isEditMode {
+                    deleteSection
                 }
-
-                Spacer()
             }
+            .padding(AppSpacing.large)
+            .padding(.bottom, AppSpacing.huge + AppSpacing.xxxLarge)
         }
-        .padding(.horizontal, AppSpacing.large)
-        .padding(.vertical, AppSpacing.small)
-        .padding(.top, AppSpacing.medium)
+        .scrollDismissesKeyboard(.interactively)
+    }
+
+    var colorSection: some View {
+        ColorPickerView(selectedColor: $viewModel.selectedColor, onSelect: viewModel.selectColor)
+    }
+
+    var iconSection: some View {
+        AccountIconPickerView(
+            selectedIcon: $viewModel.selectedIcon,
+            color: Color(named: viewModel.selectedColor),
+            onSelect: viewModel.selectIcon
+        )
     }
 
     var balanceSection: some View {
@@ -102,32 +128,31 @@ private extension AccountFormView {
 
             TextField("0", text: $viewModel.initialBalance)
                 .keyboardType(.decimalPad)
+                .focused($isBalanceFocused)
                 .font(.app(.body))
+                .fontDesign(.rounded)
+                .monospacedDigit()
                 .multilineTextAlignment(.trailing)
+                .onChange(of: viewModel.initialBalance) {
+                    viewModel.sanitizeBalanceInput()
+                }
+
+            AppText(AppString.currencySymbol, style: .body, color: AppColor.textSecondary)
         }
         .padding(AppSpacing.large)
-        .background(
-            RoundedRectangle(cornerRadius: AppRadius.card, style: .continuous)
-                .fill(AppColor.fieldFill)
-        )
-    }
-
-    var iconSection: some View {
-        IconPickerView(
-            selectedIcon: $viewModel.selectedIcon,
-            color: Color(named: viewModel.selectedColor),
-            onSelect: viewModel.selectIcon
-        )
-    }
-
-    var colorSection: some View {
-        ColorPickerView(selectedColor: $viewModel.selectedColor, onSelect: viewModel.selectColor)
+        .frame(minHeight: AppSize.inlineTile)
+        .card(cornerRadius: AppRadius.card, fillColor: AppColor.fieldFill)
+        .contentShape(Rectangle())
+        .onTapGesture {
+            isBalanceFocused = true
+        }
     }
 
     var defaultSection: some View {
         Toggle(isOn: $viewModel.isDefault) {
-            VStack(alignment: .leading, spacing: 2) {
+            VStack(alignment: .leading, spacing: AppSpacing.xxSmall) {
                 AppText(AppString.defaultAccount, style: .bodySmall)
+
                 AppText(AppString.defaultAccountHint, style: .caption, color: AppColor.textSecondary)
             }
         }
@@ -138,25 +163,21 @@ private extension AccountFormView {
 
     var deleteSection: some View {
         Button {
+            dismissKeyboard()
             showingDeleteAlert = true
         } label: {
-            HStack {
-                Spacer()
+            HStack(spacing: AppSpacing.small) {
+                AppImage.trash
+                    .font(.system(size: AppSize.glyphLarge, weight: .semibold))
 
-                HStack(spacing: AppSpacing.small) {
-                    AppImage.trash
-                        .font(.system(size: AppSize.glyphLarge, weight: .semibold))
-
-                    AppText(AppString.deleteAccount, style: .bodySmall)
-                }
-                .foregroundStyle(AppColor.expense)
-
-                Spacer()
+                AppText(AppString.deleteAccount, style: .bodySmall, color: AppColor.expense)
             }
+            .foregroundStyle(AppColor.expense)
+            .frame(maxWidth: .infinity)
             .padding(AppSpacing.large)
-            .card(cornerRadius: AppRadius.card, fillColor: AppColor.fieldFill)
+            .card(cornerRadius: AppRadius.card, fillColor: AppColor.expense.opacity(0.1))
         }
-        .buttonStyle(.plain)
+        .buttonStyle(PressableScaleButtonStyle())
     }
 
     var saveBar: some View {
@@ -180,15 +201,36 @@ private extension AccountFormView {
 
     func handleSave() {
         UIImpactFeedbackGenerator(style: .medium).impactOccurred()
+        dismissKeyboard()
 
-        withAnimation {
-            viewModel.save(accounts: accounts, using: modelContext)
+        viewModel.save(accounts: accounts, using: modelContext)
+        dismiss()
+    }
+
+    func handleClose() {
+        dismissKeyboard()
+
+        guard viewModel.hasUnsavedChanges else {
             dismiss()
+            return
         }
+
+        showingDiscardConfirmation = true
+    }
+
+    func dismissKeyboard() {
+        isBalanceFocused = false
+
+        UIApplication.shared.sendAction(
+            #selector(UIResponder.resignFirstResponder),
+            to: nil,
+            from: nil,
+            for: nil
+        )
     }
 }
 
-#Preview {
+#Preview("Новый счет") {
     AccountFormView()
         .modelContainer(for: [Account.self], inMemory: true)
 }

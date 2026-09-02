@@ -20,9 +20,10 @@ struct SettingsRouteView: View {
         switch route {
         case .categories:
             CategoriesListView()
+                .settingsSheetPresentation()
 
         case .privacyPolicy:
-            PrivacyPolicyView()
+            LegalDocumentView(document: .privacyPolicy)
                 .settingsSheetPresentation()
 
         case .helpSupport:
@@ -30,7 +31,7 @@ struct SettingsRouteView: View {
                 .settingsSheetPresentation()
 
         case .termsOfService:
-            TermsOfServiceView()
+            LegalDocumentView(document: .termsOfService)
                 .settingsSheetPresentation()
         }
     }

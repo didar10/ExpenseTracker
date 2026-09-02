@@ -8,7 +8,7 @@
 import Foundation
 
 /// Модель данных формы категории
-struct CategoryFormData {
+struct CategoryFormData: Equatable {
     var name: String
     var icon: String
     var colorHex: String

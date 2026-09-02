@@ -16,6 +16,7 @@ struct AddEditCategoryView: View {
     @Environment(\.dismiss) private var dismiss
 
     @State private var viewModel: AddEditCategoryViewModel
+    @State private var showingDiscardConfirmation = false
 
     // MARK: - Init
 
@@ -33,45 +34,27 @@ struct AddEditCategoryView: View {
             VStack(spacing: 0) {
                 header
 
-                ScrollView {
-                    VStack(spacing: AppSpacing.xLarge) {
-                        NamePreviewCardView(
-                            name: $viewModel.formData.name,
-                            icon: viewModel.formData.icon,
-                            color: Color(hex: viewModel.formData.colorHex),
-                            placeholder: AppString.categoryName
-                        )
-
-                        TransactionTypePickerView(
-                            selectedType: $viewModel.formData.type,
-                            backgroundColor: AppColor.fieldFill
-                        )
-
-                        colorSection
-                        iconSection
-                    }
-                    .padding(AppSpacing.large)
-                    .padding(.bottom, AppSpacing.huge + AppSpacing.xxxLarge)
-                }
-                .scrollDismissesKeyboard(.interactively)
+                form
             }
 
             saveBar
         }
         .toolbar(.hidden, for: .navigationBar)
         .navigationBarBackButtonHidden(true)
+        // Введенные данные не теряются молча: закрытие проходит через подтверждение
+        .interactiveDismissDisabled(viewModel.hasUnsavedChanges)
         .toolbar {
             ToolbarItemGroup(placement: .keyboard) {
                 Spacer()
-                Button(AppString.done) {
-                    UIApplication.shared.sendAction(
-                        #selector(UIResponder.resignFirstResponder),
-                        to: nil,
-                        from: nil,
-                        for: nil
-                    )
-                }
+
+                Button(AppString.done, action: dismissKeyboard)
             }
+        }
+        .alert(AppString.discardCategoryTitle, isPresented: $showingDiscardConfirmation) {
+            Button(AppString.discardChanges, role: .destructive) { dismiss() }
+            Button(AppString.keepEditing, role: .cancel) { }
+        } message: {
+            Text(AppString.discardChangesMessage)
         }
     }
 }
@@ -80,31 +63,42 @@ struct AddEditCategoryView: View {
 private extension AddEditCategoryView {
 
     var header: some View {
-        ZStack {
-            AppText(viewModel.title, style: .bodySmall)
+        SheetHeaderView(title: viewModel.title, onClose: handleClose)
+    }
 
-            HStack {
-                ToolbarIconButton(icon: "xmark", isOutlined: true) {
-                    dismiss()
-                }
+    var form: some View {
+        ScrollView {
+            VStack(spacing: AppSpacing.xLarge) {
+                NamePreviewCardView(
+                    name: $viewModel.formData.name,
+                    icon: viewModel.formData.icon,
+                    color: Color(hex: viewModel.formData.colorHex),
+                    placeholder: AppString.categoryName
+                )
 
-                Spacer()
+                TransactionTypePickerView(
+                    selectedType: $viewModel.formData.type,
+                    backgroundColor: AppColor.fieldFill
+                )
+
+                colorSection
+                iconSection
             }
+            .padding(AppSpacing.large)
+            .padding(.bottom, AppSpacing.huge + AppSpacing.xxxLarge)
         }
-        .padding(.horizontal, AppSpacing.large)
-        .padding(.vertical, AppSpacing.small)
-        .padding(.top, AppSpacing.medium)
+        .scrollDismissesKeyboard(.interactively)
+    }
+
+    var colorSection: some View {
+        ColorPickerView(selectedColor: $viewModel.formData.colorHex, palette: .hex)
     }
 
     var iconSection: some View {
         IconPicker(
             selectedIcon: $viewModel.formData.icon,
-            colorHex: viewModel.formData.colorHex
+            color: Color(hex: viewModel.formData.colorHex)
         )
-    }
-
-    var colorSection: some View {
-        ColorPickerView(selectedColor: $viewModel.formData.colorHex, palette: .hex)
     }
 
     var saveBar: some View {
@@ -128,17 +122,35 @@ private extension AddEditCategoryView {
 
     func handleSave() {
         UIImpactFeedbackGenerator(style: .medium).impactOccurred()
+        dismissKeyboard()
 
-        withAnimation {
-            if viewModel.save(context: context) {
-                dismiss()
-            }
+        if viewModel.save(context: context) {
+            dismiss()
         }
+    }
+
+    func handleClose() {
+        dismissKeyboard()
+
+        guard viewModel.hasUnsavedChanges else {
+            dismiss()
+            return
+        }
+
+        showingDiscardConfirmation = true
+    }
+
+    func dismissKeyboard() {
+        UIApplication.shared.sendAction(
+            #selector(UIResponder.resignFirstResponder),
+            to: nil,
+            from: nil,
+            for: nil
+        )
     }
 }
 
-#Preview("New Category") {
-    NavigationStack {
-        AddEditCategoryView()
-    }
+#Preview("Новая категория") {
+    AddEditCategoryView()
+        .modelContainer(for: [Category.self], inMemory: true)
 }

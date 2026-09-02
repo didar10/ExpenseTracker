@@ -12,6 +12,8 @@ struct HelpSupportView: View {
     // MARK: - Properties
 
     @Environment(\.dismiss) private var dismiss
+    @Environment(\.openURL) private var openURL
+
     @State private var expandedFAQ: UUID?
 
     // MARK: - Body
@@ -29,7 +31,7 @@ struct HelpSupportView: View {
                 ScrollView {
                     VStack(spacing: AppSpacing.xLarge) {
                         introCard
-                        quickActionsSection
+                        contactsSection
                         faqSection
                         contactCard
                     }
@@ -50,7 +52,8 @@ private extension HelpSupportView {
             VStack(spacing: AppSpacing.large) {
                 AppImage.helpCircle
                     .font(.system(size: AppSize.glyphEmptyState))
-                    .foregroundStyle(AppColor.accent.gradient)
+                    .foregroundStyle(AppColor.accent)
+                    .symbolRenderingMode(.hierarchical)
 
                 VStack(spacing: AppSpacing.small) {
                     AppText(AppString.helpAndSupport, style: .section)
@@ -66,40 +69,23 @@ private extension HelpSupportView {
             .padding(.vertical, AppSpacing.medium)
             .frame(maxWidth: .infinity)
         }
+        .accessibilityElement(children: .combine)
     }
 
-    var quickActionsSection: some View {
+    var contactsSection: some View {
         VStack(spacing: AppSpacing.medium) {
             sectionHeader(AppString.quickActions)
 
             AppCardView {
                 VStack(spacing: 0) {
-                    QuickActionRow(
-                        icon: AppImage.envelope,
-                        iconColor: AppColor.accent,
-                        title: AppString.writeToUs,
-                        subtitle: AppString.supportEmail
-                    )
+                    ForEach(Array(SupportContact.all.enumerated()), id: \.element.id) { index, contact in
+                        SupportContactRow(contact: contact)
 
-                    Divider()
-                        .padding(.leading, AppSpacing.listDividerIndent)
-
-                    QuickActionRow(
-                        icon: AppImage.globe,
-                        iconColor: AppColor.income,
-                        title: AppString.website,
-                        subtitle: AppString.supportWebsite
-                    )
-
-                    Divider()
-                        .padding(.leading, AppSpacing.listDividerIndent)
-
-                    QuickActionRow(
-                        icon: AppImage.message,
-                        iconColor: AppColor.decorativePurple,
-                        title: AppString.telegram,
-                        subtitle: AppString.supportTelegram
-                    )
+                        if index < SupportContact.all.count - 1 {
+                            Divider()
+                                .padding(.leading, AppSize.iconLarge + AppSpacing.medium)
+                        }
+                    }
                 }
             }
         }
@@ -111,14 +97,8 @@ private extension HelpSupportView {
 
             VStack(spacing: AppSpacing.medium) {
                 ForEach(FAQItem.all) { item in
-                    FAQItemView(
-                        item: item,
-                        isExpanded: expandedFAQ == item.id
-                    ) {
-                        UIImpactFeedbackGenerator(style: .light).impactOccurred()
-                        withAnimation(.spring(response: 0.3, dampingFraction: 0.7)) {
-                            expandedFAQ = expandedFAQ == item.id ? nil : item.id
-                        }
+                    FAQItemView(item: item, isExpanded: expandedFAQ == item.id) {
+                        toggle(item)
                     }
                 }
             }
@@ -137,25 +117,22 @@ private extension HelpSupportView {
                     alignment: .center
                 )
 
-                Button {
-                    UIImpactFeedbackGenerator(style: .light).impactOccurred()
-                    // TODO: open mail composer
-                } label: {
+                Button(action: writeToSupport) {
                     HStack(spacing: AppSpacing.small) {
                         AppImage.envelope
                             .font(.system(size: AppSize.glyphMedium, weight: .semibold))
 
-                        AppText(AppString.contactSupport, style: .bodySmall)
+                        AppText(AppString.contactSupport, style: .bodySmall, color: AppColor.background)
                     }
-                    .foregroundStyle(AppColor.textWhite)
+                    .foregroundStyle(AppColor.background)
                     .frame(maxWidth: .infinity)
                     .padding(.vertical, AppSpacing.large)
                     .background(
-                        RoundedRectangle(cornerRadius: AppRadius.button, style: .continuous)
-                            .fill(AppColor.accent.gradient)
+                        Capsule(style: .continuous)
+                            .fill(AppColor.textPrimary)
                     )
                 }
-                .buttonStyle(.plain)
+                .buttonStyle(PressableScaleButtonStyle())
             }
             .padding(.vertical, AppSpacing.small)
             .frame(maxWidth: .infinity)
@@ -169,128 +146,29 @@ private extension HelpSupportView {
     }
 }
 
-// MARK: - FAQ Item
+// MARK: - Actions
 
-struct FAQItem: Identifiable {
-    let id = UUID()
-    let question: String
-    let answer: String
+private extension HelpSupportView {
 
-    static let all: [FAQItem] = [
-        FAQItem(question: AppString.faqQ1, answer: AppString.faqA1),
-        FAQItem(question: AppString.faqQ2, answer: AppString.faqA2),
-        FAQItem(question: AppString.faqQ3, answer: AppString.faqA3),
-        FAQItem(question: AppString.faqQ4, answer: AppString.faqA4),
-        FAQItem(question: AppString.faqQ5, answer: AppString.faqA5),
-        FAQItem(question: AppString.faqQ6, answer: AppString.faqA6),
-        FAQItem(question: AppString.faqQ7, answer: AppString.faqA7),
-        FAQItem(question: AppString.faqQ8, answer: AppString.faqA8)
-    ]
-}
+    func toggle(_ item: FAQItem) {
+        UIImpactFeedbackGenerator(style: .light).impactOccurred()
 
-// MARK: - Quick Action Row
-
-struct QuickActionRow: View {
-
-    // MARK: - Properties
-
-    let icon: Image
-    let iconColor: Color
-    let title: String
-    let subtitle: String
-
-    // MARK: - Body
-
-    var body: some View {
-        HStack(spacing: AppSpacing.medium) {
-            iconBadge
-
-            VStack(alignment: .leading, spacing: AppSpacing.xxSmall) {
-                AppText(title, style: .bodySmall)
-
-                AppText(subtitle, style: .caption, color: AppColor.textSecondary)
-            }
-
-            Spacer()
-
-            AppImage.arrowUpRight
-                .font(.system(size: AppSize.glyphMedium, weight: .semibold))
-                .foregroundStyle(.tertiary)
-        }
-        .padding(.vertical, AppSpacing.small)
-        .contentShape(Rectangle())
-    }
-
-    // MARK: - Subviews
-
-    private var iconBadge: some View {
-        ZStack {
-            RoundedRectangle(cornerRadius: AppRadius.medium, style: .continuous)
-                .fill(iconColor.opacity(0.2))
-                .frame(width: AppSize.iconLarge, height: AppSize.iconLarge)
-
-            icon
-                .font(.system(size: AppSize.glyphLarge, weight: .semibold))
-                .foregroundStyle(iconColor)
+        withAnimation(.spring(response: 0.3, dampingFraction: 0.8)) {
+            expandedFAQ = expandedFAQ == item.id ? nil : item.id
         }
     }
-}
 
-// MARK: - FAQ Item View
+    func writeToSupport() {
+        UIImpactFeedbackGenerator(style: .light).impactOccurred()
 
-struct FAQItemView: View {
+        guard let url = SupportContact.email.url else { return }
 
-    // MARK: - Properties
+        openURL(url) { accepted in
+            guard !accepted else { return }
 
-    let item: FAQItem
-    let isExpanded: Bool
-    let onTap: () -> Void
-
-    // MARK: - Body
-
-    var body: some View {
-        VStack(spacing: 0) {
-            Button(action: onTap) {
-                HStack(spacing: AppSpacing.medium) {
-                    AppText(item.question, style: .bodySmall)
-                        .frame(maxWidth: .infinity, alignment: .leading)
-
-                    expandIcon
-                }
-                .contentShape(Rectangle())
-            }
-            .buttonStyle(.plain)
-
-            if isExpanded {
-                Divider()
-                    .padding(.vertical, AppSpacing.medium)
-
-                AppText(item.answer, style: .bodySmaller, color: AppColor.textSecondary)
-                    .frame(maxWidth: .infinity, alignment: .leading)
-                    .transition(.opacity.combined(with: .move(edge: .top)))
-            }
+            UIPasteboard.general.string = SupportContact.email.value
+            UINotificationFeedbackGenerator().notificationOccurred(.warning)
         }
-        .padding(AppSpacing.large)
-        .card(cornerRadius: AppRadius.xLarge)
-    }
-
-    // MARK: - Subviews
-
-    private var expandIcon: some View {
-        Group {
-            if isExpanded {
-                AppImage.chevronUp
-            } else {
-                AppImage.chevronDown
-            }
-        }
-        .font(.system(size: AppSize.glyphMedium, weight: .semibold))
-        .foregroundStyle(AppColor.textSecondary)
-        .frame(width: AppSize.iconSmall, height: AppSize.iconSmall)
-        .background(
-            Circle()
-                .fill(AppColor.secondaryBackground)
-        )
     }
 }
 
