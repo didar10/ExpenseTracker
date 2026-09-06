@@ -33,6 +33,8 @@ enum AppSize {
     static let glyphEmptyState: CGFloat = 48
     static let glyphArrow: CGFloat = 28
     static let glyphHuge: CGFloat = 64
+    /// Иконка в круге на приветственном экране
+    static let glyphOnboarding: CGFloat = 44
 
     // MARK: - Controls
 
@@ -56,6 +58,17 @@ enum AppSize {
     /// Иконка операции в строке списка
     static let glyphRow: CGFloat = 18
 
+    // MARK: - Onboarding
+
+    /// Круг с иконкой на приветственном экране
+    static let onboardingHero: CGFloat = 140
+    /// Внутренний круг под иконкой приветственного экрана
+    static let onboardingHeroInner: CGFloat = 96
+    /// Точка индикатора страниц приветственного экрана
+    static let pageIndicatorDot: CGFloat = 8
+    /// Ширина активной точки индикатора страниц
+    static let pageIndicatorActiveDot: CGFloat = 22
+
     // MARK: - Elevation
 
     static let shadowRadius: CGFloat = 10
@@ -65,6 +78,8 @@ enum AppSize {
 
     /// Размер вводимой суммы на экране операции
     static let amountDisplay: CGFloat = 52
+    /// Символ валюты рядом с вводимой суммой
+    static let amountSymbol: CGFloat = 26
 
     // MARK: - Charts
 

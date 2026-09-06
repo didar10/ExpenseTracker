@@ -259,7 +259,7 @@ private extension AddBudgetPlanView {
     }
 
     var saveBar: some View {
-        CategorySaveButtonView(
+        PrimaryActionButton(
             title: saveButtonTitle,
             isEnabled: canSave,
             action: savePlan

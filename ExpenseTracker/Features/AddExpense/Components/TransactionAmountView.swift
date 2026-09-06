@@ -34,10 +34,16 @@ struct TransactionAmountView: View {
                 .contentTransition(.numericText())
                 .animation(.snappy(duration: 0.2), value: amount)
 
-            AppText(AppString.currencySymbol, style: .title, color: AppColor.textSecondary)
+            // Символ валюты — часть той же суммы: та же гарнитура и начертание,
+            // вдвое меньший кегль и общая базовая линия с цифрами
+            Text(AppString.currencySymbol)
+                .font(.system(size: AppSize.amountSymbol, weight: .semibold, design: .rounded))
+                .foregroundStyle(AppColor.textSecondary)
         }
         .frame(maxWidth: .infinity)
-        .padding(.vertical, AppSpacing.medium)
+        // Сумма — главный объект экрана: занимает верхнюю треть формы,
+        // иначе между комментарием и клавиатурой остается пустая полоса
+        .padding(.vertical, AppSpacing.xxLarge)
         .accessibilityElement(children: .combine)
         .accessibilityLabel(AppString.accessibilityAmount)
         .accessibilityValue(amount)

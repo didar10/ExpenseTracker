@@ -39,12 +39,15 @@ struct BalanceCardView: View {
                 onNext: onNextPeriod
             )
 
+            // Баланс — главное число экрана: смена суммы прокручивает разряды,
+            // а не подменяет число мгновенно
             Text(balanceText)
                 .font(.app(.balance))
                 .fontDesign(.rounded)
                 .monospacedDigit()
                 .foregroundStyle(balanceColor)
                 .contentTransition(.numericText())
+                .animation(.snappy(duration: Constants.amountDuration), value: balanceData.balance)
                 .lineLimit(1)
                 .minimumScaleFactor(Constants.minAmountScaleFactor)
                 .accessibilityLabel(AppString.balance)
@@ -78,6 +81,7 @@ private extension BalanceCardView {
 
     enum Constants {
         static let minAmountScaleFactor: CGFloat = 0.6
+        static let amountDuration: Double = 0.25
     }
 }
 

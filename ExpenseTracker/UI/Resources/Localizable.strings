@@ -178,6 +178,20 @@
 "faq_q8" = "Работает ли приложение офлайн?";
 "faq_a8" = "Да! ExpenseTracker полностью работает без интернета. Все данные сохраняются локально на вашем устройстве.";
 
+/* Onboarding */
+"onboarding_skip" = "Пропустить";
+"onboarding_next" = "Далее";
+"onboarding_start" = "Начать";
+"onboarding_welcome_title" = "Добро пожаловать";
+"onboarding_welcome_subtitle" = "ExpenseTracker показывает, куда уходят деньги, и помогает держать расходы под контролем.";
+"onboarding_transactions_title" = "Записывайте операции";
+"onboarding_transactions_subtitle" = "Расход или доход добавляется за пару секунд: сумма, категория и счет.";
+"onboarding_statistics_title" = "Смотрите статистику";
+"onboarding_statistics_subtitle" = "Диаграмма по категориям за день, неделю, месяц или год показывает главное.";
+"onboarding_budgets_title" = "Планируйте бюджеты";
+"onboarding_budgets_subtitle" = "Задайте лимит по категории и следите, сколько осталось до конца периода.";
+"onboarding_page_position" = "Страница %1$d из %2$d";
+
 /* Privacy Policy */
 "privacy_section_1_title" = "Сбор информации";
 "privacy_section_1_content" = "ExpenseTracker собирает только ту информацию, которую вы добавляете вручную в приложение:\n\n• Финансовые транзакции (расходы и доходы)\n• Названия категорий и счетов\n• Суммы и даты операций\n• Заметки к транзакциям\n\nМы НЕ собираем:\n• Персональные данные (имя, email, телефон)\n• Данные банковских карт\n• Информацию об устройстве\n• Геолокацию";

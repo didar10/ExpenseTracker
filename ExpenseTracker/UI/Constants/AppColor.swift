@@ -23,6 +23,15 @@ enum AppColor {
     /// Затемнение под модальными оверлеями
     static let scrim = Color.black.opacity(0.35)
 
+    // MARK: - Elevation
+
+    /// Обводка карточки: плотная в светлой теме, приглушенная в темной
+    static let cardBorder = Color.appCardBorder
+    /// Жесткая тень карточки: всегда темнее поверхности
+    static let cardShadow = Color.appCardShadow
+    /// Мягкая тень под первичной кнопкой
+    static let softShadow = Color.appSoftShadow
+
     // MARK: - Semantic
 
     static let income = Color.green

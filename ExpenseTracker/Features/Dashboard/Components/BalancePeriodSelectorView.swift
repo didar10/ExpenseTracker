@@ -28,6 +28,7 @@ struct BalancePeriodSelectorView: View {
                     isEnabled: true,
                     action: onPrevious
                 )
+                .transition(arrowTransition)
             }
 
             AppText(AppString.balance, style: .caption, color: AppColor.textSecondary)
@@ -41,8 +42,21 @@ struct BalancePeriodSelectorView: View {
                     isEnabled: filter.canGoForward,
                     action: onNext
                 )
+                .transition(arrowTransition)
             }
         }
+        // «Все время» не листается: стрелки появляются вместе со сменой периода,
+        // иначе подпись прыгает вбок без объяснения
+        .animation(.snappy(duration: Constants.arrowsDuration), value: filter.isNavigable)
+    }
+}
+
+// MARK: - Computed Properties
+
+private extension BalancePeriodSelectorView {
+
+    var arrowTransition: AnyTransition {
+        .opacity.combined(with: .scale(scale: Constants.arrowEnterScale))
     }
 }
 
@@ -80,7 +94,7 @@ private extension BalancePeriodSelectorView {
                 Capsule().fill(AppColor.fieldFill)
             }
         }
-        .buttonStyle(.plain)
+        .buttonStyle(PressableScaleButtonStyle())
     }
 
     func arrowButton(
@@ -99,7 +113,7 @@ private extension BalancePeriodSelectorView {
                 .frame(width: AppSize.iconSmall, height: AppSize.iconSmall)
                 .contentShape(Rectangle())
         }
-        .buttonStyle(.plain)
+        .buttonStyle(PressableScaleButtonStyle())
         .disabled(!isEnabled)
         .accessibilityLabel(label)
     }
@@ -111,6 +125,8 @@ private extension BalancePeriodSelectorView {
 
     enum Constants {
         static let disabledArrowOpacity: Double = 0.4
+        static let arrowsDuration: Double = 0.2
+        static let arrowEnterScale: CGFloat = 0.7
     }
 }
 

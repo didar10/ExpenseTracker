@@ -60,7 +60,7 @@ struct DateSelectionView: View {
             .frame(height: AppSize.inlineTile)
             .card(cornerRadius: AppRadius.card)
         }
-        .buttonStyle(.plain)
+        .buttonStyle(PressableScaleButtonStyle())
         .accessibilityLabel(AppString.date)
         .accessibilityValue(dateText)
         .accessibilityHint(AppString.selectDate)
@@ -112,13 +112,16 @@ struct NoteInputView: View {
             AppImage.textAlign
                 .font(.system(size: AppSize.glyphLarge))
                 .foregroundStyle(AppColor.textSecondary)
-                .padding(.top, AppSpacing.large)
+                .padding(.top, AppSpacing.large + AppSpacing.xxSmall)
 
+            // Поле растет от одной строки: пустой комментарий не должен занимать
+            // столько же места, сколько сумма и категории вместе
             TextField(AppString.addComment, text: $note, axis: .vertical)
                 .font(.app(.body))
-                .lineLimit(2...4)
+                .lineLimit(1...4)
                 .focused($isFocused)
                 .padding(.vertical, AppSpacing.large)
+                .animation(.easeOut(duration: 0.2), value: note.isEmpty)
         }
         .padding(.horizontal, AppSpacing.large)
         .card(cornerRadius: AppRadius.card)

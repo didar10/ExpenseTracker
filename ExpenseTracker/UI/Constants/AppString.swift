@@ -161,6 +161,25 @@ enum AppString {
         String(format: noTransactionsForPeriod, category)
     }
 
+    // MARK: - Onboarding
+
+    static let onboardingSkip = String(localized: "onboarding_skip")
+    static let onboardingNext = String(localized: "onboarding_next")
+    static let onboardingStart = String(localized: "onboarding_start")
+    static let onboardingWelcomeTitle = String(localized: "onboarding_welcome_title")
+    static let onboardingWelcomeSubtitle = String(localized: "onboarding_welcome_subtitle")
+    static let onboardingTransactionsTitle = String(localized: "onboarding_transactions_title")
+    static let onboardingTransactionsSubtitle = String(localized: "onboarding_transactions_subtitle")
+    static let onboardingStatisticsTitle = String(localized: "onboarding_statistics_title")
+    static let onboardingStatisticsSubtitle = String(localized: "onboarding_statistics_subtitle")
+    static let onboardingBudgetsTitle = String(localized: "onboarding_budgets_title")
+    static let onboardingBudgetsSubtitle = String(localized: "onboarding_budgets_subtitle")
+    static let onboardingPagePosition = String(localized: "onboarding_page_position")
+
+    static func onboardingPagePosition(current: Int, total: Int) -> String {
+        String(format: onboardingPagePosition, current, total)
+    }
+
     // MARK: - Settings
 
     static let appName = String(localized: "app_name")

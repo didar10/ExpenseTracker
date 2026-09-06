@@ -63,6 +63,13 @@ enum AppImage {
 
     static let chartBarDoc = Image(systemName: "chart.bar.doc.horizontal")
 
+    // MARK: - Onboarding
+
+    static let onboardingWelcome = Image(systemName: "wallet.bifold.fill")
+    static let onboardingTransactions = Image(systemName: "plus.circle.fill")
+    static let onboardingStatistics = Image(systemName: "chart.pie.fill")
+    static let onboardingBudgets = Image(systemName: "target")
+
     // MARK: - Settings
 
     static let helpCircle = Image(systemName: "questionmark.circle.fill")

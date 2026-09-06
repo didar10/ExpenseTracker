@@ -23,11 +23,37 @@ extension UIColor {
             ? UIColor(red: 44/255, green: 44/255, blue: 46/255, alpha: 1)
             : .systemBackground
     }
+
+    /// Обводка карточки. В темной теме она заметно слабее: белый контур той же плотности,
+    /// что и черный в светлой, забивает содержимое строки
+    static let appCardBorder = UIColor { traits in
+        traits.userInterfaceStyle == .dark
+            ? UIColor(white: 1, alpha: 0.18)
+            : UIColor(white: 0, alpha: 0.7)
+    }
+
+    /// Жесткая тень карточки. Тень темнее поверхности в любой теме:
+    /// светлая тень в темной теме читается как свечение, а не как объем
+    static let appCardShadow = UIColor { traits in
+        traits.userInterfaceStyle == .dark
+            ? UIColor(white: 0, alpha: 0.45)
+            : UIColor(white: 0, alpha: 0.7)
+    }
+
+    /// Мягкая тень под первичной кнопкой экрана
+    static let appSoftShadow = UIColor { traits in
+        traits.userInterfaceStyle == .dark
+            ? UIColor(white: 0, alpha: 0.5)
+            : UIColor(white: 0, alpha: 0.25)
+    }
 }
 
 extension Color {
     static let appBackground = Color(uiColor: .appBackground)
     static let appCardBackground = Color(uiColor: .appCardBackground)
+    static let appCardBorder = Color(uiColor: .appCardBorder)
+    static let appCardShadow = Color(uiColor: .appCardShadow)
+    static let appSoftShadow = Color(uiColor: .appSoftShadow)
 }
 
 // MARK: - Color Utilities

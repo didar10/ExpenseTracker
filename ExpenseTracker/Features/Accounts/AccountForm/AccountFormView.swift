@@ -181,7 +181,7 @@ private extension AccountFormView {
     }
 
     var saveBar: some View {
-        CategorySaveButtonView(
+        PrimaryActionButton(
             title: viewModel.saveButtonTitle,
             isEnabled: viewModel.isValid,
             action: handleSave

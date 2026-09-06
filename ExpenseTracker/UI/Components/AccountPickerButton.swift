@@ -42,7 +42,7 @@ struct AccountPickerButton: View {
                     .shadow(color: AppColor.textPrimary.opacity(0.04), radius: AppSpacing.xSmall, y: 1)
             }
         }
-        .buttonStyle(.plain)
+        .buttonStyle(PressableScaleButtonStyle())
         .accessibilityLabel(AppString.selectAccount)
         .accessibilityValue(selectedAccount?.name ?? AppString.allAccounts)
     }

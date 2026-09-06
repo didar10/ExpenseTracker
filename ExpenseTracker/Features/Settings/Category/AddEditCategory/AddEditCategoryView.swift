@@ -102,7 +102,7 @@ private extension AddEditCategoryView {
     }
 
     var saveBar: some View {
-        CategorySaveButtonView(
+        PrimaryActionButton(
             title: viewModel.saveButtonTitle,
             isEnabled: viewModel.canSave,
             action: handleSave

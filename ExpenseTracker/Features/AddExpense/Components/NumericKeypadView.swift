@@ -68,7 +68,12 @@ private extension NumericKeypadView {
         if case .delete = key {
             // Долгое нажатие очищает всю сумму — быстрее, чем стирать по цифре
             button.simultaneousGesture(
-                LongPressGesture(minimumDuration: 0.4).onEnded { _ in onClearTap() }
+                LongPressGesture(minimumDuration: 0.4).onEnded { _ in
+                    // Очистка всей суммы отличается от стирания цифры только удержанием,
+                    // поэтому подтверждается откликом
+                    UIImpactFeedbackGenerator(style: .rigid).impactOccurred()
+                    onClearTap()
+                }
             )
         } else {
             button
@@ -124,7 +129,8 @@ private extension NumericKeypadView {
         } label: {
             Text(isEnterEnabled ? enterTitle : (disabledHint ?? enterTitle))
                 .font(.app(.bodySmall))
-                .foregroundStyle(AppColor.background)
+                .foregroundStyle(isEnterEnabled ? AppColor.background : AppColor.textSecondary)
+                .contentTransition(.opacity)
                 .lineLimit(1)
                 .minimumScaleFactor(0.8)
                 .padding(.horizontal, AppSpacing.large)
@@ -132,10 +138,9 @@ private extension NumericKeypadView {
                 .frame(height: AppSize.primaryButton)
                 .background {
                     RoundedRectangle(cornerRadius: AppRadius.card, style: .continuous)
-                        .fill(AppColor.textPrimary)
-                        .opacity(isEnterEnabled ? 1 : 0.35)
+                        .fill(isEnterEnabled ? AppColor.textPrimary : AppColor.subtleFill)
                         .shadow(
-                            color: AppColor.textPrimary.opacity(isEnterEnabled ? 0.25 : 0),
+                            color: isEnterEnabled ? AppColor.softShadow : .clear,
                             radius: AppSize.shadowRadius,
                             y: AppSize.shadowOffsetY
                         )
