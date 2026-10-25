@@ -6,7 +6,6 @@
 //
 
 import Foundation
-import SwiftData
 import SwiftUI
 
 @MainActor
@@ -19,6 +18,7 @@ final class DashboardViewModel: ObservableObject {
     /// Тост «Отменить» после удаления или повтора операции
     @Published private(set) var undoAction: TransactionUndoAction?
     @Published var showingMonthlyLimit = false
+    @Published var showingSaveError = false
     /// Обновляется в полночь: «сегодня» в карточке лимита должно смениться без перезапуска
     @Published private(set) var today = Date.now
 
@@ -185,47 +185,45 @@ final class DashboardViewModel: ObservableObject {
     }
 
     /// Удаляет сразу, без подтверждения: ошибку исправляет тост «Отменить»
-    func deleteTransaction(_ transaction: Transaction, in context: ModelContext) {
-        UINotificationFeedbackGenerator().notificationOccurred(.warning)
-
+    func deleteTransaction(_ transaction: Transaction, using repository: TransactionRepository) {
         let draft = TransactionDraft(transaction)
 
-        withAnimation(.snappy(duration: 0.25)) {
-            context.delete(transaction)
+        perform {
+            try repository.delete(transaction)
+        } onSuccess: {
+            UINotificationFeedbackGenerator().notificationOccurred(.warning)
+            showUndo(TransactionUndoAction(kind: .deleted(draft)))
         }
-        save(context)
-
-        showUndo(TransactionUndoAction(kind: .deleted(draft)))
     }
 
     /// Повторяет операцию сегодняшним днем — для регулярных трат вроде кофе или такси
-    func repeatTransaction(_ transaction: Transaction, in context: ModelContext) {
-        UINotificationFeedbackGenerator().notificationOccurred(.success)
+    func repeatTransaction(_ transaction: Transaction, using repository: TransactionRepository) {
+        var draft = TransactionDraft(transaction)
+        draft.date = .now
 
-        let copy = TransactionDraft(transaction).makeTransaction(date: .now)
-
-        withAnimation(.snappy(duration: 0.25)) {
-            context.insert(copy)
+        var copy: Transaction?
+        perform {
+            copy = try repository.add(draft)
+        } onSuccess: {
+            guard let copy else { return }
+            UINotificationFeedbackGenerator().notificationOccurred(.success)
+            showUndo(TransactionUndoAction(kind: .repeated(copy)))
         }
-        save(context)
-
-        showUndo(TransactionUndoAction(kind: .repeated(copy)))
     }
 
-    func undoLastAction(in context: ModelContext) {
+    func undoLastAction(using repository: TransactionRepository) {
         guard let undoAction else { return }
 
-        withAnimation(.snappy(duration: 0.25)) {
+        perform {
             switch undoAction.kind {
             case .deleted(let draft):
-                context.insert(draft.makeTransaction())
+                try repository.add(draft)
             case .repeated(let transaction):
-                context.delete(transaction)
+                try repository.delete(transaction)
             }
+        } onSuccess: {
+            dismissUndo()
         }
-        save(context)
-
-        dismissUndo()
     }
 
     func dismissUndo() {
@@ -254,11 +252,15 @@ final class DashboardViewModel: ObservableObject {
         }
     }
 
-    private func save(_ context: ModelContext) {
+    /// Изменение списка анимируется; при ошибке тост не показывается, а экран сообщает о ней
+    private func perform(_ change: () throws -> Void, onSuccess: () -> Void) {
         do {
-            try context.save()
+            try withAnimation(.snappy(duration: 0.25)) {
+                try change()
+            }
+            onSuccess()
         } catch {
-            print("Failed to save transaction changes:", error)
+            showingSaveError = true
         }
     }
 

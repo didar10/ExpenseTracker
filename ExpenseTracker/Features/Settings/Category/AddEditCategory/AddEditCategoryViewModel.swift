@@ -16,6 +16,7 @@ final class AddEditCategoryViewModel {
     // MARK: - Properties
 
     var formData: CategoryFormData
+    var showingSaveError = false
 
     private let category: Category?
 
@@ -61,25 +62,27 @@ final class AddEditCategoryViewModel {
 
     // MARK: - Actions
 
-    func save(context: ModelContext) -> Bool {
+    /// - Returns: false — форма невалидна или запись не удалась; экран остается открытым
+    func save(using repository: CategoryRepository) -> Bool {
         guard canSave else { return false }
 
-        if let category {
-            category.name = formData.trimmedName
-            category.icon = formData.icon
-            category.colorHex = formData.colorHex
-            category.type = formData.type
-        } else {
-            let newCategory = Category(
-                name: formData.trimmedName,
-                icon: formData.icon,
-                colorHex: formData.colorHex,
-                type: formData.type
-            )
-            context.insert(newCategory)
-        }
+        let draft = CategoryDraft(
+            name: formData.trimmedName,
+            icon: formData.icon,
+            colorHex: formData.colorHex,
+            type: formData.type
+        )
 
-        try? context.save()
-        return true
+        do {
+            if let category {
+                try repository.update(category, with: draft)
+            } else {
+                try repository.add(draft)
+            }
+            return true
+        } catch {
+            showingSaveError = true
+            return false
+        }
     }
 }

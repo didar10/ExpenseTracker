@@ -36,6 +36,7 @@ enum AppImage {
     static let repeatAction = Image(systemName: "arrow.clockwise")
     static let undo = Image(systemName: "arrow.uturn.backward")
     static let dailyLimit = Image(systemName: "gauge.with.needle")
+    static let dataUnavailable = Image(systemName: "externaldrive.badge.exclamationmark")
 
     // MARK: - Transactions
 

@@ -12,7 +12,7 @@ struct AppRootView: View {
 
     // MARK: - Properties
 
-    @Environment(\.modelContext) private var context
+    @Environment(\.repositories) private var repositories
     @Environment(\.accessibilityReduceMotion) private var reduceMotion
 
     @State private var onboardingStore = OnboardingStore()
@@ -53,8 +53,7 @@ struct AppRootView: View {
         }
         .animation(transitionAnimation, value: onboardingStore.isCompleted)
         .task {
-            CategorySeeder.seedIfNeeded(context: context)
-            AccountSeeder.seedIfNeeded(context: context)
+            repositories.appData.seedDefaultsIfNeeded()
         }
     }
 }

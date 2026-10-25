@@ -22,6 +22,7 @@ struct PlansView: View {
     private var transactions: [Transaction]
 
     @Environment(\.modelContext) private var context
+    @Environment(\.repositories) private var repositories
 
     @State private var viewModel = PlansViewModel()
 
@@ -63,12 +64,13 @@ struct PlansView: View {
             AddBudgetPlanView(categories: categories, existingPlans: viewModel.activePlans)
                 .environment(\.modelContext, context)
         }
+        .saveErrorAlert(isPresented: $viewModel.showingSaveError)
         .alert(AppString.deleteBudgetConfirm, isPresented: $viewModel.showDeleteAlert) {
             Button(AppString.cancel, role: .cancel) {
                 viewModel.planToDelete = nil
             }
             Button(AppString.delete, role: .destructive) {
-                viewModel.deletePlan(context: context)
+                viewModel.deletePlan(using: repositories.budgets)
             }
         } message: {
             Text(AppString.cannotUndo)
@@ -124,14 +126,17 @@ private extension PlansView {
         AppCardView(padding: AppSpacing.medium) {
             VStack(spacing: 0) {
                 ForEach(Array(section.plans.enumerated()), id: \.element.persistentModelID) { index, plan in
-                    BudgetPlanRow(
-                        plan: plan,
-                        spent: viewModel.spentAmount(for: plan),
-                        isEditing: viewModel.isEditing,
-                        onDelete: {
-                            viewModel.prepareDelete(plan)
-                        }
-                    )
+                    if let category = plan.category {
+                        BudgetPlanRow(
+                            plan: plan,
+                            category: category,
+                            spent: viewModel.spentAmount(for: plan),
+                            isEditing: viewModel.isEditing,
+                            onDelete: {
+                                viewModel.prepareDelete(plan)
+                            }
+                        )
+                    }
 
                     if index < section.plans.count - 1 {
                         Divider()

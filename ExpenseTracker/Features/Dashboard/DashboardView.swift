@@ -18,7 +18,7 @@ struct DashboardView: View {
     @Query(sort: \Account.createdAt, order: .forward)
     private var accounts: [Account]
 
-    @Environment(\.modelContext) private var context
+    @Environment(\.repositories) private var repositories
     @Environment(\.scenePhase) private var scenePhase
 
     @StateObject private var viewModel: DashboardViewModel
@@ -71,6 +71,7 @@ struct DashboardView: View {
             .sheet(isPresented: $viewModel.showingAccountsView) {
                 accountSelectionSheet
             }
+            .saveErrorAlert(isPresented: $viewModel.showingSaveError)
             .sheet(isPresented: $viewModel.showingMonthlyLimit) {
                 MonthlyLimitView(limitStore: viewModel.limitStore)
             }
@@ -159,8 +160,8 @@ private extension DashboardView {
                     isFilteredByPeriod: viewModel.isFilteredByPeriod,
                     onTransactionTap: viewModel.handleTransactionTap,
                     onResetPeriod: viewModel.resetPeriod,
-                    onRepeat: { viewModel.repeatTransaction($0, in: context) },
-                    onDelete: { viewModel.deleteTransaction($0, in: context) }
+                    onRepeat: { viewModel.repeatTransaction($0, using: repositories.transactions) },
+                    onDelete: { viewModel.deleteTransaction($0, using: repositories.transactions) }
                 )
             }
             .padding(.bottom, AppSpacing.tabBarBottomInset)
@@ -172,7 +173,7 @@ private extension DashboardView {
     var undoToast: some View {
         if let undoAction = viewModel.undoAction {
             UndoToastView(message: undoAction.message) {
-                viewModel.undoLastAction(in: context)
+                viewModel.undoLastAction(using: repositories.transactions)
             }
             .id(undoAction.id)
             .padding(.horizontal, AppSpacing.large)

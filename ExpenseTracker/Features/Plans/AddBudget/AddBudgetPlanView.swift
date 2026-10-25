@@ -16,12 +16,13 @@ struct AddBudgetPlanView: View {
     let existingPlans: [BudgetPlan]
 
     @Environment(\.dismiss) private var dismiss
-    @Environment(\.modelContext) private var context
+    @Environment(\.repositories) private var repositories
 
     @State private var selectedCategory: Category?
     @State private var amount: String = ""
     @State private var selectedPeriod: BudgetPeriod = .month
     @State private var showingCategoryPicker = false
+    @State private var showingSaveError = false
 
     // MARK: - Computed Properties
 
@@ -30,7 +31,7 @@ struct AddBudgetPlanView: View {
         let usedCategoryIDs = Set(
             existingPlans
                 .filter { $0.period == selectedPeriod }
-                .map { $0.category.persistentModelID }
+                .compactMap { $0.category?.persistentModelID }
         )
 
         return categories.filter { !usedCategoryIDs.contains($0.persistentModelID) }
@@ -60,6 +61,7 @@ struct AddBudgetPlanView: View {
 
             saveBar
         }
+        .saveErrorAlert(isPresented: $showingSaveError)
         .sheet(isPresented: $showingCategoryPicker) {
             CategoriesListView(
                 onSelect: { category in
@@ -312,16 +314,12 @@ private extension AddBudgetPlanView {
         let cleanedAmount = amount.replacingOccurrences(of: ",", with: ".")
         guard let amountValue = Decimal(string: cleanedAmount), amountValue > 0 else { return }
 
-        UIImpactFeedbackGenerator(style: .medium).impactOccurred()
-
-        let plan = BudgetPlan(
-            category: category,
-            monthlyLimit: amountValue,
-            period: selectedPeriod
-        )
-
-        context.insert(plan)
-        try? context.save()
-        dismiss()
+        do {
+            try repositories.budgets.add(category: category, limit: amountValue, period: selectedPeriod)
+            UIImpactFeedbackGenerator(style: .medium).impactOccurred()
+            dismiss()
+        } catch {
+            showingSaveError = true
+        }
     }
 }

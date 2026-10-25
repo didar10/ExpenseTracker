@@ -16,10 +16,7 @@ struct DashboardViewModelTests {
     // MARK: - Helpers
 
     private func makeContext() throws -> ModelContext {
-        let container = try ModelContainer(
-            for: Transaction.self, Category.self, Account.self, BudgetPlan.self,
-            configurations: ModelConfiguration(isStoredInMemoryOnly: true)
-        )
+        let container = try AppModelContainer.make(inMemory: true)
 
         return ModelContext(container)
     }
@@ -173,7 +170,7 @@ struct DashboardViewModelTests {
         context.insert(transaction)
 
         let viewModel = makeViewModel()
-        viewModel.deleteTransaction(transaction, in: context)
+        viewModel.deleteTransaction(transaction, using: Repositories(context: context).transactions)
 
         #expect(try fetchTransactions(context).isEmpty)
         #expect(viewModel.undoAction != nil)
@@ -188,8 +185,8 @@ struct DashboardViewModelTests {
         context.insert(transaction)
 
         let viewModel = makeViewModel()
-        viewModel.deleteTransaction(transaction, in: context)
-        viewModel.undoLastAction(in: context)
+        viewModel.deleteTransaction(transaction, using: Repositories(context: context).transactions)
+        viewModel.undoLastAction(using: Repositories(context: context).transactions)
 
         let restored = try #require(try fetchTransactions(context).first)
         #expect(restored.amount == 500)
@@ -207,13 +204,13 @@ struct DashboardViewModelTests {
         context.insert(transaction)
 
         let viewModel = makeViewModel()
-        viewModel.repeatTransaction(transaction, in: context)
+        viewModel.repeatTransaction(transaction, using: Repositories(context: context).transactions)
 
         let afterRepeat = try fetchTransactions(context)
         #expect(afterRepeat.count == 2)
         #expect(afterRepeat.contains { Calendar.current.isDateInToday($0.date) && $0.amount == 300 })
 
-        viewModel.undoLastAction(in: context)
+        viewModel.undoLastAction(using: Repositories(context: context).transactions)
 
         let afterUndo = try fetchTransactions(context)
         #expect(afterUndo.count == 1)

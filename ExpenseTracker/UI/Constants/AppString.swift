@@ -19,6 +19,7 @@ enum AppString {
     static let amountDecimalSeparator = "."
     static let save = String(localized: "save")
     static let cancel = String(localized: "cancel")
+    static let ok = String(localized: "ok")
     static let delete = String(localized: "delete")
     static let done = String(localized: "done")
     static let today = String(localized: "today")
@@ -41,6 +42,13 @@ enum AppString {
     static let transactionDeleted = String(localized: "transaction_deleted")
     static let transactionRepeated = String(localized: "transaction_repeated")
     static let undo = String(localized: "undo")
+
+    // MARK: - Persistence
+
+    static let saveFailedTitle = String(localized: "save_failed_title")
+    static let saveFailedMessage = String(localized: "save_failed_message")
+    static let dataUnavailableTitle = String(localized: "data_unavailable_title")
+    static let dataUnavailableMessage = String(localized: "data_unavailable_message")
 
     // MARK: - Monthly Limit
 

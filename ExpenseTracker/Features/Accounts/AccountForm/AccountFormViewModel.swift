@@ -6,7 +6,6 @@
 //
 
 import Foundation
-import SwiftData
 import SwiftUI
 import UIKit
 
@@ -20,6 +19,10 @@ final class AccountFormViewModel: ObservableObject {
     @Published var selectedColor: String = Snapshot.defaultColor
     @Published var initialBalance: String = ""
     @Published var isDefault: Bool = false
+
+    // MARK: - UI State
+
+    @Published var showingSaveError = false
 
     // MARK: - Private Properties
 
@@ -119,64 +122,42 @@ final class AccountFormViewModel: ObservableObject {
         }
     }
 
-    func save(accounts: [Account], using context: ModelContext) {
-        guard isValid else { return }
+    /// - Returns: false — форма невалидна или запись не удалась; экран остается открытым
+    func save(using repository: AccountRepository) -> Bool {
+        guard isValid else { return false }
 
-        let balance = balanceDecimal ?? 0
-
-        if let account = editingAccount {
-            updateExistingAccount(account, balance: balance, accounts: accounts)
-        } else {
-            createNewAccount(balance: balance, accounts: accounts, context: context)
-        }
-
-        try? context.save()
-    }
-
-    func delete(using context: ModelContext) {
-        guard let account = editingAccount else { return }
-
-        context.delete(account)
-        try? context.save()
-
-        provideFeedback(.medium)
-    }
-
-    // MARK: - Private Methods
-
-    private func updateExistingAccount(_ account: Account, balance: Decimal, accounts: [Account]) {
-        account.name = trimmedName
-        account.icon = selectedIcon
-        account.color = selectedColor
-        account.initialBalance = balance
-
-        if isDefault {
-            for other in accounts where other.id != account.id {
-                other.isDefault = false
-            }
-        }
-        account.isDefault = isDefault
-    }
-
-    private func createNewAccount(balance: Decimal, accounts: [Account], context: ModelContext) {
-        // Первый счет всегда становится основным: иначе новая операция открывается без счета
-        let becomesDefault = isDefault || accounts.isEmpty
-
-        let newAccount = Account(
+        let draft = AccountDraft(
             name: trimmedName,
             icon: selectedIcon,
             color: selectedColor,
-            initialBalance: balance,
-            isDefault: becomesDefault
+            initialBalance: balanceDecimal ?? 0,
+            isDefault: isDefault
         )
 
-        if becomesDefault {
-            for account in accounts {
-                account.isDefault = false
+        do {
+            if let account = editingAccount {
+                try repository.update(account, with: draft)
+            } else {
+                try repository.add(draft)
             }
+            return true
+        } catch {
+            showingSaveError = true
+            return false
         }
+    }
 
-        context.insert(newAccount)
+    func delete(using repository: AccountRepository) -> Bool {
+        guard let account = editingAccount else { return false }
+
+        do {
+            try repository.delete(account)
+            provideFeedback(.medium)
+            return true
+        } catch {
+            showingSaveError = true
+            return false
+        }
     }
 
     // MARK: - Haptic Feedback

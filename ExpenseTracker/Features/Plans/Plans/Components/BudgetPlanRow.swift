@@ -12,6 +12,8 @@ struct BudgetPlanRow: View {
     // MARK: - Properties
 
     let plan: BudgetPlan
+    /// Передается отдельно: у плана она необязательна, а строка без категории не показывается
+    let category: Category
     let spent: Decimal
     let isEditing: Bool
     let onDelete: () -> Void
@@ -65,10 +67,10 @@ private extension BudgetPlanRow {
     var iconBadge: some View {
         ZStack {
             RoundedRectangle(cornerRadius: AppRadius.small, style: .continuous)
-                .fill(Color(hex: plan.category.colorHex).opacity(0.2))
+                .fill(Color(hex: category.colorHex).opacity(0.2))
                 .frame(width: AppSize.iconSmall, height: AppSize.iconSmall)
 
-            Image(systemName: plan.category.icon)
+            Image(systemName: category.icon)
                 .font(.system(size: AppSize.glyphSmall, weight: .semibold))
                 .foregroundStyle(AppColor.textPrimary)
         }
@@ -76,7 +78,7 @@ private extension BudgetPlanRow {
 
     var titleRow: some View {
         HStack(spacing: AppSpacing.small) {
-            AppText(plan.category.name, style: .captionMedium)
+            AppText(category.name, style: .captionMedium)
 
             Spacer()
 

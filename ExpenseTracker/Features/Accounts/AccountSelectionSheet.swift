@@ -24,13 +24,14 @@ struct AccountSelectionSheet: View {
     private var accounts: [Account]
 
     @Environment(\.dismiss) private var dismiss
-    @Environment(\.modelContext) private var context
+    @Environment(\.repositories) private var repositories
 
     @State private var showingAddAccount = false
     @State private var editingAccount: Account?
     @State private var isEditing = false
     @State private var accountToDelete: Account?
     @State private var showDeleteAlert = false
+    @State private var showingSaveError = false
 
     // MARK: - Computed Properties
 
@@ -76,6 +77,7 @@ struct AccountSelectionSheet: View {
         .sheet(item: $editingAccount) { account in
             AccountFormView(account: account)
         }
+        .saveErrorAlert(isPresented: $showingSaveError)
         .alert(AppString.deleteAccountConfirm, isPresented: $showDeleteAlert) {
             Button(AppString.cancel, role: .cancel) {
                 accountToDelete = nil
@@ -239,11 +241,14 @@ private extension AccountSelectionSheet {
     func deleteAccount() {
         guard let accountToDelete else { return }
 
-        context.delete(accountToDelete)
-        try? context.save()
-
         self.accountToDelete = nil
-        UINotificationFeedbackGenerator().notificationOccurred(.success)
+
+        do {
+            try repositories.accounts.delete(accountToDelete)
+            UINotificationFeedbackGenerator().notificationOccurred(.success)
+        } catch {
+            showingSaveError = true
+        }
     }
 }
 

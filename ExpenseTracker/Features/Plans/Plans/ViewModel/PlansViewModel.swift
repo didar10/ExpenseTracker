@@ -8,6 +8,7 @@
 import SwiftUI
 import SwiftData
 
+@MainActor
 @Observable
 final class PlansViewModel {
 
@@ -16,6 +17,7 @@ final class PlansViewModel {
     var planToDelete: BudgetPlan?
     var showDeleteAlert = false
     var showingAddPlan = false
+    var showingSaveError = false
     var isEditing = false
 
     private var budgetPlans: [BudgetPlan] = []
@@ -25,8 +27,9 @@ final class PlansViewModel {
 
     // MARK: - Computed Properties
 
+    /// Бюджет без категории — удаленный вместе с ней, но еще не убранный из списка
     var activePlans: [BudgetPlan] {
-        budgetPlans.filter(\.isActive)
+        budgetPlans.filter { $0.isActive && $0.category != nil }
     }
 
     var hasPlans: Bool {
@@ -64,7 +67,7 @@ final class PlansViewModel {
         return transactions
             .filter { transaction in
                 transaction.type == .expense &&
-                transaction.category?.persistentModelID == plan.category.persistentModelID &&
+                transaction.category?.persistentModelID == plan.category?.persistentModelID &&
                 interval.contains(transaction.date)
             }
             .reduce(0) { $0 + $1.amount }
@@ -94,13 +97,16 @@ final class PlansViewModel {
         showDeleteAlert = true
     }
 
-    func deletePlan(context: ModelContext) {
+    func deletePlan(using repository: BudgetPlanRepository) {
         guard let plan = planToDelete else { return }
 
-        withAnimation {
-            budgetPlans.removeAll { $0.persistentModelID == plan.persistentModelID }
-            context.delete(plan)
-            try? context.save()
+        do {
+            try withAnimation {
+                try repository.delete(plan)
+                budgetPlans.removeAll { $0.persistentModelID == plan.persistentModelID }
+            }
+        } catch {
+            showingSaveError = true
         }
 
         planToDelete = nil

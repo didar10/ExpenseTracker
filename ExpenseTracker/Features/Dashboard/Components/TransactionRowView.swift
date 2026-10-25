@@ -21,9 +21,10 @@ struct TransactionRowView: View {
     /// Задан — удаление сразу, отмену предлагает экран
     var onDelete: (() -> Void)?
 
-    @Environment(\.modelContext) private var context
+    @Environment(\.repositories) private var repositories
 
     @State private var showingDeleteConfirmation = false
+    @State private var showingSaveError = false
 
     // MARK: - Body
 
@@ -55,6 +56,7 @@ struct TransactionRowView: View {
             } message: {
                 Text(AppString.cannotUndo)
             }
+            .saveErrorAlert(isPresented: $showingSaveError)
     }
 }
 
@@ -70,16 +72,13 @@ private extension TransactionRowView {
     }
 
     func delete() {
-        UINotificationFeedbackGenerator().notificationOccurred(.warning)
-
-        withAnimation(.easeOut(duration: 0.2)) {
-            context.delete(transaction)
-        }
-
         do {
-            try context.save()
+            try withAnimation(.easeOut(duration: 0.2)) {
+                try repositories.transactions.delete(transaction)
+            }
+            UINotificationFeedbackGenerator().notificationOccurred(.warning)
         } catch {
-            print("Failed to delete transaction:", error)
+            showingSaveError = true
         }
     }
 }

@@ -11,7 +11,9 @@ import SwiftData
 @Model
 final class BudgetPlan {
     
-    var category: Category
+    /// Необязательна только для SwiftData: бюджет удаляется вместе с категорией,
+    /// но в уже отрисованном списке может на мгновение остаться без нее
+    var category: Category?
     var monthlyLimit: Decimal
     var period: BudgetPeriod
     var createdAt: Date

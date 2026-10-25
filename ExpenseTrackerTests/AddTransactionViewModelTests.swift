@@ -16,10 +16,7 @@ struct AddTransactionViewModelTests {
     // MARK: - Helpers
 
     private func makeContext() throws -> ModelContext {
-        let container = try ModelContainer(
-            for: Transaction.self, Category.self, Account.self, BudgetPlan.self,
-            configurations: ModelConfiguration(isStoredInMemoryOnly: true)
-        )
+        let container = try AppModelContainer.make(inMemory: true)
 
         return ModelContext(container)
     }
@@ -39,7 +36,7 @@ struct AddTransactionViewModelTests {
         viewModel.selectedAccount = account
         viewModel.amount = "250"
 
-        #expect(viewModel.save(using: context))
+        #expect(viewModel.save(using: Repositories(context: context).transactions))
 
         let saved = try transactions(in: context)
         #expect(saved.count == 1)
@@ -57,9 +54,9 @@ struct AddTransactionViewModelTests {
         viewModel.selectedAccount = account
         viewModel.amount = "250"
 
-        #expect(viewModel.save(using: context))
-        #expect(viewModel.save(using: context) == false)
-        #expect(viewModel.save(using: context) == false)
+        #expect(viewModel.save(using: Repositories(context: context).transactions))
+        #expect(viewModel.save(using: Repositories(context: context).transactions) == false)
+        #expect(viewModel.save(using: Repositories(context: context).transactions) == false)
 
         #expect(try transactions(in: context).count == 1)
         #expect(account.currentBalance == 750)
@@ -76,7 +73,7 @@ struct AddTransactionViewModelTests {
 
         #expect(viewModel.isSaveEnabled)
 
-        #expect(viewModel.save(using: context))
+        #expect(viewModel.save(using: Repositories(context: context).transactions))
 
         #expect(viewModel.isSaved)
         #expect(viewModel.isSaveEnabled == false)
@@ -94,7 +91,7 @@ struct AddTransactionViewModelTests {
         // До сохранения предпросмотр баланса вычитает введённую сумму
         #expect(viewModel.pendingAmount == "250")
 
-        #expect(viewModel.save(using: context))
+        #expect(viewModel.save(using: Repositories(context: context).transactions))
 
         // После сохранения сумма уже учтена в currentBalance — вычитать нечего
         #expect(viewModel.pendingAmount.isEmpty)
@@ -111,7 +108,7 @@ struct AddTransactionViewModelTests {
         let viewModel = AddTransactionViewModel(transaction: transaction, accountSelection: AccountSelectionStore())
         viewModel.amount = "400"
 
-        #expect(viewModel.save(using: context))
+        #expect(viewModel.save(using: Repositories(context: context).transactions))
 
         let saved = try transactions(in: context)
         #expect(saved.count == 1)
@@ -148,7 +145,7 @@ struct AddTransactionViewModelTests {
         viewModel.selectedAccount = cash
         viewModel.amount = "100"
 
-        #expect(viewModel.save(using: context))
+        #expect(viewModel.save(using: Repositories(context: context).transactions))
         #expect(accountSelection.selectedAccount === cash)
     }
 
@@ -163,7 +160,7 @@ struct AddTransactionViewModelTests {
         viewModel.selectedAccount = account
         viewModel.amount = "100"
 
-        #expect(viewModel.save(using: context))
+        #expect(viewModel.save(using: Repositories(context: context).transactions))
         #expect(accountSelection.selectedAccount == nil)
     }
 
@@ -177,7 +174,7 @@ struct AddTransactionViewModelTests {
         viewModel.amount = "0"
 
         #expect(viewModel.isSaveEnabled == false)
-        #expect(viewModel.save(using: context) == false)
+        #expect(viewModel.save(using: Repositories(context: context).transactions) == false)
         #expect(try transactions(in: context).isEmpty)
     }
 
@@ -190,7 +187,7 @@ struct AddTransactionViewModelTests {
         viewModel.selectedAccount = account
         viewModel.amount = ""
 
-        #expect(viewModel.save(using: context) == false)
+        #expect(viewModel.save(using: Repositories(context: context).transactions) == false)
         #expect(viewModel.isSaved == false)
         #expect(try transactions(in: context).isEmpty)
     }
@@ -282,7 +279,7 @@ struct AddTransactionViewModelTests {
         #expect(viewModel.predictedBalance == 1250)
 
         // После сохранения сумма уже учтена в балансе счета — предпросмотр больше не нужен
-        #expect(viewModel.save(using: context))
+        #expect(viewModel.save(using: Repositories(context: context).transactions))
         #expect(viewModel.predictedBalance == nil)
     }
 
@@ -301,7 +298,7 @@ struct AddTransactionViewModelTests {
         viewModel.amount = "100"
         #expect(viewModel.hasUnsavedChanges)
 
-        #expect(viewModel.save(using: context))
+        #expect(viewModel.save(using: Repositories(context: context).transactions))
         #expect(viewModel.hasUnsavedChanges == false)
     }
 

@@ -12,7 +12,7 @@ struct SettingsView: View {
 
     // MARK: - Properties
 
-    @Environment(\.modelContext) private var context
+    @Environment(\.repositories) private var repositories
 
     /// Вызывается после удаления всех данных — нужен для возврата на главный экран
     private let onDataReset: () -> Void
@@ -56,6 +56,7 @@ struct SettingsView: View {
             .sheet(item: $coordinator.activeRoute) { route in
                 SettingsRouteView(route: route)
             }
+            .saveErrorAlert(isPresented: $viewModel.showingSaveError)
             .alert(AppString.deleteAllDataConfirm, isPresented: $viewModel.showingDeleteAllDataAlert) {
                 Button(AppString.cancel, role: .cancel) {
                     viewModel.cancelDeleteAllData()
@@ -158,7 +159,8 @@ private extension SettingsView {
 private extension SettingsView {
 
     func handleDeleteAllData() {
-        viewModel.confirmDeleteAllData(context: context)
+        guard viewModel.confirmDeleteAllData(using: repositories.appData) else { return }
+
         UINotificationFeedbackGenerator().notificationOccurred(.success)
         onDataReset()
     }

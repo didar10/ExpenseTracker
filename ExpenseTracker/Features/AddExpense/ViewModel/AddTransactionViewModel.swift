@@ -46,6 +46,8 @@ final class AddTransactionViewModel: ObservableObject {
     @Published var showAllCategories = false
     /// Транзакция уже записана в контекст: защищает от повторного сохранения
     @Published private(set) var isSaved = false
+    /// Запись на диск не удалась: экран остается открытым с введенными данными
+    @Published var showingSaveError = false
 
     private(set) var editingTransaction: Transaction?
 
@@ -201,28 +203,31 @@ final class AddTransactionViewModel: ObservableObject {
 
     // MARK: - Save
 
-    func save(using context: ModelContext) -> Bool {
+    func save(using repository: TransactionRepository) -> Bool {
         guard !isSaved, let value = amountDecimal, value > 0 else { return false }
         
         provideFeedback(.medium)
 
-        if let transaction = editingTransaction {
-            transaction.amount = value
-            transaction.category = selectedCategory
-            transaction.account = selectedAccount
-            transaction.note = note.isEmpty ? nil : note
-            transaction.date = date
-            transaction.type = type
-        } else {
-            let newTransaction = Transaction(
-                amount: value,
-                date: date,
-                note: note.isEmpty ? nil : note,
-                type: type,
-                category: selectedCategory,
-                account: selectedAccount
-            )
-            context.insert(newTransaction)
+        let draft = TransactionDraft(
+            amount: value,
+            date: date,
+            note: note.isEmpty ? nil : note,
+            type: type,
+            category: selectedCategory,
+            account: selectedAccount
+        )
+
+        do {
+            if let transaction = editingTransaction {
+                try repository.update(transaction, with: draft)
+            } else {
+                try repository.add(draft)
+            }
+        } catch {
+            // Репозиторий вернул операцию к сохраненному виду,
+            // а введенные значения остались в полях — можно повторить
+            showingSaveError = true
+            return false
         }
 
         isSaved = true
