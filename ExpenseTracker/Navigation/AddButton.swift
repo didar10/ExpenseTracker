@@ -31,6 +31,7 @@ struct AddButton: View {
             }
             .circleShadow()
         }
+        .buttonStyle(PressableScaleButtonStyle())
         .offset(y: isVisible ? 0 : 120)
         .animation(.spring(response: 0.4, dampingFraction: 0.8), value: isVisible)
     }

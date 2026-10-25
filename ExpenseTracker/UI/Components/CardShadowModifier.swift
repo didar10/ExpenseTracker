@@ -31,7 +31,7 @@ struct CardShadowModifier: ViewModifier {
                 RoundedRectangle(cornerRadius: cornerRadius, style: .continuous)
                     .fill(fillColor)
                     .shadow(
-                        color: Color.primary.opacity(0.7),
+                        color: AppColor.cardShadow,
                         radius: 0,
                         x: 1,
                         y: 2.5
@@ -39,7 +39,7 @@ struct CardShadowModifier: ViewModifier {
             )
             .overlay(
                 RoundedRectangle(cornerRadius: cornerRadius, style: .continuous)
-                    .strokeBorder(Color.primary.opacity(0.7), lineWidth: 1.5)
+                    .strokeBorder(AppColor.cardBorder, lineWidth: 1.5)
             )
     }
 }
@@ -54,7 +54,7 @@ struct CircleShadowModifier: ViewModifier {
                 Circle()
                     .fill(fillColor)
                     .shadow(
-                        color: Color.primary.opacity(0.7),
+                        color: AppColor.cardShadow,
                         radius: 0,
                         x: 1,
                         y: 2
@@ -62,7 +62,7 @@ struct CircleShadowModifier: ViewModifier {
             )
             .overlay(
                 Circle()
-                    .strokeBorder(Color.primary.opacity(0.7), lineWidth: 1.5)
+                    .strokeBorder(AppColor.cardBorder, lineWidth: 1.5)
             )
     }
 }

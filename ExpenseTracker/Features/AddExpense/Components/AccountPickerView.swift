@@ -48,7 +48,7 @@ struct AccountPickerView: View {
             .frame(height: AppSize.inlineTile)
             .card(cornerRadius: AppRadius.card)
         }
-        .buttonStyle(.plain)
+        .buttonStyle(PressableScaleButtonStyle())
         .accessibilityLabel(account?.name ?? AppString.chooseAccount)
         .accessibilityValue(balanceText)
         .accessibilityHint(AppString.selectAccount)

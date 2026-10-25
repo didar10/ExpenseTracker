@@ -88,16 +88,8 @@ private extension TransactionRowView {
             iconView
 
             VStack(alignment: .leading, spacing: AppSpacing.xSmall) {
-                HStack(spacing: AppSpacing.smaller) {
-                    AppText(title, style: .bodySmaller)
-                        .lineLimit(1)
-
-                    if hasNote {
-                        AppImage.noteBubble
-                            .font(.system(size: AppSize.glyphTiny))
-                            .foregroundStyle(AppColor.textTertiary)
-                    }
-                }
+                AppText(title, style: .bodySmaller)
+                    .lineLimit(1)
 
                 if let note = transaction.note, !note.isEmpty {
                     AppText(note, style: .microCaption, color: AppColor.textSecondary)
@@ -143,10 +135,6 @@ private extension TransactionRowView {
         transaction.type == .income
         ? AppString.income
         : transaction.category?.name ?? AppString.noCategory
-    }
-
-    var hasNote: Bool {
-        !(transaction.note ?? "").isEmpty
     }
 
     var transactionIcon: Image {

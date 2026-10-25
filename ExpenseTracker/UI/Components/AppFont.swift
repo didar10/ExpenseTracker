@@ -10,6 +10,7 @@ import SwiftUI
 enum AppFont {
 
     case largeTitle
+    case onboardingTitle
     case balance
     case title
     case section
@@ -28,6 +29,9 @@ enum AppFont {
         case .largeTitle:
             return .custom("Montserrat-SemiBold", size: 38)
             
+        case .onboardingTitle:
+            return .custom("Montserrat-SemiBold", size: 28)
+
         case .balance:
             return .custom("Montserrat-Bold", size: 40)
 

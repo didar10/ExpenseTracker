@@ -33,10 +33,20 @@ struct FinancialIndicatorView: View {
                 .lineLimit(1)
                 .minimumScaleFactor(0.7)
                 .contentTransition(.numericText())
+                .animation(.snappy(duration: Constants.amountDuration), value: amount)
         }
         .accessibilityElement(children: .combine)
         .accessibilityLabel(accessibilityTitle)
         .accessibilityValue(amount.formatted(.currency(code: AppString.currencyCode)))
+    }
+}
+
+// MARK: - Constants
+
+private extension FinancialIndicatorView {
+
+    enum Constants {
+        static let amountDuration: Double = 0.25
     }
 }
 
