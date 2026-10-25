@@ -7,13 +7,13 @@
 
 import SwiftUI
 
-/// Подпись «Баланс» с фильтром периода и стрелками переключения
+/// Подпись над балансом: название периода со стрелками переключения.
+/// Сам период выбирается в шапке экрана, здесь только листание
 struct BalancePeriodSelectorView: View {
 
     // MARK: - Properties
 
     let filter: PeriodFilter
-    let onSelect: (StatisticsPeriod) -> Void
     let onPrevious: () -> Void
     let onNext: () -> Void
 
@@ -31,9 +31,7 @@ struct BalancePeriodSelectorView: View {
                 .transition(arrowTransition)
             }
 
-            AppText(AppString.balance, style: .caption, color: AppColor.textSecondary)
-
-            periodMenu
+            periodTitle
 
             if filter.isNavigable {
                 arrowButton(
@@ -55,6 +53,11 @@ struct BalancePeriodSelectorView: View {
 
 private extension BalancePeriodSelectorView {
 
+    /// У «Все время» нет конкретного периода — подписываем просто «Баланс»
+    var titleText: String {
+        filter.isNavigable ? filter.title : AppString.balance
+    }
+
     var arrowTransition: AnyTransition {
         .opacity.combined(with: .scale(scale: Constants.arrowEnterScale))
     }
@@ -64,37 +67,11 @@ private extension BalancePeriodSelectorView {
 
 private extension BalancePeriodSelectorView {
 
-    var periodMenu: some View {
-        Menu {
-            ForEach(PeriodFilter.availablePeriods) { period in
-                Button {
-                    UIImpactFeedbackGenerator(style: .light).impactOccurred()
-                    onSelect(period)
-                } label: {
-                    Label {
-                        Text(period.displayName)
-                    } icon: {
-                        if filter.period == period {
-                            AppImage.checkmark
-                        }
-                    }
-                }
-            }
-        } label: {
-            HStack(spacing: AppSpacing.xSmall) {
-                AppText(filter.title, style: .captionMedium)
-
-                AppImage.chevronDown
-                    .font(.system(size: AppSize.glyphTiny, weight: .semibold))
-                    .foregroundStyle(AppColor.textSecondary)
-            }
-            .padding(.horizontal, AppSpacing.small)
-            .padding(.vertical, AppSpacing.xSmall)
-            .background {
-                Capsule().fill(AppColor.fieldFill)
-            }
-        }
-        .buttonStyle(PressableScaleButtonStyle())
+    var periodTitle: some View {
+        AppText(titleText, style: .captionMedium, color: AppColor.textSecondary)
+            .contentTransition(.numericText())
+            .animation(.snappy(duration: Constants.arrowsDuration), value: titleText)
+            .lineLimit(1)
     }
 
     func arrowButton(
@@ -133,7 +110,6 @@ private extension BalancePeriodSelectorView {
 #Preview {
     BalancePeriodSelectorView(
         filter: PeriodFilter(),
-        onSelect: { _ in },
         onPrevious: {},
         onNext: {}
     )

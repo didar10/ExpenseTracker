@@ -78,6 +78,11 @@ private extension DashboardView {
             )
 
             Spacer()
+
+            PeriodMenuButton(
+                selectedPeriod: viewModel.periodFilter.period,
+                onSelect: viewModel.changePeriod
+            )
         }
         .padding(.horizontal, AppSpacing.large)
         .padding(.vertical, AppSpacing.small)
@@ -110,7 +115,6 @@ private extension DashboardView {
                 BalanceCardView(
                     balanceData: snapshot.periodBalance,
                     periodFilter: viewModel.periodFilter,
-                    onSelectPeriod: viewModel.changePeriod,
                     onPreviousPeriod: viewModel.goToPreviousPeriod,
                     onNextPeriod: viewModel.goToNextPeriod
                 )

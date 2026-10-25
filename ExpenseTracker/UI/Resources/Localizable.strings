@@ -21,6 +21,7 @@
 
 /* Accounts */
 "select_account" = "Выбор счета";
+"select_period" = "Выбор периода";
 "all_accounts" = "Все счета";
 "all_accounts_hint" = "Показать транзакции по всем счетам";
 "no_accounts" = "Нет счетов";

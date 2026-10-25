@@ -45,6 +45,7 @@ enum AppString {
     // MARK: - Accounts
 
     static let selectAccount = String(localized: "select_account")
+    static let selectPeriod = String(localized: "select_period")
     static let allAccounts = String(localized: "all_accounts")
     static let allAccountsHint = String(localized: "all_accounts_hint")
     static let noAccounts = String(localized: "no_accounts")

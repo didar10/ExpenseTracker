@@ -13,7 +13,6 @@ struct BalanceCardView: View {
 
     let balanceData: BalanceData
     let periodFilter: PeriodFilter
-    let onSelectPeriod: (StatisticsPeriod) -> Void
     let onPreviousPeriod: () -> Void
     let onNextPeriod: () -> Void
 
@@ -34,7 +33,6 @@ struct BalanceCardView: View {
         VStack(spacing: AppSpacing.medium) {
             BalancePeriodSelectorView(
                 filter: periodFilter,
-                onSelect: onSelectPeriod,
                 onPrevious: onPreviousPeriod,
                 onNext: onNextPeriod
             )
@@ -89,7 +87,6 @@ private extension BalanceCardView {
     BalanceCardView(
         balanceData: BalanceData(transactions: []),
         periodFilter: PeriodFilter(),
-        onSelectPeriod: { _ in },
         onPreviousPeriod: {},
         onNextPeriod: {}
     )
