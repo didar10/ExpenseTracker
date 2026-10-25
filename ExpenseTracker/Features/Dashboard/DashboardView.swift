@@ -18,6 +18,9 @@ struct DashboardView: View {
     @Query(sort: \Account.createdAt, order: .forward)
     private var accounts: [Account]
 
+    @Environment(\.modelContext) private var context
+    @Environment(\.scenePhase) private var scenePhase
+
     @StateObject private var viewModel: DashboardViewModel
 
     @State private var isContentScrolled = false
@@ -26,12 +29,17 @@ struct DashboardView: View {
 
     // MARK: - Init
 
-    init(accountSelection: AccountSelectionStore, periodStore: DashboardPeriodStore) {
+    init(
+        accountSelection: AccountSelectionStore,
+        periodStore: DashboardPeriodStore,
+        limitStore: MonthlyLimitStore
+    ) {
         self.accountSelection = accountSelection
         _viewModel = StateObject(
             wrappedValue: DashboardViewModel(
                 accountSelection: accountSelection,
-                periodStore: periodStore
+                periodStore: periodStore,
+                limitStore: limitStore
             )
         )
     }
@@ -49,6 +57,7 @@ struct DashboardView: View {
                 content(for: snapshot)
             }
             .background(AppColor.background)
+            .overlay(alignment: .bottom) { undoToast }
             .navigationBarHidden(true)
             .onAppear {
                 viewModel.syncSelectedAccount(with: accounts)
@@ -61,6 +70,21 @@ struct DashboardView: View {
             }
             .sheet(isPresented: $viewModel.showingAccountsView) {
                 accountSelectionSheet
+            }
+            .sheet(isPresented: $viewModel.showingMonthlyLimit) {
+                MonthlyLimitView(limitStore: viewModel.limitStore)
+            }
+            .onReceive(
+                NotificationCenter.default
+                    .publisher(for: .NSCalendarDayChanged)
+                    .receive(on: RunLoop.main)
+            ) { _ in
+                viewModel.refreshToday()
+            }
+            .onChange(of: scenePhase) { _, phase in
+                if phase == .active {
+                    viewModel.refreshToday()
+                }
             }
         }
     }
@@ -119,17 +143,42 @@ private extension DashboardView {
                     onNextPeriod: viewModel.goToNextPeriod
                 )
 
+                if viewModel.showsDailyAllowance {
+                    DailyAllowanceCardView(
+                        allowance: snapshot.dailyAllowance,
+                        onTap: viewModel.showMonthlyLimit
+                    )
+                    .padding(.horizontal, AppSpacing.large)
+                    .padding(.bottom, AppSpacing.large)
+                    .transition(.opacity)
+                }
+
                 TransactionsListView(
                     sections: snapshot.sections,
                     emptyStateHint: viewModel.emptyStateHint,
                     isFilteredByPeriod: viewModel.isFilteredByPeriod,
                     onTransactionTap: viewModel.handleTransactionTap,
-                    onResetPeriod: viewModel.resetPeriod
+                    onResetPeriod: viewModel.resetPeriod,
+                    onRepeat: { viewModel.repeatTransaction($0, in: context) },
+                    onDelete: { viewModel.deleteTransaction($0, in: context) }
                 )
             }
             .padding(.bottom, AppSpacing.tabBarBottomInset)
         }
         .scrollDismissesKeyboard(.immediately)
+    }
+
+    @ViewBuilder
+    var undoToast: some View {
+        if let undoAction = viewModel.undoAction {
+            UndoToastView(message: undoAction.message) {
+                viewModel.undoLastAction(in: context)
+            }
+            .id(undoAction.id)
+            .padding(.horizontal, AppSpacing.large)
+            .padding(.bottom, AppSpacing.tabBarBottomInset)
+            .transition(.move(edge: .bottom).combined(with: .opacity))
+        }
     }
 
     var accountSelectionSheet: some View {

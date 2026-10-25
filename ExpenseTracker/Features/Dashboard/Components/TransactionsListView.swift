@@ -18,6 +18,8 @@ struct TransactionsListView: View {
     var isFilteredByPeriod = false
     let onTransactionTap: (Transaction) -> Void
     var onResetPeriod: () -> Void = {}
+    var onRepeat: (Transaction) -> Void = { _ in }
+    var onDelete: (Transaction) -> Void = { _ in }
 
     // MARK: - Body
 
@@ -32,9 +34,12 @@ struct TransactionsListView: View {
                 ForEach(sections) { section in
                     Section {
                         ForEach(section.transactions) { transaction in
-                            TransactionRowView(transaction: transaction) {
-                                onTransactionTap(transaction)
-                            }
+                            TransactionRowView(
+                                transaction: transaction,
+                                onTap: { onTransactionTap(transaction) },
+                                onRepeat: { onRepeat(transaction) },
+                                onDelete: { onDelete(transaction) }
+                            )
                         }
                     } header: {
                         SectionHeaderView(date: section.date)

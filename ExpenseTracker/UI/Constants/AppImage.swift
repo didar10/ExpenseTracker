@@ -33,6 +33,9 @@ enum AppImage {
     static let incomeArrow = Image(systemName: "arrow.down.circle.fill")
     static let expenseArrow = Image(systemName: "arrow.up.circle.fill")
     static let noIcon = Image(systemName: "minus")
+    static let repeatAction = Image(systemName: "arrow.clockwise")
+    static let undo = Image(systemName: "arrow.uturn.backward")
+    static let dailyLimit = Image(systemName: "gauge.with.needle")
 
     // MARK: - Transactions
 

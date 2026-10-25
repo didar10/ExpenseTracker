@@ -39,7 +39,7 @@ private extension SettingsRowView {
 
     var label: some View {
         HStack(spacing: AppSpacing.large) {
-            iconBadge
+            SettingsIconBadge(icon: icon, color: iconColor)
 
             AppText(title, style: .bodySmaller, color: titleColor)
                 .lineLimit(2)
@@ -57,16 +57,25 @@ private extension SettingsRowView {
         .frame(minHeight: AppSize.iconXLarge)
         .contentShape(Rectangle())
     }
+}
 
-    var iconBadge: some View {
+// MARK: - Icon Badge
+
+/// Цветная иконка в круге — общая для всех видов строк настроек
+struct SettingsIconBadge: View {
+
+    let icon: Image
+    let color: Color
+
+    var body: some View {
         ZStack {
             Circle()
-                .fill(iconColor.opacity(0.15))
+                .fill(color.opacity(0.15))
                 .frame(width: AppSize.iconMedium, height: AppSize.iconMedium)
 
             icon
                 .font(.system(size: AppSize.glyphLarge, weight: .semibold))
-                .foregroundStyle(iconColor)
+                .foregroundStyle(color)
         }
         .circleShadow()
         .accessibilityHidden(true)

@@ -18,6 +18,8 @@ struct DashboardSnapshot {
     /// Баланс счетов за все время — маленькая подпись в шапке
     let totalBalance: Decimal
     let sections: [TransactionSection]
+    /// «Можно потратить сегодня»: nil, если лимит на месяц не задан
+    let dailyAllowance: DailyAllowance?
 
     // MARK: - Computed Properties
 
@@ -30,6 +32,7 @@ struct DashboardSnapshot {
     static let empty = DashboardSnapshot(
         periodBalance: BalanceData(transactions: []),
         totalBalance: 0,
-        sections: []
+        sections: [],
+        dailyAllowance: nil
     )
 }

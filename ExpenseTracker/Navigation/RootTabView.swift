@@ -18,6 +18,7 @@ struct RootTabView: View {
     // выбранный счет общий для экранов, ViewModel статистики живет дольше своей View
     @State private var accountSelection: AccountSelectionStore
     @State private var dashboardPeriodStore = DashboardPeriodStore()
+    @State private var monthlyLimitStore = MonthlyLimitStore()
     @State private var statisticsViewModel: StatisticsViewModel
 
     init() {
@@ -37,7 +38,8 @@ struct RootTabView: View {
                 case .dashboard:
                     DashboardView(
                         accountSelection: accountSelection,
-                        periodStore: dashboardPeriodStore
+                        periodStore: dashboardPeriodStore,
+                        limitStore: monthlyLimitStore
                     )
                         .environment(\.tabBarVisibility, $isTabBarVisible)
                 case .statistics:
@@ -47,7 +49,7 @@ struct RootTabView: View {
                     PlansView()
                         .environment(\.tabBarVisibility, $isTabBarVisible)
                 case .settings:
-                    SettingsView(onDataReset: handleDataReset)
+                    SettingsView(limitStore: monthlyLimitStore, onDataReset: handleDataReset)
                         .environment(\.tabBarVisibility, $isTabBarVisible)
                 }
             }
@@ -81,6 +83,7 @@ struct RootTabView: View {
     /// и сбрасываем состояние экранов, живущих дольше своей View
     private func handleDataReset() {
         statisticsViewModel.resetAfterDataReset()
+        monthlyLimitStore.reset()
 
         withAnimation(.spring(response: 0.3, dampingFraction: 0.7)) {
             selectedTab = .dashboard

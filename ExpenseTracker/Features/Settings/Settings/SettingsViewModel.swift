@@ -17,7 +17,21 @@ final class SettingsViewModel {
 
     var showingDeleteAllDataAlert = false
 
+    @ObservationIgnored
+    private let limitStore: MonthlyLimitStore
+
+    // MARK: - Init
+
+    init(limitStore: MonthlyLimitStore) {
+        self.limitStore = limitStore
+    }
+
     // MARK: - Computed Properties
+
+    var isLimitShownOnDashboard: Bool {
+        get { limitStore.isShownOnDashboard }
+        set { limitStore.setShownOnDashboard(newValue) }
+    }
 
     /// Версия берется из бандла: строка в ресурсах устаревала бы при каждом релизе
     var appVersionTitle: String {

@@ -31,6 +31,9 @@ struct DashboardViewModelTests {
             accountSelection: accountSelection,
             periodStore: DashboardPeriodStore(
                 defaults: UserDefaults(suiteName: "DashboardViewModelTests.\(UUID().uuidString)")!
+            ),
+            limitStore: MonthlyLimitStore(
+                defaults: UserDefaults(suiteName: "DashboardViewModelTests.limit.\(UUID().uuidString)")!
             )
         )
     }
@@ -154,5 +157,66 @@ struct DashboardViewModelTests {
 
         #expect(viewModel.periodFilter.period == .allTime)
         #expect(viewModel.periodFilter.offset == 0)
+    }
+
+    // MARK: - Удаление и повтор с отменой
+
+    private func fetchTransactions(_ context: ModelContext) throws -> [Transaction] {
+        try context.fetch(FetchDescriptor<Transaction>())
+    }
+
+    @Test func deleteRemovesTransactionAndOffersUndo() throws {
+        let context = try makeContext()
+        let account = Account(name: "Основной", initialBalance: 0)
+        context.insert(account)
+        let transaction = Transaction(amount: 500, date: date(daysAgo: 3), note: "Кофе", type: .expense, account: account)
+        context.insert(transaction)
+
+        let viewModel = makeViewModel()
+        viewModel.deleteTransaction(transaction, in: context)
+
+        #expect(try fetchTransactions(context).isEmpty)
+        #expect(viewModel.undoAction != nil)
+    }
+
+    @Test func undoDeleteRestoresTransactionFields() throws {
+        let context = try makeContext()
+        let account = Account(name: "Основной", initialBalance: 0)
+        context.insert(account)
+        let originalDate = date(daysAgo: 3)
+        let transaction = Transaction(amount: 500, date: originalDate, note: "Кофе", type: .expense, account: account)
+        context.insert(transaction)
+
+        let viewModel = makeViewModel()
+        viewModel.deleteTransaction(transaction, in: context)
+        viewModel.undoLastAction(in: context)
+
+        let restored = try #require(try fetchTransactions(context).first)
+        #expect(restored.amount == 500)
+        #expect(restored.date == originalDate)
+        #expect(restored.note == "Кофе")
+        #expect(restored.account === account)
+        #expect(viewModel.undoAction == nil)
+    }
+
+    @Test func repeatCreatesTodayCopyAndUndoRemovesIt() throws {
+        let context = try makeContext()
+        let account = Account(name: "Основной", initialBalance: 0)
+        context.insert(account)
+        let transaction = Transaction(amount: 300, date: date(daysAgo: 5), type: .expense, account: account)
+        context.insert(transaction)
+
+        let viewModel = makeViewModel()
+        viewModel.repeatTransaction(transaction, in: context)
+
+        let afterRepeat = try fetchTransactions(context)
+        #expect(afterRepeat.count == 2)
+        #expect(afterRepeat.contains { Calendar.current.isDateInToday($0.date) && $0.amount == 300 })
+
+        viewModel.undoLastAction(in: context)
+
+        let afterUndo = try fetchTransactions(context)
+        #expect(afterUndo.count == 1)
+        #expect(afterUndo.first === transaction)
     }
 }

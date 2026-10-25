@@ -17,16 +17,18 @@ struct SettingsView: View {
     /// Вызывается после удаления всех данных — нужен для возврата на главный экран
     private let onDataReset: () -> Void
 
-    @State private var viewModel = SettingsViewModel()
+    @State private var viewModel: SettingsViewModel
     @State private var coordinator: SettingsCoordinator
 
     // MARK: - Init
 
     @MainActor
     init(
+        limitStore: MonthlyLimitStore,
         coordinator: SettingsCoordinator? = nil,
         onDataReset: @escaping () -> Void = {}
     ) {
+        _viewModel = State(initialValue: SettingsViewModel(limitStore: limitStore))
         _coordinator = State(initialValue: coordinator ?? SettingsCoordinator())
         self.onDataReset = onDataReset
     }
@@ -79,6 +81,15 @@ private extension SettingsView {
             ) {
                 coordinator.show(.categories)
             }
+
+            SettingsRowDivider()
+
+            SettingsToggleRowView(
+                icon: AppImage.dailyLimit,
+                iconColor: AppColor.income,
+                title: AppString.showLimitOnDashboard,
+                isOn: $viewModel.isLimitShownOnDashboard
+            )
         }
     }
 
@@ -154,6 +165,6 @@ private extension SettingsView {
 }
 
 #Preview {
-    SettingsView()
+    SettingsView(limitStore: MonthlyLimitStore())
         .modelContainer(for: [Account.self, Category.self, Transaction.self, BudgetPlan.self], inMemory: true)
 }

@@ -37,6 +37,43 @@ enum AppString {
     static let noTransactionsHint = String(localized: "no_transactions_hint")
     static let noTransactionsInPeriod = String(localized: "no_transactions_in_period")
     static let deleteTransaction = String(localized: "delete_transaction")
+    static let repeatTransaction = String(localized: "repeat_transaction")
+    static let transactionDeleted = String(localized: "transaction_deleted")
+    static let transactionRepeated = String(localized: "transaction_repeated")
+    static let undo = String(localized: "undo")
+
+    // MARK: - Monthly Limit
+
+    static let canSpendToday = String(localized: "can_spend_today")
+    static let overspentToday = String(localized: "overspent_today")
+    static let monthlyLimitExceeded = String(localized: "monthly_limit_exceeded")
+    static let monthlyLimitTitle = String(localized: "monthly_limit_title")
+    static let monthlyLimitDescription = String(localized: "monthly_limit_description")
+    static let monthlyLimitPromptTitle = String(localized: "monthly_limit_prompt_title")
+    static let monthlyLimitPromptHint = String(localized: "monthly_limit_prompt_hint")
+    static let removeMonthlyLimit = String(localized: "remove_monthly_limit")
+    static let amountPlaceholder = String(localized: "amount_placeholder")
+    static let showLimitOnDashboard = String(localized: "show_limit_on_dashboard")
+    private static let ofAmount = String(localized: "of_amount")
+    private static let monthRemainingFooter = String(localized: "month_remaining_footer")
+    private static let monthlyLimitFooter = String(localized: "monthly_limit_footer")
+    private static let monthlyLimitPerDayHint = String(localized: "monthly_limit_per_day_hint")
+
+    static func ofAmount(_ amount: String) -> String {
+        String(format: ofAmount, amount)
+    }
+
+    static func monthRemainingFooter(_ amount: String, _ days: Int) -> String {
+        String(format: monthRemainingFooter, amount, days)
+    }
+
+    static func monthlyLimitFooter(_ amount: String) -> String {
+        String(format: monthlyLimitFooter, amount)
+    }
+
+    static func monthlyLimitPerDayHint(_ amount: String) -> String {
+        String(format: monthlyLimitPerDayHint, amount)
+    }
 
     static func noTransactionsInPeriod(_ period: String) -> String {
         String(format: noTransactionsInPeriod, period)

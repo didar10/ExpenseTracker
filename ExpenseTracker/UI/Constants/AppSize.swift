@@ -57,6 +57,8 @@ enum AppSize {
     static let keypadDigit: CGFloat = 28
     /// Иконка операции в строке списка
     static let glyphRow: CGFloat = 18
+    /// Высота полоски прогресса в карточке
+    static let progressBar: CGFloat = 6
 
     // MARK: - Onboarding
 

@@ -18,6 +18,24 @@
 "no_transactions_hint" = "Нажмите + чтобы добавить первую транзакцию";
 "no_transactions_in_period" = "За период «%@» операций не было";
 "delete_transaction" = "Удалить транзакцию?";
+"repeat_transaction" = "Повторить";
+"transaction_deleted" = "Операция удалена";
+"transaction_repeated" = "Операция повторена сегодня";
+"undo" = "Отменить";
+"can_spend_today" = "Можно потратить сегодня";
+"overspent_today" = "Перерасход за сегодня";
+"monthly_limit_exceeded" = "Лимит на месяц превышен на";
+"monthly_limit_title" = "Лимит на месяц";
+"monthly_limit_description" = "Сколько вы готовы потратить за месяц. Каждый день покажем, сколько можно потратить сегодня — сэкономленное переходит на следующие дни.";
+"monthly_limit_prompt_title" = "Сколько можно тратить в день?";
+"monthly_limit_prompt_hint" = "Задайте лимит на месяц — посчитаем сумму на каждый день";
+"remove_monthly_limit" = "Убрать лимит";
+"amount_placeholder" = "0";
+"show_limit_on_dashboard" = "Лимит на главном экране";
+"of_amount" = "из %@";
+"month_remaining_footer" = "До конца месяца %@ · дней осталось: %d";
+"monthly_limit_footer" = "Лимит на месяц: %@";
+"monthly_limit_per_day_hint" = "Примерно %@ в день";
 
 /* Accounts */
 "select_account" = "Выбор счета";
