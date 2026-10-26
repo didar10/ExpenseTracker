@@ -37,6 +37,7 @@ struct DailyAllowanceCardView: View {
         }
         .buttonStyle(HighlightRowButtonStyle())
         .accessibilityHint(AppString.monthlyLimitTitle)
+        .accessibilityIdentifier(AccessibilityID.dailyAllowanceCard)
     }
 }
 

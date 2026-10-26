@@ -16,8 +16,6 @@ struct MonthlyLimitView: View {
 
     @StateObject private var viewModel: MonthlyLimitViewModel
 
-    @FocusState private var isAmountFocused: Bool
-
     // MARK: - Init
 
     init(limitStore: MonthlyLimitStore) {
@@ -50,8 +48,10 @@ struct MonthlyLimitView: View {
             .animation(.snappy(duration: Constants.hintDuration), value: viewModel.perDayHint)
         }
         .background(AppColor.background)
-        .onAppear { isAmountFocused = true }
         .presentationDetents([.medium])
+        // В iOS 26 окно на полэкрана по умолчанию полупрозрачное: заливка кнопки
+        // просвечивала и активная кнопка выглядела неактивной
+        .presentationBackground(AppColor.background)
         .presentationDragIndicator(.visible)
     }
 }
@@ -62,11 +62,14 @@ private extension MonthlyLimitView {
 
     var amountField: some View {
         HStack {
-            TextField(AppString.amountPlaceholder, text: $viewModel.amountText)
-                .font(.app(.title))
-                .fontDesign(.rounded)
-                .keyboardType(.decimalPad)
-                .focused($isAmountFocused)
+            FormattedAmountField(
+                amount: viewModel.amount,
+                placeholder: AppString.amountPlaceholder,
+                accessibilityIdentifier: AccessibilityID.monthlyLimitAmountField,
+                isInitiallyFocused: true,
+                onChange: viewModel.updateAmount
+            )
+            .fixedSize(horizontal: false, vertical: true)
 
             AppText(AppString.currencySymbol, style: .title, color: AppColor.textSecondary)
         }

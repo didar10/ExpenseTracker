@@ -24,46 +24,49 @@ enum AppFont {
     case microCaptionStrong
 
     var font: Font {
+        .custom(fontName, size: size)
+    }
+
+    /// Тот же шрифт для UIKit — для полей, которых нет в SwiftUI.
+    /// Масштабируется с Dynamic Type, как и `font`
+    var uiFont: UIFont {
+        let base = UIFont(name: fontName, size: size) ?? .systemFont(ofSize: size)
+        return UIFontMetrics.default.scaledFont(for: base)
+    }
+
+    private var fontName: String {
         switch self {
+        case .largeTitle: return "Montserrat-SemiBold"
+        case .onboardingTitle: return "Montserrat-SemiBold"
+        case .balance: return "Montserrat-Bold"
+        case .title: return "Montserrat-SemiBold"
+        case .section: return "Montserrat-SemiBold"
+        case .sectionHeader: return "Montserrat-SemiBold"
+        case .body: return "Montserrat-Regular"
+        case .bodySmaller: return "Montserrat-Medium"
+        case .bodySmall: return "Montserrat-SemiBold"
+        case .caption: return "Montserrat-Regular"
+        case .captionMedium: return "Montserrat-SemiBold"
+        case .microCaption: return "Montserrat-Medium"
+        case .microCaptionStrong: return "Montserrat-SemiBold"
+        }
+    }
 
-        case .largeTitle:
-            return .custom("Montserrat-SemiBold", size: 38)
-            
-        case .onboardingTitle:
-            return .custom("Montserrat-SemiBold", size: 28)
-
-        case .balance:
-            return .custom("Montserrat-Bold", size: 40)
-
-        case .title:
-            return .custom("Montserrat-SemiBold", size: 20)
-
-        case .section:
-            return .custom("Montserrat-SemiBold", size: 18)
-            
-        case .sectionHeader:
-            return .custom("Montserrat-SemiBold", size: 14)
-
-        case .body:
-            return .custom("Montserrat-Regular", size: 16)
-        
-        case .bodySmaller:
-            return .custom("Montserrat-Medium", size: 15)
-            
-        case .bodySmall:
-            return .custom("Montserrat-SemiBold", size: 15)
-
-        case .caption:
-            return .custom("Montserrat-Regular", size: 13)
-
-        case .captionMedium:
-            return .custom("Montserrat-SemiBold", size: 13)
-            
-        case .microCaption:
-            return .custom("Montserrat-Medium", size: 10)
-
-        case .microCaptionStrong:
-            return .custom("Montserrat-SemiBold", size: 10)
+    private var size: CGFloat {
+        switch self {
+        case .largeTitle: return 38
+        case .onboardingTitle: return 28
+        case .balance: return 40
+        case .title: return 20
+        case .section: return 18
+        case .sectionHeader: return 14
+        case .body: return 16
+        case .bodySmaller: return 15
+        case .bodySmall: return 15
+        case .caption: return 13
+        case .captionMedium: return 13
+        case .microCaption: return 10
+        case .microCaptionStrong: return 10
         }
     }
 }

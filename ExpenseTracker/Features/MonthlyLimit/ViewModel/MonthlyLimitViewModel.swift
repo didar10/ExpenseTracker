@@ -12,7 +12,8 @@ final class MonthlyLimitViewModel: ObservableObject {
 
     // MARK: - UI State
 
-    @Published var amountText: String
+    /// Сумма форматируется так же, как сумма операции: 500000 → 500 000
+    @Published private(set) var amount: AmountInput
 
     // MARK: - Properties
 
@@ -22,7 +23,7 @@ final class MonthlyLimitViewModel: ObservableObject {
 
     init(limitStore: MonthlyLimitStore) {
         self.limitStore = limitStore
-        self.amountText = limitStore.limit.map { "\($0)" } ?? ""
+        self.amount = AmountInput(limitStore.limit)
     }
 
     // MARK: - Computed Properties
@@ -32,16 +33,8 @@ final class MonthlyLimitViewModel: ObservableObject {
         limitStore.limit != nil
     }
 
-    var parsedAmount: Decimal? {
-        let cleaned = amountText
-            .replacingOccurrences(of: ",", with: ".")
-            .replacingOccurrences(of: " ", with: "")
-        guard let value = Decimal(string: cleaned), value > 0 else { return nil }
-        return value
-    }
-
     var canSave: Bool {
-        parsedAmount != nil
+        amount.isPositive
     }
 
     var saveButtonTitle: String {
@@ -50,11 +43,11 @@ final class MonthlyLimitViewModel: ObservableObject {
 
     /// Сколько выйдет в день при равномерных тратах — подсказка под полем
     var perDayHint: String? {
-        guard let parsedAmount else { return nil }
+        guard canSave, let value = amount.value else { return nil }
 
         let calendar = Calendar.current
         let daysInMonth = calendar.range(of: .day, in: .month, for: .now)?.count ?? 30
-        let perDay = (parsedAmount / Decimal(daysInMonth))
+        let perDay = (value / Decimal(daysInMonth))
             .formatted(.currency(code: AppString.currencyCode).precision(.fractionLength(0)))
 
         return AppString.monthlyLimitPerDayHint(perDay)
@@ -62,9 +55,13 @@ final class MonthlyLimitViewModel: ObservableObject {
 
     // MARK: - Actions
 
+    func updateAmount(_ newAmount: AmountInput) {
+        amount = newAmount
+    }
+
     func save() {
-        guard let parsedAmount else { return }
-        limitStore.setLimit(parsedAmount)
+        guard canSave, let value = amount.value else { return }
+        limitStore.setLimit(value)
     }
 
     func removeLimit() {
