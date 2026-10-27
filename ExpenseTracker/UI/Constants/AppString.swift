@@ -159,7 +159,6 @@ enum AppString {
     static let name = String(localized: "name")
     static let edit = String(localized: "edit")
     static let addNew = String(localized: "add_new")
-    static let preview = String(localized: "preview")
     static let categoryNameExample = String(localized: "category_name_example")
 
     // MARK: - Plans
@@ -182,6 +181,7 @@ enum AppString {
     static let allCategoriesUsedHint = String(localized: "all_categories_used_hint")
     static let selectCategory = String(localized: "select_category")
     static let searchCategory = String(localized: "search_category")
+    static let chooseCategory = String(localized: "choose_category")
     static let budgetsLimitPromptTitle = String(localized: "budgets_limit_prompt_title")
     static let budgetsLimitPromptHint = String(localized: "budgets_limit_prompt_hint")
     private static let monthlyLimitRemainingPerDay = String(localized: "monthly_limit_remaining_per_day")
@@ -199,7 +199,6 @@ enum AppString {
     static func budgetsOverAllocated(_ amount: String) -> String {
         String(format: budgetsOverAllocated, amount)
     }
-    static let chooseCategory = String(localized: "choose_category")
 
     // MARK: - Statistics
 

@@ -32,11 +32,10 @@ enum AppImage {
     static let noteBubble = Image(systemName: "text.bubble")
     static let incomeArrow = Image(systemName: "arrow.down.circle.fill")
     static let expenseArrow = Image(systemName: "arrow.up.circle.fill")
-    static let noIcon = Image(systemName: "minus")
     static let repeatAction = Image(systemName: "arrow.clockwise")
     static let undo = Image(systemName: "arrow.uturn.backward")
-    static let warningTriangle = Image(systemName: "exclamationmark.triangle.fill")
     static let dailyLimit = Image(systemName: "gauge.with.needle")
+    static let warningTriangle = Image(systemName: "exclamationmark.triangle.fill")
     static let dataUnavailable = Image(systemName: "externaldrive.badge.exclamationmark")
 
     // MARK: - Transactions

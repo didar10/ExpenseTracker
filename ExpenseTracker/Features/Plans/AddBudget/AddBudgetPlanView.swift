@@ -49,7 +49,6 @@ struct AddBudgetPlanView: View {
 
                 ScrollView {
                     VStack(spacing: AppSpacing.xLarge) {
-                        previewCard
                         categorySection
                         amountSection
                         periodSection
@@ -94,63 +93,6 @@ private extension AddBudgetPlanView {
         .padding(.horizontal, AppSpacing.large)
         .padding(.vertical, AppSpacing.small)
         .padding(.top, AppSpacing.medium)
-    }
-
-    var previewCard: some View {
-        VStack(spacing: AppSpacing.large) {
-            AppText(
-                AppString.preview.uppercased(),
-                style: .microCaption,
-                color: AppColor.textSecondary
-            )
-            .tracking(AppSpacing.hairline)
-
-            HStack(spacing: AppSpacing.medium) {
-                if let category = selectedCategory {
-                    ZStack {
-                        RoundedRectangle(cornerRadius: AppRadius.medium, style: .continuous)
-                            .fill(Color(hex: category.colorHex).opacity(0.2))
-                            .frame(width: AppSize.iconLarge, height: AppSize.iconLarge)
-
-                        Image(systemName: category.icon)
-                            .font(.system(size: AppSize.glyphLarge, weight: .semibold))
-                            .foregroundStyle(AppColor.textPrimary)
-                    }
-
-                    AppText(category.name, style: .bodySmall)
-                } else {
-                    ZStack {
-                        RoundedRectangle(cornerRadius: AppRadius.medium, style: .continuous)
-                            .fill(Color(.systemGray4).opacity(0.2))
-                            .frame(width: AppSize.iconLarge, height: AppSize.iconLarge)
-
-                        AppImage.noIcon
-                            .font(.system(size: AppSize.glyphLarge, weight: .semibold))
-                            .foregroundStyle(AppColor.textSecondary)
-                    }
-
-                    AppText(AppString.noCategory, style: .bodySmall, color: AppColor.textSecondary)
-                }
-
-                Spacer()
-
-                if !amount.isEmpty, let value = Decimal(string: amount.replacingOccurrences(of: ",", with: ".")), value > 0 {
-                    Text(value.formatted(.currency(code: AppString.currencyCode)))
-                        .font(.app(.caption))
-                        .fontDesign(.rounded)
-                        .foregroundStyle(AppColor.textSecondary)
-                }
-            }
-            .padding(AppSpacing.large)
-            .background(
-                RoundedRectangle(cornerRadius: AppRadius.card, style: .continuous)
-                    .fill(AppColor.subtleFill)
-            )
-        }
-        .frame(maxWidth: .infinity)
-        .padding(.vertical, AppSpacing.xLarge)
-        .padding(.horizontal, AppSpacing.large)
-        .card(cornerRadius: AppRadius.xLarge)
     }
 
     var categorySection: some View {
