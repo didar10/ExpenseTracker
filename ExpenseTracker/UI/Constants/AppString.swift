@@ -182,6 +182,23 @@ enum AppString {
     static let allCategoriesUsedHint = String(localized: "all_categories_used_hint")
     static let selectCategory = String(localized: "select_category")
     static let searchCategory = String(localized: "search_category")
+    static let budgetsLimitPromptTitle = String(localized: "budgets_limit_prompt_title")
+    static let budgetsLimitPromptHint = String(localized: "budgets_limit_prompt_hint")
+    private static let monthlyLimitRemainingPerDay = String(localized: "monthly_limit_remaining_per_day")
+    private static let budgetsAllocated = String(localized: "budgets_allocated")
+    private static let budgetsOverAllocated = String(localized: "budgets_over_allocated")
+
+    static func monthlyLimitRemainingPerDay(_ remaining: String, _ perDay: String) -> String {
+        String(format: monthlyLimitRemainingPerDay, remaining, perDay)
+    }
+
+    static func budgetsAllocated(_ amount: String) -> String {
+        String(format: budgetsAllocated, amount)
+    }
+
+    static func budgetsOverAllocated(_ amount: String) -> String {
+        String(format: budgetsOverAllocated, amount)
+    }
     static let chooseCategory = String(localized: "choose_category")
 
     // MARK: - Statistics

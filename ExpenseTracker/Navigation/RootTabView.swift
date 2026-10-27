@@ -46,7 +46,7 @@ struct RootTabView: View {
                     StatisticsView(viewModel: statisticsViewModel)
                         .environment(\.tabBarVisibility, $isTabBarVisible)
                 case .plans:
-                    PlansView()
+                    PlansView(limitStore: monthlyLimitStore)
                         .environment(\.tabBarVisibility, $isTabBarVisible)
                 case .settings:
                     SettingsView(limitStore: monthlyLimitStore, onDataReset: handleDataReset)

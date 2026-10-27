@@ -35,6 +35,7 @@ enum AppImage {
     static let noIcon = Image(systemName: "minus")
     static let repeatAction = Image(systemName: "arrow.clockwise")
     static let undo = Image(systemName: "arrow.uturn.backward")
+    static let warningTriangle = Image(systemName: "exclamationmark.triangle.fill")
     static let dailyLimit = Image(systemName: "gauge.with.needle")
     static let dataUnavailable = Image(systemName: "externaldrive.badge.exclamationmark")
 

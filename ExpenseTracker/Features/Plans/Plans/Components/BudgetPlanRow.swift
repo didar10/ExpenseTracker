@@ -15,15 +15,12 @@ struct BudgetPlanRow: View {
     /// Передается отдельно: у плана она необязательна, а строка без категории не показывается
     let category: Category
     let spent: Decimal
+    /// Темп трат: от него цвет полоски и отметка «сегодня»
+    let pace: BudgetPace
     let isEditing: Bool
     let onDelete: () -> Void
 
     // MARK: - Computed Properties
-
-    private var progress: Double {
-        guard plan.monthlyLimit > 0 else { return 0 }
-        return min(Double(truncating: spent as NSDecimalNumber) / Double(truncating: plan.monthlyLimit as NSDecimalNumber), 1.0)
-    }
 
     private var percentage: Int {
         guard plan.monthlyLimit > 0 else { return 0 }
@@ -35,11 +32,7 @@ struct BudgetPlanRow: View {
     }
 
     private var progressColor: Color {
-        switch progress {
-        case 0..<0.7: return AppColor.income
-        case 0.7..<0.9: return AppColor.warning
-        default: return AppColor.expense
-        }
+        pace.level.color
     }
 
     // MARK: - Body
@@ -51,7 +44,7 @@ struct BudgetPlanRow: View {
             VStack(spacing: AppSpacing.smaller) {
                 titleRow
 
-                progressBar
+                BudgetProgressBar(pace: pace, height: AppSpacing.xSmall)
 
                 amountsRow
             }
@@ -118,21 +111,6 @@ private extension BudgetPlanRow {
                 )
         }
         .buttonStyle(.plain)
-    }
-
-    var progressBar: some View {
-        GeometryReader { geometry in
-            ZStack(alignment: .leading) {
-                Capsule()
-                    .fill(AppColor.subtleFill)
-
-                Capsule()
-                    .fill(progressColor)
-                    .frame(width: max(geometry.size.width * progress, 0))
-                    .animation(.spring(response: 0.5, dampingFraction: 0.8), value: progress)
-            }
-        }
-        .frame(height: AppSpacing.xSmall)
     }
 
     @ViewBuilder

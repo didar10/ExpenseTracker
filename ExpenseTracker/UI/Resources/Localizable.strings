@@ -121,6 +121,11 @@
 "spent" = "Потрачено";
 "remaining" = "Осталось:";
 "out_of" = "из";
+"budgets_limit_prompt_title" = "Задайте лимит на месяц";
+"budgets_limit_prompt_hint" = "Общая сумма на все траты — бюджеты категорий покажут, как она распределена";
+"monthly_limit_remaining_per_day" = "Осталось %@ · примерно %@ в день";
+"budgets_allocated" = "По категориям распределено %@";
+"budgets_over_allocated" = "Бюджеты категорий больше лимита на %@";
 "exceeded" = "Превышено на";
 "category" = "Категория";
 "limit" = "Лимит";

@@ -11,4 +11,5 @@ import Foundation
 enum AccessibilityID {
     static let dailyAllowanceCard = "dashboard.dailyAllowanceCard"
     static let monthlyLimitAmountField = "monthlyLimit.amountField"
+    static let budgetsMonthlyLimitCard = "plans.monthlyLimitCard"
 }

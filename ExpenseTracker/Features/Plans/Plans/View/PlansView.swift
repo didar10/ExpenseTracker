@@ -24,7 +24,13 @@ struct PlansView: View {
     @Environment(\.modelContext) private var context
     @Environment(\.repositories) private var repositories
 
-    @State private var viewModel = PlansViewModel()
+    @State private var viewModel: PlansViewModel
+
+    // MARK: - Init
+
+    init(limitStore: MonthlyLimitStore) {
+        _viewModel = State(initialValue: PlansViewModel(limitStore: limitStore))
+    }
 
     // MARK: - Body
 
@@ -38,6 +44,11 @@ struct PlansView: View {
 
                 ScrollView {
                     VStack(spacing: AppSpacing.xLarge) {
+                        MonthlyLimitSummaryCardView(
+                            summary: viewModel.monthlyLimitSummary,
+                            onTap: viewModel.showMonthlyLimit
+                        )
+
                         if viewModel.hasPlans {
                             ForEach(viewModel.sections) { section in
                                 periodSection(section)
@@ -63,6 +74,9 @@ struct PlansView: View {
         .sheet(isPresented: $viewModel.showingAddPlan) {
             AddBudgetPlanView(categories: categories, existingPlans: viewModel.activePlans)
                 .environment(\.modelContext, context)
+        }
+        .sheet(isPresented: $viewModel.showingMonthlyLimit) {
+            MonthlyLimitView(limitStore: viewModel.limitStore)
         }
         .saveErrorAlert(isPresented: $viewModel.showingSaveError)
         .alert(AppString.deleteBudgetConfirm, isPresented: $viewModel.showDeleteAlert) {
@@ -131,6 +145,7 @@ private extension PlansView {
                             plan: plan,
                             category: category,
                             spent: viewModel.spentAmount(for: plan),
+                            pace: viewModel.pace(for: plan),
                             isEditing: viewModel.isEditing,
                             onDelete: {
                                 viewModel.prepareDelete(plan)
@@ -149,5 +164,5 @@ private extension PlansView {
 }
 
 #Preview {
-    PlansView()
+    PlansView(limitStore: MonthlyLimitStore(defaults: UserDefaults(suiteName: "preview") ?? .standard))
 }

@@ -59,6 +59,10 @@ enum AppSize {
     static let glyphRow: CGFloat = 18
     /// Высота полоски прогресса в карточке
     static let progressBar: CGFloat = 6
+    /// Отметка «сегодня» на полоске бюджета
+    static let progressMarkerWidth: CGFloat = 3
+    static let progressMarkerHeight: CGFloat = 12
+    static let progressMarkerBorder: CGFloat = 1
 
     // MARK: - Onboarding
 
