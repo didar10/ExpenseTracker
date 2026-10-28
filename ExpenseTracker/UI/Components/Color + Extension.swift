@@ -40,6 +40,13 @@ extension UIColor {
             : UIColor(white: 0, alpha: 0.7)
     }
 
+    /// Темный край нижней карточки в карточке «стопкой»: почти черный, как жесткая тень
+    static let appCardLedge = UIColor { traits in
+        traits.userInterfaceStyle == .dark
+            ? UIColor(white: 0, alpha: 0.6)
+            : UIColor(white: 0, alpha: 0.9)
+    }
+
     /// Мягкая тень под первичной кнопкой экрана
     static let appSoftShadow = UIColor { traits in
         traits.userInterfaceStyle == .dark
@@ -53,6 +60,7 @@ extension Color {
     static let appCardBackground = Color(uiColor: .appCardBackground)
     static let appCardBorder = Color(uiColor: .appCardBorder)
     static let appCardShadow = Color(uiColor: .appCardShadow)
+    static let appCardLedge = Color(uiColor: .appCardLedge)
     static let appSoftShadow = Color(uiColor: .appSoftShadow)
 }
 

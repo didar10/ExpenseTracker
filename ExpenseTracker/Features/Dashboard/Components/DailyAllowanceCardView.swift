@@ -33,7 +33,7 @@ struct DailyAllowanceCardView: View {
             }
             .padding(AppSpacing.large)
             .frame(maxWidth: .infinity, alignment: .leading)
-            .cardShadow(cornerRadius: AppRadius.card)
+            .layeredCard()
         }
         .buttonStyle(HighlightRowButtonStyle())
         .accessibilityHint(AppString.monthlyLimitTitle)

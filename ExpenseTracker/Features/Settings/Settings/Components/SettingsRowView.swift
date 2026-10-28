@@ -111,7 +111,7 @@ struct SettingsRowDivider: View {
             showsChevron: false
         ) {}
     }
-    .cardShadow(cornerRadius: AppRadius.card)
+    .layeredCard()
     .padding(AppSpacing.large)
     .background(AppColor.background)
 }

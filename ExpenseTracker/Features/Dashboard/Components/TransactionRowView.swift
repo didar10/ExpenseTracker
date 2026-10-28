@@ -152,7 +152,6 @@ private extension TransactionRowView {
                 .font(.system(size: AppSize.glyphRow, weight: .semibold))
                 .symbolRenderingMode(.hierarchical)
         }
-        .circleShadow()
     }
 }
 

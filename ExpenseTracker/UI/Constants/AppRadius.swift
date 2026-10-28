@@ -20,4 +20,6 @@ enum AppRadius {
     static let button: CGFloat = 14
     static let card: CGFloat = 16
     static let xLarge: CGFloat = 20
+    /// Скругление больше половины высоты — SwiftUI ограничивает его, и прямоугольник становится капсулой
+    static let capsule: CGFloat = 999
 }

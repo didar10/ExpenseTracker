@@ -29,7 +29,7 @@ struct SettingsSectionView<Content: View>: View {
                 content
             }
             .clipShape(RoundedRectangle(cornerRadius: AppRadius.card, style: .continuous))
-            .cardShadow(cornerRadius: AppRadius.card)
+            .layeredCard()
         }
         .accessibilityElement(children: .contain)
     }

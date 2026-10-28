@@ -136,7 +136,7 @@ private extension AddTransactionView {
             HStack {
                 Spacer()
 
-                TransactionTypePickerView(selectedType: $viewModel.type)
+                TransactionTypePickerView(selectedType: $viewModel.type, style: .layered)
                     .frame(width: AppSize.typePickerWidth, height: AppSize.typePickerHeight)
 
                 Spacer()

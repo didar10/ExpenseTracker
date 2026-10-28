@@ -28,7 +28,7 @@ struct SettingsToggleRowView: View {
                     .lineLimit(2)
             }
         }
-        .tint(AppColor.income)
+        .toggleStyle(.pill)
         .sensoryFeedback(.selection, trigger: isOn)
         .padding(.horizontal, AppSpacing.large)
         .padding(.vertical, AppSpacing.medium)
@@ -52,7 +52,7 @@ private extension SettingsToggleRowView {
         title: AppString.showLimitOnDashboard,
         isOn: .constant(true)
     )
-    .cardShadow(cornerRadius: AppRadius.card)
+    .layeredCard()
     .padding(AppSpacing.large)
     .background(AppColor.background)
 }

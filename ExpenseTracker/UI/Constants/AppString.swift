@@ -62,6 +62,8 @@ enum AppString {
     static let removeMonthlyLimit = String(localized: "remove_monthly_limit")
     static let amountPlaceholder = String(localized: "amount_placeholder")
     static let showLimitOnDashboard = String(localized: "show_limit_on_dashboard")
+    static let toggleOn = String(localized: "toggle_on")
+    static let toggleOff = String(localized: "toggle_off")
     private static let ofAmount = String(localized: "of_amount")
     private static let monthRemainingFooter = String(localized: "month_remaining_footer")
     private static let monthlyLimitFooter = String(localized: "monthly_limit_footer")

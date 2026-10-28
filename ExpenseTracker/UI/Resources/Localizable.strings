@@ -37,6 +37,8 @@
 "remove_monthly_limit" = "Убрать лимит";
 "amount_placeholder" = "0";
 "show_limit_on_dashboard" = "Лимит на главном экране";
+"toggle_on" = "Вкл";
+"toggle_off" = "Выкл";
 "of_amount" = "из %@";
 "month_remaining_footer" = "До конца месяца %@ · дней осталось: %d";
 "monthly_limit_footer" = "Лимит на месяц: %@";

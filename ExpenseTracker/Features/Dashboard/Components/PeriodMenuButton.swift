@@ -50,11 +50,7 @@ struct PeriodMenuButton: View {
             }
             .padding(.horizontal, AppSpacing.medium)
             .padding(.vertical, AppSpacing.mediumSmall)
-            .background {
-                Capsule()
-                    .fill(AppColor.cardBackground)
-                    .shadow(color: AppColor.textPrimary.opacity(Constants.shadowOpacity), radius: AppSpacing.xSmall, y: 1)
-            }
+            .layeredCard(cornerRadius: AppRadius.capsule)
         }
         .buttonStyle(PressableScaleButtonStyle())
         .accessibilityLabel(AppString.selectPeriod)
@@ -67,7 +63,6 @@ struct PeriodMenuButton: View {
 private extension PeriodMenuButton {
 
     enum Constants {
-        static let shadowOpacity: Double = 0.04
         static let titleDuration: Double = 0.2
     }
 }
