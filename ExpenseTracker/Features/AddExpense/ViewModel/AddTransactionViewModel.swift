@@ -15,12 +15,6 @@ final class AddTransactionViewModel: ObservableObject {
     // MARK: - Types
 
     /// Ограничения ввода суммы: длиннее уже не помещается в поле и не имеет смысла для денег
-    private enum AmountLimit {
-        static let integerDigits = 12
-        static let fractionDigits = 2
-        static let groupSize = 3
-    }
-
     /// Снимок полей формы для сравнения «есть ли несохраненные изменения»
     private struct InputSnapshot: Equatable {
         let amount: String
@@ -46,6 +40,8 @@ final class AddTransactionViewModel: ObservableObject {
     @Published var showAllCategories = false
     /// Транзакция уже записана в контекст: защищает от повторного сохранения
     @Published private(set) var isSaved = false
+    /// Запись на диск не удалась: экран остается открытым с введенными данными
+    @Published var showingSaveError = false
 
     private(set) var editingTransaction: Transaction?
 
@@ -131,14 +127,7 @@ final class AddTransactionViewModel: ObservableObject {
 
     /// Сумма с разделителями разрядов для отображения: 1350000 → 1 350 000
     var amountDisplay: String {
-        guard !amount.isEmpty else { return "0" }
-
-        let parts = amount.split(separator: ".", maxSplits: 1, omittingEmptySubsequences: false)
-        let groupedInteger = Self.groupedDigits(String(parts[0]))
-
-        guard parts.count > 1 else { return groupedInteger }
-
-        return groupedInteger + AppString.amountDecimalSeparator + parts[1]
+        AmountInput(amount).display
     }
 
     /// Введена ли сумма — влияет на цвет «0» на экране: набранный ноль не плейсхолдер
@@ -147,13 +136,11 @@ final class AddTransactionViewModel: ObservableObject {
     }
 
     private var hasPositiveAmount: Bool {
-        guard let value = amountDecimal else { return false }
-
-        return value > 0
+        AmountInput(amount).isPositive
     }
 
     private var amountDecimal: Decimal? {
-        Decimal(string: amount.replacingOccurrences(of: ",", with: "."))
+        AmountInput(amount).value
     }
 
     private var currentSnapshot: InputSnapshot {
@@ -201,28 +188,31 @@ final class AddTransactionViewModel: ObservableObject {
 
     // MARK: - Save
 
-    func save(using context: ModelContext) -> Bool {
+    func save(using repository: TransactionRepository) -> Bool {
         guard !isSaved, let value = amountDecimal, value > 0 else { return false }
         
         provideFeedback(.medium)
 
-        if let transaction = editingTransaction {
-            transaction.amount = value
-            transaction.category = selectedCategory
-            transaction.account = selectedAccount
-            transaction.note = note.isEmpty ? nil : note
-            transaction.date = date
-            transaction.type = type
-        } else {
-            let newTransaction = Transaction(
-                amount: value,
-                date: date,
-                note: note.isEmpty ? nil : note,
-                type: type,
-                category: selectedCategory,
-                account: selectedAccount
-            )
-            context.insert(newTransaction)
+        let draft = TransactionDraft(
+            amount: value,
+            date: date,
+            note: note.isEmpty ? nil : note,
+            type: type,
+            category: selectedCategory,
+            account: selectedAccount
+        )
+
+        do {
+            if let transaction = editingTransaction {
+                try repository.update(transaction, with: draft)
+            } else {
+                try repository.add(draft)
+            }
+        } catch {
+            // Репозиторий вернул операцию к сохраненному виду,
+            // а введенные значения остались в полях — можно повторить
+            showingSaveError = true
+            return false
         }
 
         isSaved = true
@@ -251,87 +241,21 @@ final class AddTransactionViewModel: ObservableObject {
     // MARK: - Keypad Logic
 
     func handleKeyTap(_ key: NumericKeypadView.Key) {
-        let isAccepted: Bool
-
-        switch key {
-        case .number(let value):
-            isAccepted = appendNumber(value)
-        case .decimal:
-            isAccepted = appendDecimal()
-        case .delete:
-            isAccepted = deleteLast()
-        }
-
+        var input = AmountInput(amount)
         // Отклоненный ввод (предел длины, пустое поле) не должен ощущаться как принятый
-        guard isAccepted else { return }
+        guard input.apply(key) else { return }
 
+        amount = input.raw
         provideFeedback(.light)
     }
 
     /// Долгое нажатие на удаление стирает всю сумму
     func clearAmount() {
-        guard !amount.isEmpty else { return }
+        var input = AmountInput(amount)
+        guard input.clear() else { return }
 
-        amount = ""
+        amount = input.raw
         provideFeedback(.medium)
-    }
-
-    @discardableResult
-    private func appendNumber(_ value: String) -> Bool {
-        guard canAppendDigit else { return false }
-
-        if amount == "0" {
-            amount = value
-        } else {
-            amount.append(value)
-        }
-
-        return true
-    }
-
-    @discardableResult
-    private func appendDecimal() -> Bool {
-        guard !amount.contains(AppString.amountDecimalSeparator) else { return false }
-
-        amount = amount.isEmpty ? "0." : amount + AppString.amountDecimalSeparator
-
-        return true
-    }
-
-    @discardableResult
-    private func deleteLast() -> Bool {
-        guard !amount.isEmpty else { return false }
-
-        amount.removeLast()
-
-        return true
-    }
-
-    /// Целая часть ограничена длиной поля, дробная — копейками
-    private var canAppendDigit: Bool {
-        let parts = amount.split(separator: ".", maxSplits: 1, omittingEmptySubsequences: false)
-
-        guard parts.count > 1 else {
-            return amount.count < AmountLimit.integerDigits
-        }
-
-        return parts[1].count < AmountLimit.fractionDigits
-    }
-    
-    // MARK: - Amount Formatting
-
-    /// Разбивает целую часть суммы на группы по три цифры справа налево
-    private static func groupedDigits(_ digits: String) -> String {
-        var reversedGrouped = ""
-
-        for (offset, character) in digits.reversed().enumerated() {
-            if offset > 0, offset % AmountLimit.groupSize == 0 {
-                reversedGrouped.append(AppString.amountGroupingSeparator)
-            }
-            reversedGrouped.append(character)
-        }
-
-        return String(reversedGrouped.reversed())
     }
 
     // MARK: - Haptic Feedback

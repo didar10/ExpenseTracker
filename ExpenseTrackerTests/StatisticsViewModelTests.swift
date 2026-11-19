@@ -16,10 +16,7 @@ struct StatisticsViewModelTests {
     // MARK: - Helpers
 
     private func makeContext() throws -> ModelContext {
-        let container = try ModelContainer(
-            for: Transaction.self, Category.self, Account.self, BudgetPlan.self,
-            configurations: ModelConfiguration(isStoredInMemoryOnly: true)
-        )
+        let container = try AppModelContainer.make(inMemory: true)
 
         return ModelContext(container)
     }

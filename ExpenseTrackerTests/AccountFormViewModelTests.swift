@@ -16,12 +16,7 @@ struct AccountFormViewModelTests {
     // MARK: - Helpers
 
     private func makeContext() throws -> ModelContext {
-        let container = try ModelContainer(
-            for: Transaction.self, Category.self, Account.self, BudgetPlan.self,
-            // Имя у конфигурации своё: безымянное in-memory хранилище общее
-            // для всех контейнеров процесса, и параллельные тесты видят чужие данные
-            configurations: ModelConfiguration(UUID().uuidString, isStoredInMemoryOnly: true)
-        )
+        let container = try AppModelContainer.make(inMemory: true)
 
         return ModelContext(container)
     }
@@ -45,7 +40,7 @@ struct AccountFormViewModelTests {
         let viewModel = AccountFormViewModel()
         viewModel.name = "  Kaspi Gold  "
 
-        viewModel.save(accounts: [], using: context)
+        #expect(viewModel.save(using: Repositories(context: context).accounts))
 
         #expect(try accounts(in: context).first?.name == "Kaspi Gold")
     }
@@ -54,7 +49,7 @@ struct AccountFormViewModelTests {
         let context = try makeContext()
         let viewModel = AccountFormViewModel()
 
-        viewModel.save(accounts: [], using: context)
+        #expect(viewModel.save(using: Repositories(context: context).accounts) == false)
 
         #expect(try accounts(in: context).isEmpty)
     }
@@ -83,7 +78,7 @@ struct AccountFormViewModelTests {
         viewModel.name = "Наличные"
         viewModel.initialBalance = "1500,50"
 
-        viewModel.save(accounts: [], using: context)
+        #expect(viewModel.save(using: Repositories(context: context).accounts))
 
         #expect(try accounts(in: context).first?.initialBalance == Decimal(string: "1500.5"))
     }
@@ -95,7 +90,7 @@ struct AccountFormViewModelTests {
         let viewModel = AccountFormViewModel()
         viewModel.name = "Основной"
 
-        viewModel.save(accounts: [], using: context)
+        #expect(viewModel.save(using: Repositories(context: context).accounts))
 
         #expect(try accounts(in: context).first?.isDefault == true)
     }
@@ -109,7 +104,7 @@ struct AccountFormViewModelTests {
         viewModel.name = "Kaspi Gold"
         viewModel.isDefault = true
 
-        viewModel.save(accounts: [existing], using: context)
+        #expect(viewModel.save(using: Repositories(context: context).accounts))
 
         let saved = try accounts(in: context)
         #expect(saved.filter(\.isDefault).count == 1)
@@ -145,7 +140,7 @@ struct AccountFormViewModelTests {
         viewModel.name = "Kaspi Red"
         viewModel.initialBalance = "2000"
 
-        viewModel.save(accounts: [account], using: context)
+        #expect(viewModel.save(using: Repositories(context: context).accounts))
 
         let saved = try accounts(in: context)
         #expect(saved.count == 1)

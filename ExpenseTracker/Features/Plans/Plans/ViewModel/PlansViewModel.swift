@@ -8,6 +8,7 @@
 import SwiftUI
 import SwiftData
 
+@MainActor
 @Observable
 final class PlansViewModel {
 
@@ -16,17 +17,32 @@ final class PlansViewModel {
     var planToDelete: BudgetPlan?
     var showDeleteAlert = false
     var showingAddPlan = false
+    var showingSaveError = false
+    var showingMonthlyLimit = false
     var isEditing = false
+
+    let limitStore: MonthlyLimitStore
+
+    /// Текущий момент; подменяется в тестах
+    private let now: () -> Date
 
     private var budgetPlans: [BudgetPlan] = []
     private var transactions: [Transaction] = []
     /// Сдвиг показанного интервала для каждого периода: 0 — текущий, -1 — предыдущий
     private var periodOffsets: [BudgetPeriod: Int] = [:]
 
+    // MARK: - Init
+
+    init(limitStore: MonthlyLimitStore, now: @escaping () -> Date = { .now }) {
+        self.limitStore = limitStore
+        self.now = now
+    }
+
     // MARK: - Computed Properties
 
+    /// Бюджет без категории — удаленный вместе с ней, но еще не убранный из списка
     var activePlans: [BudgetPlan] {
-        budgetPlans.filter(\.isActive)
+        budgetPlans.filter { $0.isActive && $0.category != nil }
     }
 
     var hasPlans: Bool {
@@ -51,6 +67,18 @@ final class PlansViewModel {
         }
     }
 
+    /// Общий лимит на текущий месяц; nil — лимит не задан
+    var monthlyLimitSummary: MonthlyLimitSummary? {
+        guard let limit = limitStore.limit else { return nil }
+
+        return MonthlyLimitSummary(
+            limit: limit,
+            transactions: transactions,
+            monthlyBudgets: activePlans.filter { $0.period == .month },
+            now: now()
+        )
+    }
+
     // MARK: - Public Methods
 
     func updateData(budgetPlans: [BudgetPlan], transactions: [Transaction]) {
@@ -64,10 +92,24 @@ final class PlansViewModel {
         return transactions
             .filter { transaction in
                 transaction.type == .expense &&
-                transaction.category?.persistentModelID == plan.category.persistentModelID &&
+                transaction.category?.persistentModelID == plan.category?.persistentModelID &&
                 interval.contains(transaction.date)
             }
             .reduce(0) { $0 + $1.amount }
+    }
+
+    /// Темп трат по бюджету в показанном интервале: у прошедшего интервала нет отметки «сегодня»
+    func pace(for plan: BudgetPlan) -> BudgetPace {
+        BudgetPace(
+            spent: spentAmount(for: plan),
+            limit: plan.monthlyLimit,
+            interval: plan.period.dateInterval(offset: offset(for: plan.period)),
+            now: now()
+        )
+    }
+
+    func showMonthlyLimit() {
+        showingMonthlyLimit = true
     }
 
     func offset(for period: BudgetPeriod) -> Int {
@@ -94,13 +136,16 @@ final class PlansViewModel {
         showDeleteAlert = true
     }
 
-    func deletePlan(context: ModelContext) {
+    func deletePlan(using repository: BudgetPlanRepository) {
         guard let plan = planToDelete else { return }
 
-        withAnimation {
-            budgetPlans.removeAll { $0.persistentModelID == plan.persistentModelID }
-            context.delete(plan)
-            try? context.save()
+        do {
+            try withAnimation {
+                try repository.delete(plan)
+                budgetPlans.removeAll { $0.persistentModelID == plan.persistentModelID }
+            }
+        } catch {
+            showingSaveError = true
         }
 
         planToDelete = nil

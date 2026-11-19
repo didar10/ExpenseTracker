@@ -12,10 +12,8 @@ struct AccountFormView: View {
 
     // MARK: - Properties
 
-    @Environment(\.modelContext) private var modelContext
+    @Environment(\.repositories) private var repositories
     @Environment(\.dismiss) private var dismiss
-
-    @Query(sort: \Account.name) private var accounts: [Account]
 
     @StateObject private var viewModel: AccountFormViewModel
 
@@ -57,11 +55,13 @@ struct AccountFormView: View {
                 }
             }
         }
+        .saveErrorAlert(isPresented: $viewModel.showingSaveError)
         .alert(AppString.deleteAccountConfirm, isPresented: $showingDeleteAlert) {
             Button(AppString.cancel, role: .cancel) { }
             Button(AppString.delete, role: .destructive) {
-                viewModel.delete(using: modelContext)
-                dismiss()
+                if viewModel.delete(using: repositories.accounts) {
+                    dismiss()
+                }
             }
         } message: {
             // Вместе со счетом каскадом удаляются его операции — предупреждаем об этом явно
@@ -203,8 +203,9 @@ private extension AccountFormView {
         UIImpactFeedbackGenerator(style: .medium).impactOccurred()
         dismissKeyboard()
 
-        viewModel.save(accounts: accounts, using: modelContext)
-        dismiss()
+        if viewModel.save(using: repositories.accounts) {
+            dismiss()
+        }
     }
 
     func handleClose() {

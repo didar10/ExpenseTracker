@@ -6,7 +6,6 @@
 //
 
 import Foundation
-import SwiftData
 
 /// ViewModel экрана настроек
 @MainActor
@@ -16,8 +15,23 @@ final class SettingsViewModel {
     // MARK: - Properties
 
     var showingDeleteAllDataAlert = false
+    var showingSaveError = false
+
+    @ObservationIgnored
+    private let limitStore: MonthlyLimitStore
+
+    // MARK: - Init
+
+    init(limitStore: MonthlyLimitStore) {
+        self.limitStore = limitStore
+    }
 
     // MARK: - Computed Properties
+
+    var isLimitShownOnDashboard: Bool {
+        get { limitStore.isShownOnDashboard }
+        set { limitStore.setShownOnDashboard(newValue) }
+    }
 
     /// Версия берется из бандла: строка в ресурсах устаревала бы при каждом релизе
     var appVersionTitle: String {
@@ -37,31 +51,16 @@ final class SettingsViewModel {
     }
 
     /// Удаляет все пользовательские данные и заново создает значения по умолчанию
-    func confirmDeleteAllData(context: ModelContext) {
-        // Бюджеты удаляются первыми: они ссылаются на категорию без опционала
-        deleteAll(BudgetPlan.self, context: context)
-        deleteAll(Transaction.self, context: context)
-        deleteAll(Category.self, context: context)
-        deleteAll(Account.self, context: context)
-
-        try? context.save()
-
-        // Сидеры создают данные только на пустой базе, поэтому нужен save выше
-        CategorySeeder.seedIfNeeded(context: context)
-        AccountSeeder.seedIfNeeded(context: context)
-
-        try? context.save()
-
+    /// - Returns: false — удаление не удалось, данные остались как были
+    func confirmDeleteAllData(using repository: AppDataRepository) -> Bool {
         showingDeleteAllDataAlert = false
-    }
 
-    // MARK: - Private Methods
-
-    private func deleteAll<Model: PersistentModel>(_ type: Model.Type, context: ModelContext) {
-        let descriptor = FetchDescriptor<Model>()
-
-        guard let items = try? context.fetch(descriptor) else { return }
-
-        items.forEach { context.delete($0) }
+        do {
+            try repository.deleteAllData()
+            return true
+        } catch {
+            showingSaveError = true
+            return false
+        }
     }
 }

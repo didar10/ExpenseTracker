@@ -19,6 +19,14 @@ final class Category {
     var colorHex: String
     var type: TransactionType = TransactionType.expense
 
+    /// Удаление категории оставляет операции без категории, а не удаляет их
+    @Relationship(deleteRule: .nullify, inverse: \Transaction.category)
+    var transactions: [Transaction] = []
+
+    /// Бюджет без категории не имеет смысла — удаляется вместе с ней
+    @Relationship(deleteRule: .cascade, inverse: \BudgetPlan.category)
+    var budgetPlans: [BudgetPlan] = []
+
     init(
         name: String,
         icon: String,

@@ -18,9 +18,35 @@
 "no_transactions_hint" = "Нажмите + чтобы добавить первую транзакцию";
 "no_transactions_in_period" = "За период «%@» операций не было";
 "delete_transaction" = "Удалить транзакцию?";
+"repeat_transaction" = "Повторить";
+"transaction_deleted" = "Операция удалена";
+"transaction_repeated" = "Операция повторена сегодня";
+"undo" = "Отменить";
+"ok" = "Понятно";
+"save_failed_title" = "Не удалось сохранить";
+"save_failed_message" = "Изменения не сохранились. Попробуйте ещё раз.";
+"data_unavailable_title" = "Не удалось открыть данные";
+"data_unavailable_message" = "Ваши записи сохранены на устройстве, но эта версия приложения не может их прочитать. Обновите приложение или напишите нам.";
+"can_spend_today" = "Можно потратить сегодня";
+"overspent_today" = "Перерасход за сегодня";
+"monthly_limit_exceeded" = "Лимит на месяц превышен на";
+"monthly_limit_title" = "Лимит на месяц";
+"monthly_limit_description" = "Сколько вы готовы потратить за месяц. Каждый день покажем, сколько можно потратить сегодня — сэкономленное переходит на следующие дни.";
+"monthly_limit_prompt_title" = "Сколько можно тратить в день?";
+"monthly_limit_prompt_hint" = "Задайте лимит на месяц — посчитаем сумму на каждый день";
+"remove_monthly_limit" = "Убрать лимит";
+"amount_placeholder" = "0";
+"show_limit_on_dashboard" = "Лимит на главном экране";
+"toggle_on" = "Вкл";
+"toggle_off" = "Выкл";
+"of_amount" = "из %@";
+"month_remaining_footer" = "До конца месяца %@ · дней осталось: %d";
+"monthly_limit_footer" = "Лимит на месяц: %@";
+"monthly_limit_per_day_hint" = "Примерно %@ в день";
 
 /* Accounts */
 "select_account" = "Выбор счета";
+"select_period" = "Выбор периода";
 "all_accounts" = "Все счета";
 "all_accounts_hint" = "Показать транзакции по всем счетам";
 "no_accounts" = "Нет счетов";
@@ -83,7 +109,6 @@
 "name" = "Название";
 "edit" = "Изменить";
 "add_new" = "Новая";
-"preview" = "Превью";
 "category_name_example" = "Например, Кофе";
 
 /* Plans */
@@ -98,6 +123,11 @@
 "remaining" = "Осталось:";
 "out_of" = "из";
 "exceeded" = "Превышено на";
+"budgets_limit_prompt_title" = "Задайте лимит на месяц";
+"budgets_limit_prompt_hint" = "Общая сумма на все траты — бюджеты категорий покажут, как она распределена";
+"monthly_limit_remaining_per_day" = "Осталось %@ · примерно %@ в день";
+"budgets_allocated" = "По категориям распределено %@";
+"budgets_over_allocated" = "Бюджеты категорий больше лимита на %@";
 "category" = "Категория";
 "limit" = "Лимит";
 "period" = "Период";

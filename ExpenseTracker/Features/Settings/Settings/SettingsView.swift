@@ -12,21 +12,23 @@ struct SettingsView: View {
 
     // MARK: - Properties
 
-    @Environment(\.modelContext) private var context
+    @Environment(\.repositories) private var repositories
 
     /// Вызывается после удаления всех данных — нужен для возврата на главный экран
     private let onDataReset: () -> Void
 
-    @State private var viewModel = SettingsViewModel()
+    @State private var viewModel: SettingsViewModel
     @State private var coordinator: SettingsCoordinator
 
     // MARK: - Init
 
     @MainActor
     init(
+        limitStore: MonthlyLimitStore,
         coordinator: SettingsCoordinator? = nil,
         onDataReset: @escaping () -> Void = {}
     ) {
+        _viewModel = State(initialValue: SettingsViewModel(limitStore: limitStore))
         _coordinator = State(initialValue: coordinator ?? SettingsCoordinator())
         self.onDataReset = onDataReset
     }
@@ -54,6 +56,7 @@ struct SettingsView: View {
             .sheet(item: $coordinator.activeRoute) { route in
                 SettingsRouteView(route: route)
             }
+            .saveErrorAlert(isPresented: $viewModel.showingSaveError)
             .alert(AppString.deleteAllDataConfirm, isPresented: $viewModel.showingDeleteAllDataAlert) {
                 Button(AppString.cancel, role: .cancel) {
                     viewModel.cancelDeleteAllData()
@@ -79,6 +82,15 @@ private extension SettingsView {
             ) {
                 coordinator.show(.categories)
             }
+
+            SettingsRowDivider()
+
+            SettingsToggleRowView(
+                icon: AppImage.dailyLimit,
+                iconColor: AppColor.income,
+                title: AppString.showLimitOnDashboard,
+                isOn: $viewModel.isLimitShownOnDashboard
+            )
         }
     }
 
@@ -147,13 +159,14 @@ private extension SettingsView {
 private extension SettingsView {
 
     func handleDeleteAllData() {
-        viewModel.confirmDeleteAllData(context: context)
+        guard viewModel.confirmDeleteAllData(using: repositories.appData) else { return }
+
         UINotificationFeedbackGenerator().notificationOccurred(.success)
         onDataReset()
     }
 }
 
 #Preview {
-    SettingsView()
+    SettingsView(limitStore: MonthlyLimitStore())
         .modelContainer(for: [Account.self, Category.self, Transaction.self, BudgetPlan.self], inMemory: true)
 }

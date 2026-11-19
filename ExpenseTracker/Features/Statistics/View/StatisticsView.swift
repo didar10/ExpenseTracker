@@ -89,7 +89,7 @@ private extension StatisticsView {
 
             Spacer()
 
-            TransactionTypePickerView(selectedType: $viewModel.selectedType)
+            TransactionTypePickerView(selectedType: $viewModel.selectedType, style: .layered)
         }
         .padding(.horizontal, AppSpacing.large)
         .padding(.vertical, AppSpacing.small)

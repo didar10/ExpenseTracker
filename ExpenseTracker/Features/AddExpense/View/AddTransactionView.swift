@@ -12,7 +12,7 @@ struct AddTransactionView: View {
 
     // MARK: - Properties
 
-    @Environment(\.modelContext) private var modelContext
+    @Environment(\.repositories) private var repositories
     @Environment(\.dismiss) private var dismiss
 
     @StateObject private var viewModel: AddTransactionViewModel
@@ -96,6 +96,7 @@ struct AddTransactionView: View {
             .sheet(isPresented: $showingAccountPicker) {
                 accountSelectionSheet
             }
+            .saveErrorAlert(isPresented: $viewModel.showingSaveError)
         }
     }
 }
@@ -104,7 +105,7 @@ struct AddTransactionView: View {
 private extension AddTransactionView {
 
     func handleSave() {
-        guard viewModel.save(using: modelContext) else { return }
+        guard viewModel.save(using: repositories.transactions) else { return }
 
         isNoteFocused = false
 
@@ -135,7 +136,7 @@ private extension AddTransactionView {
             HStack {
                 Spacer()
 
-                TransactionTypePickerView(selectedType: $viewModel.type)
+                TransactionTypePickerView(selectedType: $viewModel.type, style: .layered)
                     .frame(width: AppSize.typePickerWidth, height: AppSize.typePickerHeight)
 
                 Spacer()

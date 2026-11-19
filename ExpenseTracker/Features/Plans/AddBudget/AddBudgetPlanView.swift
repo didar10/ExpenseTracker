@@ -16,12 +16,13 @@ struct AddBudgetPlanView: View {
     let existingPlans: [BudgetPlan]
 
     @Environment(\.dismiss) private var dismiss
-    @Environment(\.modelContext) private var context
+    @Environment(\.repositories) private var repositories
 
     @State private var selectedCategory: Category?
     @State private var amount: String = ""
     @State private var selectedPeriod: BudgetPeriod = .month
     @State private var showingCategoryPicker = false
+    @State private var showingSaveError = false
 
     // MARK: - Computed Properties
 
@@ -30,7 +31,7 @@ struct AddBudgetPlanView: View {
         let usedCategoryIDs = Set(
             existingPlans
                 .filter { $0.period == selectedPeriod }
-                .map { $0.category.persistentModelID }
+                .compactMap { $0.category?.persistentModelID }
         )
 
         return categories.filter { !usedCategoryIDs.contains($0.persistentModelID) }
@@ -48,7 +49,6 @@ struct AddBudgetPlanView: View {
 
                 ScrollView {
                     VStack(spacing: AppSpacing.xLarge) {
-                        previewCard
                         categorySection
                         amountSection
                         periodSection
@@ -60,6 +60,7 @@ struct AddBudgetPlanView: View {
 
             saveBar
         }
+        .saveErrorAlert(isPresented: $showingSaveError)
         .sheet(isPresented: $showingCategoryPicker) {
             CategoriesListView(
                 onSelect: { category in
@@ -92,63 +93,6 @@ private extension AddBudgetPlanView {
         .padding(.horizontal, AppSpacing.large)
         .padding(.vertical, AppSpacing.small)
         .padding(.top, AppSpacing.medium)
-    }
-
-    var previewCard: some View {
-        VStack(spacing: AppSpacing.large) {
-            AppText(
-                AppString.preview.uppercased(),
-                style: .microCaption,
-                color: AppColor.textSecondary
-            )
-            .tracking(AppSpacing.hairline)
-
-            HStack(spacing: AppSpacing.medium) {
-                if let category = selectedCategory {
-                    ZStack {
-                        RoundedRectangle(cornerRadius: AppRadius.medium, style: .continuous)
-                            .fill(Color(hex: category.colorHex).opacity(0.2))
-                            .frame(width: AppSize.iconLarge, height: AppSize.iconLarge)
-
-                        Image(systemName: category.icon)
-                            .font(.system(size: AppSize.glyphLarge, weight: .semibold))
-                            .foregroundStyle(AppColor.textPrimary)
-                    }
-
-                    AppText(category.name, style: .bodySmall)
-                } else {
-                    ZStack {
-                        RoundedRectangle(cornerRadius: AppRadius.medium, style: .continuous)
-                            .fill(Color(.systemGray4).opacity(0.2))
-                            .frame(width: AppSize.iconLarge, height: AppSize.iconLarge)
-
-                        AppImage.noIcon
-                            .font(.system(size: AppSize.glyphLarge, weight: .semibold))
-                            .foregroundStyle(AppColor.textSecondary)
-                    }
-
-                    AppText(AppString.noCategory, style: .bodySmall, color: AppColor.textSecondary)
-                }
-
-                Spacer()
-
-                if !amount.isEmpty, let value = Decimal(string: amount.replacingOccurrences(of: ",", with: ".")), value > 0 {
-                    Text(value.formatted(.currency(code: AppString.currencyCode)))
-                        .font(.app(.caption))
-                        .fontDesign(.rounded)
-                        .foregroundStyle(AppColor.textSecondary)
-                }
-            }
-            .padding(AppSpacing.large)
-            .background(
-                RoundedRectangle(cornerRadius: AppRadius.card, style: .continuous)
-                    .fill(AppColor.subtleFill)
-            )
-        }
-        .frame(maxWidth: .infinity)
-        .padding(.vertical, AppSpacing.xLarge)
-        .padding(.horizontal, AppSpacing.large)
-        .card(cornerRadius: AppRadius.xLarge)
     }
 
     var categorySection: some View {
@@ -312,16 +256,12 @@ private extension AddBudgetPlanView {
         let cleanedAmount = amount.replacingOccurrences(of: ",", with: ".")
         guard let amountValue = Decimal(string: cleanedAmount), amountValue > 0 else { return }
 
-        UIImpactFeedbackGenerator(style: .medium).impactOccurred()
-
-        let plan = BudgetPlan(
-            category: category,
-            monthlyLimit: amountValue,
-            period: selectedPeriod
-        )
-
-        context.insert(plan)
-        try? context.save()
-        dismiss()
+        do {
+            try repositories.budgets.add(category: category, limit: amountValue, period: selectedPeriod)
+            UIImpactFeedbackGenerator(style: .medium).impactOccurred()
+            dismiss()
+        } catch {
+            showingSaveError = true
+        }
     }
 }

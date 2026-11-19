@@ -30,7 +30,7 @@ struct AccountSeeder {
         
         context.insert(defaultAccount)
         
-        try? context.save()
+        try? context.saveOrRollback()
         
         print("✅ Создан счет по умолчанию")
     }

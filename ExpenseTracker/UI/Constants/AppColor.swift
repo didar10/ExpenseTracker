@@ -29,6 +29,8 @@ enum AppColor {
     static let cardBorder = Color.appCardBorder
     /// Жесткая тень карточки: всегда темнее поверхности
     static let cardShadow = Color.appCardShadow
+    /// Темный край нижней карточки в карточке «стопкой»
+    static let cardLedge = Color.appCardLedge
     /// Мягкая тень под первичной кнопкой
     static let softShadow = Color.appSoftShadow
 

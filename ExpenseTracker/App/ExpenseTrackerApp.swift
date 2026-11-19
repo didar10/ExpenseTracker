@@ -10,20 +10,37 @@ import SwiftData
 
 @main
 struct ExpenseTrackerApp: App {
-    
+
+    // MARK: - Properties
+
+    /// nil — базу не удалось открыть или перенести на новую схему
+    private let modelContainer: ModelContainer?
+
+    // MARK: - Init
+
     init() {
         NavigationBarAppearance.setup()
+
+        do {
+            modelContainer = try AppModelContainer.make()
+        } catch {
+            // Падение при запуске не дало бы пользователю ничего сделать,
+            // а файл базы остается на месте — следующая версия приложения сможет его открыть
+            PersistenceLog.logger.fault("Не удалось открыть базу: \(error.localizedDescription, privacy: .public)")
+            modelContainer = nil
+        }
     }
+
+    // MARK: - Body
 
     var body: some Scene {
         WindowGroup {
-            AppRootView()
+            if let modelContainer {
+                AppRootView()
+                    .modelContainer(modelContainer)
+            } else {
+                DataUnavailableView()
+            }
         }
-        .modelContainer(for: [
-            Transaction.self,
-            Category.self,
-            Account.self,
-            BudgetPlan.self
-        ])
     }
 }

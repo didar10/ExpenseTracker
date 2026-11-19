@@ -16,12 +16,7 @@ struct CategoryListViewModelTests {
     // MARK: - Helpers
 
     private func makeContext() throws -> ModelContext {
-        let container = try ModelContainer(
-            for: Transaction.self, ExpenseTracker.Category.self, Account.self, BudgetPlan.self,
-            // Имя у конфигурации своё: безымянное in-memory хранилище общее
-            // для всех контейнеров процесса, и параллельные тесты видят чужие данные
-            configurations: ModelConfiguration(UUID().uuidString, isStoredInMemoryOnly: true)
-        )
+        let container = try AppModelContainer.make(inMemory: true)
 
         return ModelContext(container)
     }
@@ -40,8 +35,8 @@ struct CategoryListViewModelTests {
         let category = makeCategory(in: context)
 
         let viewModel = CategoryListViewModel()
-        viewModel.prepareDelete(category, context: context)
-        viewModel.confirmDelete(context: context)
+        viewModel.prepareDelete(category)
+        viewModel.confirmDelete(using: Repositories(context: context).categories)
 
         #expect(try context.fetch(FetchDescriptor<ExpenseTracker.Category>()).isEmpty)
     }
@@ -57,16 +52,16 @@ struct CategoryListViewModelTests {
         context.insert(BudgetPlan(category: other, monthlyLimit: 30_000))
 
         let viewModel = CategoryListViewModel()
-        viewModel.prepareDelete(category, context: context)
+        viewModel.prepareDelete(category)
 
         #expect(viewModel.deletesBudgetPlan)
         #expect(viewModel.deleteMessage == AppString.deleteCategoryWithBudgetMessage)
 
-        viewModel.confirmDelete(context: context)
+        viewModel.confirmDelete(using: Repositories(context: context).categories)
 
         let plans = try context.fetch(FetchDescriptor<BudgetPlan>())
         #expect(plans.count == 1)
-        #expect(plans.first?.category.name == "Еда")
+        #expect(plans.first?.category?.name == "Еда")
     }
 
     @Test func deleteKeepsTransactionsWithoutCategory() throws {
@@ -76,8 +71,8 @@ struct CategoryListViewModelTests {
         context.insert(transaction)
 
         let viewModel = CategoryListViewModel()
-        viewModel.prepareDelete(category, context: context)
-        viewModel.confirmDelete(context: context)
+        viewModel.prepareDelete(category)
+        viewModel.confirmDelete(using: Repositories(context: context).categories)
 
         let saved = try context.fetch(FetchDescriptor<Transaction>())
         #expect(saved.count == 1)
@@ -89,7 +84,7 @@ struct CategoryListViewModelTests {
         let category = makeCategory(in: context)
 
         let viewModel = CategoryListViewModel()
-        viewModel.prepareDelete(category, context: context)
+        viewModel.prepareDelete(category)
 
         #expect(!viewModel.deletesBudgetPlan)
         #expect(viewModel.deleteMessage == AppString.deleteCategoryMessage)
@@ -100,13 +95,13 @@ struct CategoryListViewModelTests {
         let category = makeCategory(in: context)
 
         let viewModel = CategoryListViewModel()
-        viewModel.prepareDelete(category, context: context)
+        viewModel.prepareDelete(category)
         viewModel.cancelDelete()
 
         #expect(!viewModel.showDeleteAlert)
         #expect(viewModel.categoryToDelete == nil)
 
-        viewModel.confirmDelete(context: context)
+        viewModel.confirmDelete(using: Repositories(context: context).categories)
 
         #expect(try context.fetch(FetchDescriptor<ExpenseTracker.Category>()).count == 1)
     }
@@ -116,12 +111,7 @@ struct CategoryListViewModelTests {
 struct AddEditCategoryViewModelTests {
 
     private func makeContext() throws -> ModelContext {
-        let container = try ModelContainer(
-            for: Transaction.self, ExpenseTracker.Category.self, Account.self, BudgetPlan.self,
-            // Имя у конфигурации своё: безымянное in-memory хранилище общее
-            // для всех контейнеров процесса, и параллельные тесты видят чужие данные
-            configurations: ModelConfiguration(UUID().uuidString, isStoredInMemoryOnly: true)
-        )
+        let container = try AppModelContainer.make(inMemory: true)
 
         return ModelContext(container)
     }
@@ -148,7 +138,7 @@ struct AddEditCategoryViewModelTests {
         let viewModel = AddEditCategoryViewModel()
         viewModel.formData.name = "   "
 
-        #expect(!viewModel.save(context: context))
+        #expect(!viewModel.save(using: Repositories(context: context).categories))
         #expect(try context.fetch(FetchDescriptor<ExpenseTracker.Category>()).isEmpty)
     }
 
@@ -157,7 +147,7 @@ struct AddEditCategoryViewModelTests {
         let viewModel = AddEditCategoryViewModel()
         viewModel.formData.name = "  Кафе  "
 
-        #expect(viewModel.save(context: context))
+        #expect(viewModel.save(using: Repositories(context: context).categories))
         #expect(try context.fetch(FetchDescriptor<ExpenseTracker.Category>()).first?.name == "Кафе")
     }
 }

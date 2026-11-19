@@ -22,8 +22,15 @@ struct PlansView: View {
     private var transactions: [Transaction]
 
     @Environment(\.modelContext) private var context
+    @Environment(\.repositories) private var repositories
 
-    @State private var viewModel = PlansViewModel()
+    @State private var viewModel: PlansViewModel
+
+    // MARK: - Init
+
+    init(limitStore: MonthlyLimitStore) {
+        _viewModel = State(initialValue: PlansViewModel(limitStore: limitStore))
+    }
 
     // MARK: - Body
 
@@ -37,6 +44,11 @@ struct PlansView: View {
 
                 ScrollView {
                     VStack(spacing: AppSpacing.xLarge) {
+                        MonthlyLimitSummaryCardView(
+                            summary: viewModel.monthlyLimitSummary,
+                            onTap: viewModel.showMonthlyLimit
+                        )
+
                         if viewModel.hasPlans {
                             ForEach(viewModel.sections) { section in
                                 periodSection(section)
@@ -63,12 +75,16 @@ struct PlansView: View {
             AddBudgetPlanView(categories: categories, existingPlans: viewModel.activePlans)
                 .environment(\.modelContext, context)
         }
+        .sheet(isPresented: $viewModel.showingMonthlyLimit) {
+            MonthlyLimitView(limitStore: viewModel.limitStore)
+        }
+        .saveErrorAlert(isPresented: $viewModel.showingSaveError)
         .alert(AppString.deleteBudgetConfirm, isPresented: $viewModel.showDeleteAlert) {
             Button(AppString.cancel, role: .cancel) {
                 viewModel.planToDelete = nil
             }
             Button(AppString.delete, role: .destructive) {
-                viewModel.deletePlan(context: context)
+                viewModel.deletePlan(using: repositories.budgets)
             }
         } message: {
             Text(AppString.cannotUndo)
@@ -124,14 +140,18 @@ private extension PlansView {
         AppCardView(padding: AppSpacing.medium) {
             VStack(spacing: 0) {
                 ForEach(Array(section.plans.enumerated()), id: \.element.persistentModelID) { index, plan in
-                    BudgetPlanRow(
-                        plan: plan,
-                        spent: viewModel.spentAmount(for: plan),
-                        isEditing: viewModel.isEditing,
-                        onDelete: {
-                            viewModel.prepareDelete(plan)
-                        }
-                    )
+                    if let category = plan.category {
+                        BudgetPlanRow(
+                            plan: plan,
+                            category: category,
+                            spent: viewModel.spentAmount(for: plan),
+                            pace: viewModel.pace(for: plan),
+                            isEditing: viewModel.isEditing,
+                            onDelete: {
+                                viewModel.prepareDelete(plan)
+                            }
+                        )
+                    }
 
                     if index < section.plans.count - 1 {
                         Divider()
@@ -144,5 +164,5 @@ private extension PlansView {
 }
 
 #Preview {
-    PlansView()
+    PlansView(limitStore: MonthlyLimitStore(defaults: UserDefaults(suiteName: "preview") ?? .standard))
 }

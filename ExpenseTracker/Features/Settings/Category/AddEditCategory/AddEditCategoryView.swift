@@ -12,7 +12,7 @@ struct AddEditCategoryView: View {
 
     // MARK: - Properties
 
-    @Environment(\.modelContext) private var context
+    @Environment(\.repositories) private var repositories
     @Environment(\.dismiss) private var dismiss
 
     @State private var viewModel: AddEditCategoryViewModel
@@ -50,6 +50,7 @@ struct AddEditCategoryView: View {
                 Button(AppString.done, action: dismissKeyboard)
             }
         }
+        .saveErrorAlert(isPresented: $viewModel.showingSaveError)
         .alert(AppString.discardCategoryTitle, isPresented: $showingDiscardConfirmation) {
             Button(AppString.discardChanges, role: .destructive) { dismiss() }
             Button(AppString.keepEditing, role: .cancel) { }
@@ -124,7 +125,7 @@ private extension AddEditCategoryView {
         UIImpactFeedbackGenerator(style: .medium).impactOccurred()
         dismissKeyboard()
 
-        if viewModel.save(context: context) {
+        if viewModel.save(using: repositories.categories) {
             dismiss()
         }
     }

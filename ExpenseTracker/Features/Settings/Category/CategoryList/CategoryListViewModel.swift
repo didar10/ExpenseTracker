@@ -6,7 +6,7 @@
 //
 
 import Foundation
-import SwiftData
+import UIKit
 
 /// ViewModel для списка категорий
 @MainActor
@@ -20,6 +20,7 @@ final class CategoryListViewModel {
     private(set) var deletesBudgetPlan = false
 
     var showDeleteAlert = false
+    var showingSaveError = false
 
     // MARK: - Computed Properties
 
@@ -29,9 +30,9 @@ final class CategoryListViewModel {
 
     // MARK: - Methods
 
-    func prepareDelete(_ category: Category, context: ModelContext) {
+    func prepareDelete(_ category: Category) {
         categoryToDelete = category
-        deletesBudgetPlan = !budgetPlans(for: category, in: context).isEmpty
+        deletesBudgetPlan = !category.budgetPlans.isEmpty
         showDeleteAlert = true
     }
 
@@ -41,36 +42,19 @@ final class CategoryListViewModel {
         showDeleteAlert = false
     }
 
-    func confirmDelete(context: ModelContext) {
+    /// Бюджеты категории удаляются, а операции остаются без нее — по правилам связей в модели
+    func confirmDelete(using repository: CategoryRepository) {
         guard let category = categoryToDelete else { return }
 
-        // Бюджет ссылается на категорию без опционала: оставшийся план указывал бы
-        // на удаленную модель, а обращение к ней роняет SwiftData
-        budgetPlans(for: category, in: context).forEach { context.delete($0) }
-
-        // У связи «операция — категория» нет обратной ссылки, поэтому SwiftData
-        // не обнуляет её сам: операции остались бы с удаленной категорией
-        transactions(for: category, in: context).forEach { $0.category = nil }
-
-        context.delete(category)
-        try? context.save()
+        do {
+            try repository.delete(category)
+            UINotificationFeedbackGenerator().notificationOccurred(.success)
+        } catch {
+            showingSaveError = true
+        }
 
         categoryToDelete = nil
         deletesBudgetPlan = false
         showDeleteAlert = false
-    }
-
-    // MARK: - Private Methods
-
-    private func budgetPlans(for category: Category, in context: ModelContext) -> [BudgetPlan] {
-        let plans = (try? context.fetch(FetchDescriptor<BudgetPlan>())) ?? []
-
-        return plans.filter { $0.category.persistentModelID == category.persistentModelID }
-    }
-
-    private func transactions(for category: Category, in context: ModelContext) -> [Transaction] {
-        let transactions = (try? context.fetch(FetchDescriptor<Transaction>())) ?? []
-
-        return transactions.filter { $0.category?.persistentModelID == category.persistentModelID }
     }
 }

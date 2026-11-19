@@ -21,7 +21,7 @@ struct CategoriesListView: View {
     @Query(sort: \Category.name)
     private var categories: [Category]
 
-    @Environment(\.modelContext) private var context
+    @Environment(\.repositories) private var repositories
     @Environment(\.dismiss) private var dismiss
 
     @State private var viewModel = CategoryListViewModel()
@@ -86,13 +86,13 @@ struct CategoriesListView: View {
         .sheet(item: $editingCategory) { category in
             AddEditCategoryView(category: category)
         }
+        .saveErrorAlert(isPresented: $viewModel.showingSaveError)
         .alert(AppString.deleteCategoryConfirm, isPresented: $viewModel.showDeleteAlert) {
             Button(AppString.cancel, role: .cancel) {
                 viewModel.cancelDelete()
             }
             Button(AppString.delete, role: .destructive) {
-                viewModel.confirmDelete(context: context)
-                UINotificationFeedbackGenerator().notificationOccurred(.success)
+                viewModel.confirmDelete(using: repositories.categories)
             }
         } message: {
             Text(viewModel.deleteMessage)
@@ -174,7 +174,7 @@ private extension CategoriesListView {
     func rowContent(for category: Category) -> some View {
         if isEditing {
             CategoryRowView(category: category, isEditing: true) {
-                viewModel.prepareDelete(category, context: context)
+                viewModel.prepareDelete(category)
             }
         } else {
             Button {

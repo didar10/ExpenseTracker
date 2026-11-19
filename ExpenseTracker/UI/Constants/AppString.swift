@@ -19,6 +19,7 @@ enum AppString {
     static let amountDecimalSeparator = "."
     static let save = String(localized: "save")
     static let cancel = String(localized: "cancel")
+    static let ok = String(localized: "ok")
     static let delete = String(localized: "delete")
     static let done = String(localized: "done")
     static let today = String(localized: "today")
@@ -37,6 +38,52 @@ enum AppString {
     static let noTransactionsHint = String(localized: "no_transactions_hint")
     static let noTransactionsInPeriod = String(localized: "no_transactions_in_period")
     static let deleteTransaction = String(localized: "delete_transaction")
+    static let repeatTransaction = String(localized: "repeat_transaction")
+    static let transactionDeleted = String(localized: "transaction_deleted")
+    static let transactionRepeated = String(localized: "transaction_repeated")
+    static let undo = String(localized: "undo")
+
+    // MARK: - Persistence
+
+    static let saveFailedTitle = String(localized: "save_failed_title")
+    static let saveFailedMessage = String(localized: "save_failed_message")
+    static let dataUnavailableTitle = String(localized: "data_unavailable_title")
+    static let dataUnavailableMessage = String(localized: "data_unavailable_message")
+
+    // MARK: - Monthly Limit
+
+    static let canSpendToday = String(localized: "can_spend_today")
+    static let overspentToday = String(localized: "overspent_today")
+    static let monthlyLimitExceeded = String(localized: "monthly_limit_exceeded")
+    static let monthlyLimitTitle = String(localized: "monthly_limit_title")
+    static let monthlyLimitDescription = String(localized: "monthly_limit_description")
+    static let monthlyLimitPromptTitle = String(localized: "monthly_limit_prompt_title")
+    static let monthlyLimitPromptHint = String(localized: "monthly_limit_prompt_hint")
+    static let removeMonthlyLimit = String(localized: "remove_monthly_limit")
+    static let amountPlaceholder = String(localized: "amount_placeholder")
+    static let showLimitOnDashboard = String(localized: "show_limit_on_dashboard")
+    static let toggleOn = String(localized: "toggle_on")
+    static let toggleOff = String(localized: "toggle_off")
+    private static let ofAmount = String(localized: "of_amount")
+    private static let monthRemainingFooter = String(localized: "month_remaining_footer")
+    private static let monthlyLimitFooter = String(localized: "monthly_limit_footer")
+    private static let monthlyLimitPerDayHint = String(localized: "monthly_limit_per_day_hint")
+
+    static func ofAmount(_ amount: String) -> String {
+        String(format: ofAmount, amount)
+    }
+
+    static func monthRemainingFooter(_ amount: String, _ days: Int) -> String {
+        String(format: monthRemainingFooter, amount, days)
+    }
+
+    static func monthlyLimitFooter(_ amount: String) -> String {
+        String(format: monthlyLimitFooter, amount)
+    }
+
+    static func monthlyLimitPerDayHint(_ amount: String) -> String {
+        String(format: monthlyLimitPerDayHint, amount)
+    }
 
     static func noTransactionsInPeriod(_ period: String) -> String {
         String(format: noTransactionsInPeriod, period)
@@ -45,6 +92,7 @@ enum AppString {
     // MARK: - Accounts
 
     static let selectAccount = String(localized: "select_account")
+    static let selectPeriod = String(localized: "select_period")
     static let allAccounts = String(localized: "all_accounts")
     static let allAccountsHint = String(localized: "all_accounts_hint")
     static let noAccounts = String(localized: "no_accounts")
@@ -113,7 +161,6 @@ enum AppString {
     static let name = String(localized: "name")
     static let edit = String(localized: "edit")
     static let addNew = String(localized: "add_new")
-    static let preview = String(localized: "preview")
     static let categoryNameExample = String(localized: "category_name_example")
 
     // MARK: - Plans
@@ -137,6 +184,23 @@ enum AppString {
     static let selectCategory = String(localized: "select_category")
     static let searchCategory = String(localized: "search_category")
     static let chooseCategory = String(localized: "choose_category")
+    static let budgetsLimitPromptTitle = String(localized: "budgets_limit_prompt_title")
+    static let budgetsLimitPromptHint = String(localized: "budgets_limit_prompt_hint")
+    private static let monthlyLimitRemainingPerDay = String(localized: "monthly_limit_remaining_per_day")
+    private static let budgetsAllocated = String(localized: "budgets_allocated")
+    private static let budgetsOverAllocated = String(localized: "budgets_over_allocated")
+
+    static func monthlyLimitRemainingPerDay(_ remaining: String, _ perDay: String) -> String {
+        String(format: monthlyLimitRemainingPerDay, remaining, perDay)
+    }
+
+    static func budgetsAllocated(_ amount: String) -> String {
+        String(format: budgetsAllocated, amount)
+    }
+
+    static func budgetsOverAllocated(_ amount: String) -> String {
+        String(format: budgetsOverAllocated, amount)
+    }
 
     // MARK: - Statistics
 

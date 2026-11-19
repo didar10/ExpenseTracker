@@ -16,10 +16,15 @@ struct TransactionRowView: View {
     /// Не задан там, где строка только показывает операцию (список категории):
     /// тогда она не кнопка и не предлагает редактирование
     var onTap: (() -> Void)?
+    var onRepeat: (() -> Void)?
+    /// Не задан — строка удаляет операцию сама, с подтверждением.
+    /// Задан — удаление сразу, отмену предлагает экран
+    var onDelete: (() -> Void)?
 
-    @Environment(\.modelContext) private var context
+    @Environment(\.repositories) private var repositories
 
     @State private var showingDeleteConfirmation = false
+    @State private var showingSaveError = false
 
     // MARK: - Body
 
@@ -27,6 +32,7 @@ struct TransactionRowView: View {
         row
             .accessibilityElement(children: .combine)
             .accessibilityLabel(accessibilityLabel)
+            .accessibilityActions { accessibilityActionButtons }
             .contextMenu {
                 if let onTap {
                     Button(action: onTap) {
@@ -34,9 +40,13 @@ struct TransactionRowView: View {
                     }
                 }
 
-                Button(role: .destructive) {
-                    showingDeleteConfirmation = true
-                } label: {
+                if let onRepeat {
+                    Button(action: onRepeat) {
+                        Label { Text(AppString.repeatTransaction) } icon: { AppImage.repeatAction }
+                    }
+                }
+
+                Button(role: .destructive, action: requestDelete) {
                     Label { Text(AppString.delete) } icon: { AppImage.trash }
                 }
             }
@@ -46,29 +56,47 @@ struct TransactionRowView: View {
             } message: {
                 Text(AppString.cannotUndo)
             }
+            .saveErrorAlert(isPresented: $showingSaveError)
     }
 }
 
 // MARK: - Actions
 private extension TransactionRowView {
 
-    func delete() {
-        UINotificationFeedbackGenerator().notificationOccurred(.warning)
-
-        withAnimation(.easeOut(duration: 0.2)) {
-            context.delete(transaction)
+    func requestDelete() {
+        if let onDelete {
+            onDelete()
+        } else {
+            showingDeleteConfirmation = true
         }
+    }
 
+    func delete() {
         do {
-            try context.save()
+            try withAnimation(.easeOut(duration: 0.2)) {
+                try repositories.transactions.delete(transaction)
+            }
+            UINotificationFeedbackGenerator().notificationOccurred(.warning)
         } catch {
-            print("Failed to delete transaction:", error)
+            showingSaveError = true
         }
     }
 }
 
 // MARK: - Subviews
 private extension TransactionRowView {
+
+    /// Контекстное меню неудобно в VoiceOver — те же действия в ротор
+    @ViewBuilder
+    var accessibilityActionButtons: some View {
+        if let onRepeat {
+            Button(AppString.repeatTransaction, action: onRepeat)
+        }
+
+        if onDelete != nil {
+            Button(AppString.delete, action: requestDelete)
+        }
+    }
 
     @ViewBuilder
     var row: some View {
@@ -124,7 +152,6 @@ private extension TransactionRowView {
                 .font(.system(size: AppSize.glyphRow, weight: .semibold))
                 .symbolRenderingMode(.hierarchical)
         }
-        .circleShadow()
     }
 }
 

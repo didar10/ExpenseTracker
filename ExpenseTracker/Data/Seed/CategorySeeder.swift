@@ -41,5 +41,7 @@ struct CategorySeeder {
                 )
             )
         }
+
+        try? context.saveOrRollback()
     }
 }
