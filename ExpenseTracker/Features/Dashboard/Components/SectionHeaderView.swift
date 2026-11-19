@@ -7,42 +7,58 @@
 
 import SwiftUI
 
-/// Компонент заголовка секции с датой
+/// Заголовок дня в списке операций. Прилипает к верху списка при прокрутке,
+/// поэтому рисует непрозрачный фон
 struct SectionHeaderView: View {
+
+    // MARK: - Properties
+
     let date: Date
-    
-    var body: some View {
-        AppText(dateTitle, style: .bodySmaller)
-            .foregroundStyle(.gray)
-            .padding(.horizontal, 4)
-    }
-    
+
+    /// Формат берется из локали устройства, а не задается строкой:
+    /// пересоздавать DateFormatter на каждый рендер строки списка дорого
+    private static let dayFormatter: DateFormatter = {
+        let formatter = DateFormatter()
+        formatter.setLocalizedDateFormatFromTemplate("EEEdMMMM")
+        return formatter
+    }()
+
+    // MARK: - Computed Properties
+
     private var dateTitle: String {
         let calendar = Calendar.current
-        
+
         if calendar.isDateInToday(date) {
-            return "Сегодня"
-        } else if calendar.isDateInYesterday(date) {
-            return "Вчера"
-        } else {
-            let formatter = DateFormatter()
-            formatter.locale = Locale(identifier: "ru_RU")
-            formatter.dateFormat = "EE, d MMMM"
-            return formatter.string(from: date)
+            return AppString.today
         }
+
+        if calendar.isDateInYesterday(date) {
+            return AppString.yesterday
+        }
+
+        return Self.dayFormatter.string(from: date).capitalizingFirstLetter
+    }
+
+    // MARK: - Body
+
+    var body: some View {
+        AppText(dateTitle, style: .bodySmaller)
+            .color(AppColor.textTertiary)
+            .frame(maxWidth: .infinity, alignment: .leading)
+            .padding(.horizontal, AppSpacing.xSmall)
+            .padding(.top, AppSpacing.small)
+            .padding(.bottom, AppSpacing.smaller)
+            .background(AppColor.background)
+            .accessibilityAddTraits(.isHeader)
     }
 }
 
-#Preview("Today") {
-    SectionHeaderView(date: Date())
-}
-
-#Preview("Yesterday") {
-    let yesterday = Calendar.current.date(byAdding: .day, value: -1, to: Date())!
-    return SectionHeaderView(date: yesterday)
-}
-
-#Preview("Custom Date") {
-    let customDate = Calendar.current.date(byAdding: .day, value: -5, to: Date())!
-    return SectionHeaderView(date: customDate)
+#Preview {
+    VStack(alignment: .leading) {
+        SectionHeaderView(date: .now)
+        SectionHeaderView(date: .now.addingTimeInterval(-86_400))
+        SectionHeaderView(date: .now.addingTimeInterval(-86_400 * 5))
+    }
+    .padding(AppSpacing.large)
+    .background(AppColor.background)
 }

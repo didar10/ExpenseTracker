@@ -7,84 +7,101 @@
 
 import SwiftUI
 
+/// Палитра иконок категории: горизонтальная сетка из четырех рядов
 struct IconPicker: View {
 
+    // MARK: - Properties
+
     @Binding var selectedIcon: String
+    let color: Color
 
     private let icons: [String] = [
-
-        // Покупки
         "cart", "cart.fill", "bag", "bag.fill",
         "basket", "creditcard", "creditcard.fill",
         "gift", "gift.fill", "tag",
-
-        // Еда
         "fork.knife", "takeoutbag.and.cup.and.straw",
         "cup.and.saucer", "wineglass", "birthday.cake",
-
-        // Дом
         "house", "house.fill", "sofa.fill",
         "lightbulb", "drop.fill", "flame.fill",
-
-        // Транспорт
         "car", "car.fill", "bus", "tram",
         "airplane", "fuelpump", "bicycle",
-
-        // Здоровье
         "heart", "heart.fill", "cross.case",
         "cross.case.fill", "pills.fill",
-
-        // Развлечения
         "gamecontroller", "gamecontroller.fill",
         "tv", "music.note", "film",
-
-        // Образование / работа
         "graduationcap", "graduationcap.fill",
         "briefcase", "briefcase.fill",
         "book", "book.fill",
-
-        // Связь и сервисы
         "phone", "wifi", "antenna.radiowaves.left.and.right",
         "bolt.fill", "wrench.and.screwdriver",
-
-        // Прочее
         "pawprint", "leaf", "globe",
         "star", "star.fill"
     ]
 
+    private let rows = Array(
+        repeating: GridItem(.fixed(AppSize.iconLarge), spacing: AppSpacing.small),
+        count: 4
+    )
+
+    // MARK: - Body
+
     var body: some View {
-        ScrollView {
-            LazyVGrid(
-                columns: Array(repeating: .init(.flexible()), count: 6),
-                spacing: 16
-            ) {
+        ScrollView(.horizontal, showsIndicators: false) {
+            LazyHGrid(rows: rows, spacing: AppSpacing.small) {
                 ForEach(icons, id: \.self) { icon in
                     iconCell(icon)
                 }
             }
-            .padding(.vertical)
+            .padding(AppSpacing.medium)
         }
+        .background(
+            RoundedRectangle(cornerRadius: AppRadius.card, style: .continuous)
+                .fill(AppColor.fieldFill)
+        )
+        .accessibilityElement(children: .contain)
+        .accessibilityLabel(AppString.selectIcon)
     }
+}
 
-    private func iconCell(_ icon: String) -> some View {
-        Image(systemName: icon)
-            .font(.title2)
-            .frame(width: 44, height: 44)
-            .background(
-                selectedIcon == icon
-                ? Color.green.opacity(0.25)
-                : Color.secondary.opacity(0.1)
-            )
-            .clipShape(RoundedRectangle(cornerRadius: 10))
-            .overlay(
-                RoundedRectangle(cornerRadius: 10)
-                    .stroke(
-                        selectedIcon == icon ? Color.green : Color.clear,
-                        lineWidth: 2
-                    )
-            )
-            .onTapGesture {
-                selectedIcon = icon
-            }
+// MARK: - Subviews
+private extension IconPicker {
+
+    func iconCell(_ icon: String) -> some View {
+        let isSelected = selectedIcon == icon
+
+        return Button {
+            guard !isSelected else { return }
+
+            UIImpactFeedbackGenerator(style: .light).impactOccurred()
+            selectedIcon = icon
+        } label: {
+            Image(systemName: icon)
+                .font(.system(size: AppSize.glyphLarge, weight: .semibold))
+                .foregroundStyle(AppColor.textPrimary)
+                .frame(width: AppSize.iconLarge, height: AppSize.iconLarge)
+                .background(
+                    RoundedRectangle(cornerRadius: AppRadius.medium, style: .continuous)
+                        .fill(isSelected ? color : color.opacity(0.2))
+                )
+                // Выбранная плитка обводится: отличать её только по насыщенности
+                // заливки на светлых цветах палитры тяжело
+                .overlay(
+                    RoundedRectangle(cornerRadius: AppRadius.medium, style: .continuous)
+                        .strokeBorder(
+                            isSelected ? AppColor.textPrimary.opacity(0.35) : Color.clear,
+                            lineWidth: AppSpacing.hairline
+                        )
+                )
+                .contentShape(Rectangle())
+        }
+        .buttonStyle(PressableScaleButtonStyle())
+        .animation(.easeOut(duration: 0.15), value: isSelected)
+        .accessibilityAddTraits(isSelected ? .isSelected : [])
     }
+}
+
+#Preview {
+    IconPicker(selectedIcon: .constant("cart"), color: Color(hex: "#F5A623"))
+        .padding(AppSpacing.large)
+        .background(AppColor.background)
 }

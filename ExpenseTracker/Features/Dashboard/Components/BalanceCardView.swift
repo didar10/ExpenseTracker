@@ -7,45 +7,88 @@
 
 import SwiftUI
 
-/// Компонент карточки баланса с отображением доходов и расходов
 struct BalanceCardView: View {
+
+    // MARK: - Properties
+
     let balanceData: BalanceData
-    
+    let periodFilter: PeriodFilter
+    let onPreviousPeriod: () -> Void
+    let onNextPeriod: () -> Void
+
+    // MARK: - Computed Properties
+
+    private var balanceText: String {
+        balanceData.balance.formatted(.currency(code: AppString.currencyCode))
+    }
+
+    /// Минус в балансе — единственное, что подсвечивается цветом в карточке
+    private var balanceColor: Color {
+        balanceData.balance < 0 ? AppColor.expense : AppColor.textPrimary
+    }
+
+    // MARK: - Body
+
     var body: some View {
-        VStack(spacing: 12) {
-            AppText("Баланс", style: .caption, color: .secondary)
-            
-            // Применяем .rounded design на уровне view
-            Text(balanceData.balance.formatted(.currency(code: "KZT")))
+        VStack(spacing: AppSpacing.medium) {
+            BalancePeriodSelectorView(
+                filter: periodFilter,
+                onPrevious: onPreviousPeriod,
+                onNext: onNextPeriod
+            )
+
+            // Баланс — главное число экрана: смена суммы прокручивает разряды,
+            // а не подменяет число мгновенно
+            Text(balanceText)
                 .font(.app(.balance))
                 .fontDesign(.rounded)
-                .foregroundStyle(.primary)
+                .monospacedDigit()
+                .foregroundStyle(balanceColor)
                 .contentTransition(.numericText())
-            
-            HStack(spacing: 24) {
+                .animation(.snappy(duration: Constants.amountDuration), value: balanceData.balance)
+                .lineLimit(1)
+                .minimumScaleFactor(Constants.minAmountScaleFactor)
+                .accessibilityLabel(AppString.balance)
+                .accessibilityValue(balanceText)
+
+            HStack(spacing: AppSpacing.xxLarge) {
                 FinancialIndicatorView(
-                    icon: "arrow.down.circle.fill",
-                    color: .green,
-                    amount: balanceData.totalIncome
+                    icon: AppImage.incomeArrow,
+                    color: AppColor.income,
+                    amount: balanceData.totalIncome,
+                    accessibilityTitle: AppString.incomes
                 )
-                
+
                 FinancialIndicatorView(
-                    icon: "arrow.up.circle.fill",
-                    color: .red,
-                    amount: balanceData.totalExpenses
+                    icon: AppImage.expenseArrow,
+                    color: AppColor.expense,
+                    amount: balanceData.totalExpenses,
+                    accessibilityTitle: AppString.expenses
                 )
             }
-            .padding(.top, 4)
+            .padding(.top, AppSpacing.xSmall)
         }
-        .padding(.vertical, 24)
-        .padding(.horizontal)
+        .padding(.vertical, AppSpacing.xxLarge)
+        .padding(.horizontal, AppSpacing.large)
+    }
+}
+
+// MARK: - Constants
+
+private extension BalanceCardView {
+
+    enum Constants {
+        static let minAmountScaleFactor: CGFloat = 0.6
+        static let amountDuration: Double = 0.25
     }
 }
 
 #Preview {
-    let mockTransactions: [Transaction] = []
-    let balanceData = BalanceData(transactions: mockTransactions)
-    
-    return BalanceCardView(balanceData: balanceData)
-        .background(Color(.systemGroupedBackground))
+    BalanceCardView(
+        balanceData: BalanceData(transactions: []),
+        periodFilter: PeriodFilter(),
+        onPreviousPeriod: {},
+        onNextPeriod: {}
+    )
+    .background(AppColor.background)
 }

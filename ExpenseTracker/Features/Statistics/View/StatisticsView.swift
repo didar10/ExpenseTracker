@@ -9,179 +9,212 @@ import SwiftUI
 import SwiftData
 
 struct StatisticsView: View {
-    
+
     // MARK: - Properties
-    
-    @Query(sort: \Transaction.date, order: .reverse)
-    private var transactions: [Transaction]
-    
-    @Query(sort: \Account.createdAt, order: .forward)
-    private var accounts: [Account]
-    
-    @State private var viewModel = StatisticsViewModel()
-    @State private var scrollOffset: CGFloat = 0
-    @State private var navigationPath = NavigationPath()
+
+    @Bindable var viewModel: StatisticsViewModel
+
+    @State private var selectedStatistic: CategoryStatistic?
     @State private var showingAccountsView = false
-    
-    @Environment(\.tabBarVisibility) private var isTabBarVisible
-    
+    @State private var isContentScrolled = false
+
+    @Query(sort: \Transaction.date, order: .reverse)
+    private var transactionsTrigger: [Transaction]
+
+    @Query(sort: \Account.createdAt, order: .forward)
+    private var accountsTrigger: [Account]
+
+    @Environment(\.modelContext) private var modelContext
+
     // MARK: - Body
-    
+
     var body: some View {
-        NavigationStack(path: $navigationPath) {
+        NavigationStack {
             VStack(spacing: 0) {
-                // Шапка с выбором счета и месяца
                 headerView
-                
-                ScrollView {
-                    VStack(spacing: 16) {
-                        if viewModel.isEmpty {
-                            // Выбор периода для пустого состояния
-                            periodPickerButton
-                                .frame(maxWidth: .infinity, alignment: .center)
-                                .padding(.top, 8)
-                            
-                            StatisticsEmptyStateView()
-                        } else {
-                            ExpensesPieChartView(
-                                statistics: viewModel.statistics,
-                                totalExpenses: viewModel.totalExpenses
-                            )
-                            
-                            // Выбор периода по центру
-                            periodPickerButton
-                                .frame(maxWidth: .infinity, alignment: .center)
-                            
-                            CategoryStatisticsListView(
-                                statistics: viewModel.statistics,
-                                totalExpenses: viewModel.totalExpenses,
-                                selectedPeriod: viewModel.selectedPeriod,
-                                onCategoryTap: handleCategoryTap
-                            )
-                        }
-                    }
-                    .padding()
-                    .padding(.bottom, 100)
-                }
+
+                content
             }
-            .background(Color(.systemGroupedBackground))
+            .background(AppColor.background)
             .navigationBarHidden(true)
-            .navigationDestination(for: CategoryStatistic.self) { statistic in
+            .sheet(item: $selectedStatistic) { statistic in
                 CategoryTransactionsView(
                     category: statistic.category,
-                    period: viewModel.selectedPeriod,
+                    periodTitle: viewModel.periodTitle,
                     transactions: viewModel.transactions(for: statistic.category)
                 )
+                .presentationDragIndicator(.hidden)
             }
             .sheet(isPresented: $showingAccountsView) {
-                AccountSelectionSheet(
-                    accounts: accounts,
-                    selectedAccount: viewModel.selectedAccount,
-                    onSelect: { account in
-                        withAnimation(.spring(response: 0.3, dampingFraction: 0.7)) {
-                            viewModel.selectedAccount = account
-                        }
-                        showingAccountsView = false
-                    },
-                    onShowAll: {
-                        showingAccountsView = false
-                    }
-                )
+                accountSelectionSheet
             }
-            .onChange(of: transactions) { oldValue, newValue in
-                viewModel.updateTransactions(newValue)
+            .onChange(of: transactionsTrigger) { _, _ in
+                viewModel.fetchData()
             }
-            .onChange(of: viewModel.selectedAccount) { oldValue, newValue in
-                // Пересчет статистики при изменении счета
-                viewModel.changeAccount(newValue)
+            .onChange(of: accountsTrigger) { _, _ in
+                viewModel.fetchData()
+            }
+            .onChange(of: viewModel.selectedAccount) { _, _ in
+                viewModel.refreshStatistics()
             }
             .onAppear {
-                viewModel.updateTransactions(transactions)
+                // Экран пересоздается при каждом переключении вкладки, поэтому
+                // перезагружаем данные: пока вкладка неактивна, @Query не отслеживает изменения
+                viewModel.setup(with: modelContext)
             }
         }
     }
-    
+
     // MARK: - Actions
-    
+
     private func handleCategoryTap(_ statistic: CategoryStatistic) {
-        navigationPath.append(statistic)
+        UIImpactFeedbackGenerator(style: .light).impactOccurred()
+        selectedStatistic = statistic
     }
 }
 
-// MARK: - Header View
+// MARK: - Subviews
 
 private extension StatisticsView {
-    
+
     var headerView: some View {
-        HStack(spacing: 12) {
-            accountPickerButton
+        HStack(spacing: AppSpacing.medium) {
+            AccountPickerButton(
+                selectedAccount: viewModel.selectedAccount,
+                totalBalance: viewModel.totalBalance,
+                action: {
+                    showingAccountsView = true
+                }
+            )
+
             Spacer()
+
+            TransactionTypePickerView(selectedType: $viewModel.selectedType, style: .layered)
         }
-        .padding(.horizontal, 16)
-        .padding(.vertical, 12)
-        .background(Color(.systemGroupedBackground))
+        .padding(.horizontal, AppSpacing.large)
+        .padding(.vertical, AppSpacing.small)
+        .background(AppColor.background)
+        // Контент, уехавший под шапку, отделяется линией
+        .overlay(alignment: .bottom) {
+            Divider()
+                .opacity(isContentScrolled ? 1 : 0)
+                .animation(.easeOut(duration: 0.15), value: isContentScrolled)
+        }
     }
-    
-    var accountPickerButton: some View {
+
+    @ViewBuilder
+    var content: some View {
+        if #available(iOS 18.0, *) {
+            scrollContent
+                .onScrollGeometryChange(for: Bool.self) { geometry in
+                    geometry.contentOffset.y > geometry.contentInsets.top
+                } action: { _, isScrolled in
+                    isContentScrolled = isScrolled
+                }
+        } else {
+            scrollContent
+        }
+    }
+
+    var scrollContent: some View {
+        ScrollView {
+            VStack(spacing: AppSpacing.large) {
+                chartSection
+
+                periodSelector
+                    .frame(maxWidth: .infinity, alignment: .center)
+
+                listSection
+            }
+            .padding(AppSpacing.large)
+            .padding(.bottom, AppSpacing.tabBarBottomInset)
+        }
+        .scrollBounceBehavior(.basedOnSize)
+    }
+
+    @ViewBuilder
+    var chartSection: some View {
+        if viewModel.isEmpty {
+            StatisticsEmptyChartView(hint: viewModel.emptyStateHint)
+        } else {
+            CategoryPieChartView(
+                statistics: viewModel.statistics,
+                totalAmount: viewModel.totalAmount,
+                title: viewModel.totalTitle
+            )
+        }
+    }
+
+    /// Под переключателем — список категорий, а в пустом состоянии
+    /// предложение снять фильтр периода, если данные скрыл именно он
+    @ViewBuilder
+    var listSection: some View {
+        if viewModel.isEmpty {
+            if viewModel.isFilteredByPeriod {
+                PillActionButton(title: AppString.periodAllTime) {
+                    UIImpactFeedbackGenerator(style: .light).impactOccurred()
+                    viewModel.resetPeriod()
+                }
+            }
+        } else {
+            CategoryStatisticsListView(
+                statistics: viewModel.statistics,
+                totalAmount: viewModel.totalAmount,
+                onCategoryTap: handleCategoryTap
+            )
+        }
+    }
+
+    /// Выбор периода со стрелками переключения на соседний период
+    var periodSelector: some View {
+        HStack(spacing: AppSpacing.small) {
+            if viewModel.isPeriodNavigable {
+                periodArrowButton(
+                    image: AppImage.chevronLeft,
+                    label: AppString.previousPeriod,
+                    isEnabled: true,
+                    action: viewModel.goToPreviousPeriod
+                )
+            }
+
+            periodPickerButton
+
+            if viewModel.isPeriodNavigable {
+                periodArrowButton(
+                    image: AppImage.chevronRight,
+                    label: AppString.nextPeriod,
+                    isEnabled: viewModel.canGoToNextPeriod,
+                    action: viewModel.goToNextPeriod
+                )
+            }
+        }
+    }
+
+    func periodArrowButton(
+        image: Image,
+        label: String,
+        isEnabled: Bool,
+        action: @escaping () -> Void
+    ) -> some View {
         Button {
             UIImpactFeedbackGenerator(style: .light).impactOccurred()
-            showingAccountsView = true
+            action()
         } label: {
-            HStack(spacing: 6) {
-                if let selectedAccount = viewModel.selectedAccount {
-                    ZStack {
-                        Circle()
-                            .fill(selectedAccount.swiftUIColor.opacity(0.2))
-                            .frame(width: 24, height: 24)
-                        
-                        Image(systemName: selectedAccount.icon)
-                            .font(.system(size: 12, weight: .medium))
-                            .foregroundStyle(selectedAccount.swiftUIColor)
-                    }
-                    
-                    VStack(alignment: .leading, spacing: 1) {
-                        Text(selectedAccount.name)
-                            .font(.system(size: 13, weight: .medium))
-                            .foregroundStyle(.primary)
-                        
-                        Text(selectedAccount.currentBalance.formatted(.currency(code: "KZT")))
-                            .font(.system(size: 11, weight: .regular))
-                            .fontDesign(.rounded)
-                            .foregroundStyle(.secondary)
-                    }
-                } else {
-                    Image(systemName: "square.stack.3d.up.fill")
-                        .font(.system(size: 16, weight: .medium))
-                        .foregroundStyle(.black)
-                    
-                    VStack(alignment: .leading, spacing: 1) {
-                        Text("Все счета")
-                            .font(.system(size: 13, weight: .medium))
-                            .foregroundStyle(.primary)
-                        
-                        let totalBalance = accounts.reduce(0) { $0 + $1.currentBalance }
-                        Text(totalBalance.formatted(.currency(code: "KZT")))
-                            .font(.system(size: 11, weight: .regular))
-                            .fontDesign(.rounded)
-                            .foregroundStyle(.secondary)
-                    }
+            image
+                .font(.system(size: AppSize.glyphMedium, weight: .semibold))
+                .foregroundStyle(isEnabled ? AppColor.textPrimary : AppColor.textSecondary.opacity(Constants.disabledArrowOpacity))
+                .frame(width: AppSize.iconMedium, height: AppSize.iconMedium)
+                .background {
+                    Circle()
+                        .fill(AppColor.cardBackground)
+                        .shadow(color: AppColor.textPrimary.opacity(Constants.controlShadowOpacity), radius: AppSpacing.xSmall, y: AppSpacing.hairline)
                 }
-                
-                Image(systemName: "chevron.down")
-                    .font(.system(size: 10, weight: .semibold))
-                    .foregroundStyle(.secondary)
-            }
-            .padding(.horizontal, 12)
-            .padding(.vertical, 8)
-            .background {
-                Capsule()
-                    .fill(Color(uiColor: .systemBackground))
-                    .shadow(color: .black.opacity(0.04), radius: 4, y: 1)
-            }
         }
-        .buttonStyle(.plain)
+        .buttonStyle(PressableScaleButtonStyle())
+        .disabled(!isEnabled)
+        .accessibilityLabel(label)
     }
-    
+
     var periodPickerButton: some View {
         Menu {
             ForEach(StatisticsPeriod.allCases) { period in
@@ -190,37 +223,59 @@ private extension StatisticsView {
                     viewModel.changePeriod(period)
                 } label: {
                     Label {
-                        Text(period.rawValue)
+                        Text(period.displayName)
                     } icon: {
                         if viewModel.selectedPeriod == period {
-                            Image(systemName: "checkmark")
+                            AppImage.checkmark
                         }
                     }
                 }
             }
         } label: {
-            HStack(spacing: 6) {
-                Image(systemName: "calendar")
-                    .font(.system(size: 14, weight: .medium))
-                    .foregroundStyle(.black)
-                
-                Text(viewModel.selectedPeriod.rawValue)
-                    .font(.system(size: 13, weight: .medium))
-                    .foregroundStyle(.primary)
-                
-                Image(systemName: "chevron.down")
-                    .font(.system(size: 10, weight: .semibold))
-                    .foregroundStyle(.secondary)
+            HStack(spacing: AppSpacing.smaller) {
+                AppImage.calendar
+                    .font(.system(size: AppSize.glyphMedium, weight: .medium))
+                    .foregroundStyle(AppColor.textPrimary)
+
+                AppText(viewModel.periodTitle, style: .caption)
+
+                AppImage.chevronDown
+                    .font(.system(size: AppSize.glyphTiny, weight: .semibold))
+                    .foregroundStyle(AppColor.textSecondary)
             }
-            .padding(.horizontal, 12)
-            .padding(.vertical, 8)
+            .padding(.horizontal, AppSpacing.medium)
+            .padding(.vertical, AppSpacing.small)
             .background {
                 Capsule()
-                    .fill(Color(uiColor: .systemBackground))
-                    .shadow(color: .black.opacity(0.04), radius: 4, y: 1)
+                    .fill(AppColor.cardBackground)
+                    .shadow(color: AppColor.textPrimary.opacity(Constants.controlShadowOpacity), radius: AppSpacing.xSmall, y: AppSpacing.hairline)
             }
         }
         .buttonStyle(.plain)
+        .accessibilityLabel(AppString.period)
+        .accessibilityValue(viewModel.periodTitle)
+    }
+
+    var accountSelectionSheet: some View {
+        AccountSelectionSheet(
+            selectedAccount: viewModel.selectedAccount,
+            onSelect: { account in
+                withAnimation(.spring(response: 0.3, dampingFraction: 0.7)) {
+                    viewModel.selectedAccount = account
+                }
+                showingAccountsView = false
+            }
+        )
+    }
+}
+
+// MARK: - Constants
+
+private extension StatisticsView {
+
+    enum Constants {
+        static let disabledArrowOpacity: Double = 0.4
+        static let controlShadowOpacity: Double = 0.04
     }
 }
 
@@ -230,9 +285,8 @@ extension CategoryStatistic: Hashable {
     static func == (lhs: CategoryStatistic, rhs: CategoryStatistic) -> Bool {
         lhs.id == rhs.id
     }
-    
+
     func hash(into hasher: inout Hasher) {
         hasher.combine(id)
     }
 }
-

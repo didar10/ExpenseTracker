@@ -7,34 +7,51 @@
 
 import SwiftUI
 
-/// Пустое состояние для списка категорий
 struct EmptyCategoriesView: View {
+
+    // MARK: - Properties
+
+    var title: String = AppString.noCategories
+    var hint: String = AppString.addCategoryHint
+    /// Задано, когда категорию можно создать прямо из пустого состояния
+    var onCreateTap: (() -> Void)?
+
+    // MARK: - Body
+
     var body: some View {
-        CategoriesCardView {
-            VStack(spacing: 16) {
-                Image(systemName: "folder")
-                    .font(.system(size: 56))
+        AppCardView {
+            VStack(spacing: AppSpacing.large) {
+                AppImage.folder
+                    .font(.system(size: AppSize.glyphEmptyState))
                     .foregroundStyle(.tertiary)
                     .symbolRenderingMode(.hierarchical)
-                
-                VStack(spacing: 8) {
-                    Text("Нет категорий")
-                        .font(.system(size: 20, weight: .semibold))
-                    
-                    Text("Нажмите + чтобы добавить категорию")
-                        .font(.system(size: 15))
-                        .foregroundStyle(.secondary)
-                        .multilineTextAlignment(.center)
+
+                VStack(spacing: AppSpacing.small) {
+                    AppText(title, style: .section)
+
+                    AppText(hint, style: .bodySmaller, color: AppColor.textSecondary, alignment: .center)
+                }
+
+                if let onCreateTap {
+                    PillActionButton(title: AppString.createCategory, action: onCreateTap)
+                        .padding(.top, AppSpacing.small)
                 }
             }
-            .padding(.vertical, 24)
+            .padding(.vertical, AppSpacing.xxLarge)
             .frame(maxWidth: .infinity)
         }
+        .accessibilityElement(children: .contain)
     }
 }
 
-#Preview {
-    EmptyCategoriesView()
-        .padding()
-        .background(Color(.systemGroupedBackground))
+#Preview("Нет категорий") {
+    EmptyCategoriesView(onCreateTap: {})
+        .padding(AppSpacing.large)
+        .background(AppColor.background)
+}
+
+#Preview("Все использованы") {
+    EmptyCategoriesView(title: AppString.allCategoriesUsed, hint: AppString.allCategoriesUsedHint)
+        .padding(AppSpacing.large)
+        .background(AppColor.background)
 }

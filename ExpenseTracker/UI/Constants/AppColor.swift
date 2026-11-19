@@ -1,0 +1,52 @@
+//
+//  AppColor.swift
+//  ExpenseTracker
+//
+//  Created by Didar on 09.04.2026.
+//
+
+import SwiftUI
+
+enum AppColor {
+
+    // MARK: - Backgrounds
+
+    static let background = Color.appBackground
+    static let cardBackground = Color.appCardBackground
+    static let secondaryBackground = Color(uiColor: .secondarySystemGroupedBackground)
+    /// Нейтральная подложка внутри карточек: прогресс-бары, вложенные блоки
+    static let subtleFill = Color.primary.opacity(0.08)
+    /// Светлая нейтральная заливка полей ввода и секций формы
+    static let fieldFill = Color.primary.opacity(0.04)
+    /// Заливка нейтральных круглых элементов: кнопка «Ещё», плейсхолдеры
+    static let neutralFill = Color(uiColor: .systemGray5)
+    /// Затемнение под модальными оверлеями
+    static let scrim = Color.black.opacity(0.35)
+
+    // MARK: - Elevation
+
+    /// Обводка карточки: плотная в светлой теме, приглушенная в темной
+    static let cardBorder = Color.appCardBorder
+    /// Жесткая тень карточки: всегда темнее поверхности
+    static let cardShadow = Color.appCardShadow
+    /// Темный край нижней карточки в карточке «стопкой»
+    static let cardLedge = Color.appCardLedge
+    /// Мягкая тень под первичной кнопкой
+    static let softShadow = Color.appSoftShadow
+
+    // MARK: - Semantic
+
+    static let income = Color.green
+    static let expense = Color.red
+    static let accent = Color.blue
+    static let warning = Color.orange
+    static let highlight = Color.yellow
+    static let decorativePurple = Color.purple
+
+    // MARK: - Text
+
+    static let textPrimary = Color.primary
+    static let textSecondary = Color.secondary
+    static let textTertiary = Color.gray
+    static let textWhite = Color.white
+}

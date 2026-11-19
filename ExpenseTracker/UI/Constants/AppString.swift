@@ -1,0 +1,340 @@
+//
+//  AppString.swift
+//  ExpenseTracker
+//
+//  Created by Didar on 09.04.2026.
+//
+
+import Foundation
+
+enum AppString {
+
+    // MARK: - Common
+
+    static let currencyCode = "KZT"
+    static let currencySymbol = "₸"
+    /// Неразрывный пробел между разрядами суммы: 1 350 000
+    static let amountGroupingSeparator = "\u{00A0}"
+    /// Разделитель дробной части суммы на клавиатуре
+    static let amountDecimalSeparator = "."
+    static let save = String(localized: "save")
+    static let cancel = String(localized: "cancel")
+    static let ok = String(localized: "ok")
+    static let delete = String(localized: "delete")
+    static let done = String(localized: "done")
+    static let today = String(localized: "today")
+    static let yesterday = String(localized: "yesterday")
+    static let income = String(localized: "income")
+    static let expense = String(localized: "expense")
+    static let noCategory = String(localized: "no_category")
+    static let cannotUndo = String(localized: "cannot_undo")
+    static let more = String(localized: "more")
+    static let copy = String(localized: "copy")
+
+    // MARK: - Dashboard
+
+    static let balance = String(localized: "balance")
+    static let noTransactions = String(localized: "no_transactions")
+    static let noTransactionsHint = String(localized: "no_transactions_hint")
+    static let noTransactionsInPeriod = String(localized: "no_transactions_in_period")
+    static let deleteTransaction = String(localized: "delete_transaction")
+    static let repeatTransaction = String(localized: "repeat_transaction")
+    static let transactionDeleted = String(localized: "transaction_deleted")
+    static let transactionRepeated = String(localized: "transaction_repeated")
+    static let undo = String(localized: "undo")
+
+    // MARK: - Persistence
+
+    static let saveFailedTitle = String(localized: "save_failed_title")
+    static let saveFailedMessage = String(localized: "save_failed_message")
+    static let dataUnavailableTitle = String(localized: "data_unavailable_title")
+    static let dataUnavailableMessage = String(localized: "data_unavailable_message")
+
+    // MARK: - Monthly Limit
+
+    static let canSpendToday = String(localized: "can_spend_today")
+    static let overspentToday = String(localized: "overspent_today")
+    static let monthlyLimitExceeded = String(localized: "monthly_limit_exceeded")
+    static let monthlyLimitTitle = String(localized: "monthly_limit_title")
+    static let monthlyLimitDescription = String(localized: "monthly_limit_description")
+    static let monthlyLimitPromptTitle = String(localized: "monthly_limit_prompt_title")
+    static let monthlyLimitPromptHint = String(localized: "monthly_limit_prompt_hint")
+    static let removeMonthlyLimit = String(localized: "remove_monthly_limit")
+    static let amountPlaceholder = String(localized: "amount_placeholder")
+    static let showLimitOnDashboard = String(localized: "show_limit_on_dashboard")
+    static let toggleOn = String(localized: "toggle_on")
+    static let toggleOff = String(localized: "toggle_off")
+    private static let ofAmount = String(localized: "of_amount")
+    private static let monthRemainingFooter = String(localized: "month_remaining_footer")
+    private static let monthlyLimitFooter = String(localized: "monthly_limit_footer")
+    private static let monthlyLimitPerDayHint = String(localized: "monthly_limit_per_day_hint")
+
+    static func ofAmount(_ amount: String) -> String {
+        String(format: ofAmount, amount)
+    }
+
+    static func monthRemainingFooter(_ amount: String, _ days: Int) -> String {
+        String(format: monthRemainingFooter, amount, days)
+    }
+
+    static func monthlyLimitFooter(_ amount: String) -> String {
+        String(format: monthlyLimitFooter, amount)
+    }
+
+    static func monthlyLimitPerDayHint(_ amount: String) -> String {
+        String(format: monthlyLimitPerDayHint, amount)
+    }
+
+    static func noTransactionsInPeriod(_ period: String) -> String {
+        String(format: noTransactionsInPeriod, period)
+    }
+
+    // MARK: - Accounts
+
+    static let selectAccount = String(localized: "select_account")
+    static let selectPeriod = String(localized: "select_period")
+    static let allAccounts = String(localized: "all_accounts")
+    static let allAccountsHint = String(localized: "all_accounts_hint")
+    static let noAccounts = String(localized: "no_accounts")
+    static let noAccountsHint = String(localized: "no_accounts_hint")
+    static let chooseAccount = String(localized: "choose_account")
+    static let accountName = String(localized: "account_name")
+    static let initialBalance = String(localized: "initial_balance")
+    static let icon = String(localized: "icon")
+    static let color = String(localized: "color")
+    static let defaultAccount = String(localized: "default_account")
+    static let defaultAccountHint = String(localized: "default_account_hint")
+    static let deleteAccount = String(localized: "delete_account")
+    static let deleteAccountConfirm = String(localized: "delete_account_confirm")
+    static let deleteAccountMessage = String(localized: "delete_account_message")
+    static let editAccount = String(localized: "edit_account")
+    static let newAccount = String(localized: "new_account")
+    /// Короткая подпись плавающей кнопки в списке счетов
+    static let newAccountShort = String(localized: "new_account_short")
+    static let createAccount = String(localized: "create_account")
+    static let addAccount = String(localized: "add_account")
+    static let addAccountHint = String(localized: "add_account_hint")
+
+    // MARK: - AddExpense
+
+    static let saved = String(localized: "saved")
+    static let enterAmount = String(localized: "enter_amount")
+    static let addComment = String(localized: "add_comment")
+    static let selectDate = String(localized: "select_date")
+    static let date = String(localized: "date")
+    static let newTransaction = String(localized: "new_transaction")
+    static let editTransaction = String(localized: "edit_transaction")
+    static let discardChangesTitle = String(localized: "discard_changes_title")
+    static let discardChangesMessage = String(localized: "discard_changes_message")
+    static let discardChanges = String(localized: "discard_changes")
+    static let discardAccountTitle = String(localized: "discard_account_title")
+    static let discardCategoryTitle = String(localized: "discard_category_title")
+    static let keepEditing = String(localized: "keep_editing")
+    static let noCategoriesForType = String(localized: "no_categories_for_type")
+
+    // MARK: - Accessibility
+
+    static let accessibilityClose = String(localized: "accessibility_close")
+    static let accessibilityDeleteDigit = String(localized: "accessibility_delete_digit")
+    static let accessibilityClearAmount = String(localized: "accessibility_clear_amount")
+    static let accessibilityDecimalSeparator = String(localized: "accessibility_decimal_separator")
+    static let accessibilityAmount = String(localized: "accessibility_amount")
+
+    // MARK: - Categories
+
+    static let allCategories = String(localized: "all_categories")
+    static let noCategories = String(localized: "no_categories")
+    static let createCategory = String(localized: "create_category")
+    static let createCategoryHint = String(localized: "create_category_hint")
+    static let categories = String(localized: "categories")
+    static let deleteCategoryConfirm = String(localized: "delete_category_confirm")
+    static let deleteCategoryMessage = String(localized: "delete_category_message")
+    static let deleteCategoryWithBudgetMessage = String(localized: "delete_category_with_budget_message")
+    static let categoryName = String(localized: "category_name")
+    static let enterName = String(localized: "enter_name")
+    static let selectIcon = String(localized: "select_icon")
+    static let selectColor = String(localized: "select_color")
+    static let editCategory = String(localized: "edit_category")
+    static let newCategory = String(localized: "new_category")
+    static let saveChanges = String(localized: "save_changes")
+    static let addCategoryHint = String(localized: "add_category_hint")
+    static let name = String(localized: "name")
+    static let edit = String(localized: "edit")
+    static let addNew = String(localized: "add_new")
+    static let categoryNameExample = String(localized: "category_name_example")
+
+    // MARK: - Plans
+
+    static let budgets = String(localized: "budgets")
+    static let noBudgets = String(localized: "no_budgets")
+    static let noBudgetsHint = String(localized: "no_budgets_hint")
+    static let createBudget = String(localized: "create_budget")
+    static let deleteBudgetConfirm = String(localized: "delete_budget_confirm")
+    static let newBudget = String(localized: "new_budget")
+    static let totalBudget = String(localized: "total_budget")
+    static let spent = String(localized: "spent")
+    static let remaining = String(localized: "remaining")
+    static let exceeded = String(localized: "exceeded")
+    static let outOf = String(localized: "out_of")
+    static let category = String(localized: "category")
+    static let limit = String(localized: "limit")
+    static let period = String(localized: "period")
+    static let allCategoriesUsed = String(localized: "all_categories_used")
+    static let allCategoriesUsedHint = String(localized: "all_categories_used_hint")
+    static let selectCategory = String(localized: "select_category")
+    static let searchCategory = String(localized: "search_category")
+    static let chooseCategory = String(localized: "choose_category")
+    static let budgetsLimitPromptTitle = String(localized: "budgets_limit_prompt_title")
+    static let budgetsLimitPromptHint = String(localized: "budgets_limit_prompt_hint")
+    private static let monthlyLimitRemainingPerDay = String(localized: "monthly_limit_remaining_per_day")
+    private static let budgetsAllocated = String(localized: "budgets_allocated")
+    private static let budgetsOverAllocated = String(localized: "budgets_over_allocated")
+
+    static func monthlyLimitRemainingPerDay(_ remaining: String, _ perDay: String) -> String {
+        String(format: monthlyLimitRemainingPerDay, remaining, perDay)
+    }
+
+    static func budgetsAllocated(_ amount: String) -> String {
+        String(format: budgetsAllocated, amount)
+    }
+
+    static func budgetsOverAllocated(_ amount: String) -> String {
+        String(format: budgetsOverAllocated, amount)
+    }
+
+    // MARK: - Statistics
+
+    static let expenses = String(localized: "expenses")
+    static let noData = String(localized: "no_data")
+    static let noDataHint = String(localized: "no_data_hint")
+    static let incomes = String(localized: "incomes")
+    static let noDataHintIncome = String(localized: "no_data_hint_income")
+    static let totalForPeriod = String(localized: "total_for_period")
+    static let totalExpenses = String(localized: "total_expenses")
+    static let noTransactionsForPeriod = String(localized: "no_transactions_for_period")
+    static let amount = String(localized: "amount")
+    static let periodDay = String(localized: "statistics_period_day")
+    static let periodWeek = String(localized: "statistics_period_week")
+    static let periodMonth = String(localized: "statistics_period_month")
+    static let periodYear = String(localized: "statistics_period_year")
+    static let periodAllTime = String(localized: "statistics_period_all_time")
+    static let previousPeriod = String(localized: "statistics_previous_period")
+    static let nextPeriod = String(localized: "statistics_next_period")
+
+    static func noTransactionsForPeriod(category: String) -> String {
+        String(format: noTransactionsForPeriod, category)
+    }
+
+    // MARK: - Onboarding
+
+    static let onboardingSkip = String(localized: "onboarding_skip")
+    static let onboardingNext = String(localized: "onboarding_next")
+    static let onboardingStart = String(localized: "onboarding_start")
+    static let onboardingWelcomeTitle = String(localized: "onboarding_welcome_title")
+    static let onboardingWelcomeSubtitle = String(localized: "onboarding_welcome_subtitle")
+    static let onboardingTransactionsTitle = String(localized: "onboarding_transactions_title")
+    static let onboardingTransactionsSubtitle = String(localized: "onboarding_transactions_subtitle")
+    static let onboardingStatisticsTitle = String(localized: "onboarding_statistics_title")
+    static let onboardingStatisticsSubtitle = String(localized: "onboarding_statistics_subtitle")
+    static let onboardingBudgetsTitle = String(localized: "onboarding_budgets_title")
+    static let onboardingBudgetsSubtitle = String(localized: "onboarding_budgets_subtitle")
+    static let onboardingPagePosition = String(localized: "onboarding_page_position")
+
+    static func onboardingPagePosition(current: Int, total: Int) -> String {
+        String(format: onboardingPagePosition, current, total)
+    }
+
+    // MARK: - Settings
+
+    static let appName = String(localized: "app_name")
+    static let settings = String(localized: "settings")
+    static let general = String(localized: "general")
+    static let defaultCurrency = String(localized: "default_currency")
+    static let information = String(localized: "information")
+    static let privacyPolicy = String(localized: "privacy_policy")
+    static let privacyPolicyShort = String(localized: "privacy_policy_short")
+    static let helpAndSupport = String(localized: "help_and_support")
+    static let helpShort = String(localized: "help_short")
+    static let termsOfService = String(localized: "terms_of_service")
+    static let appVersion = String(localized: "app_version")
+
+    static func appVersion(_ version: String) -> String {
+        String(format: appVersion, version)
+    }
+    static let contactSupport = String(localized: "contact_support")
+    static let quickActions = String(localized: "quick_actions")
+    static let faq = String(localized: "faq")
+    static let noAnswerFound = String(localized: "no_answer_found")
+    static let supportAvailable = String(localized: "support_available")
+    static let helpSupportIntro = String(localized: "help_support_intro")
+    static let expandAnswer = String(localized: "expand_answer")
+    static let collapseAnswer = String(localized: "collapse_answer")
+    static let writeToUs = String(localized: "write_to_us")
+    static let website = String(localized: "website")
+    static let telegram = String(localized: "telegram")
+    static let supportEmail = String(localized: "support_email")
+    static let supportWebsite = String(localized: "support_website")
+    static let supportTelegram = String(localized: "support_telegram")
+    static let lastUpdated = String(localized: "last_updated")
+    static let termsIntro = String(localized: "terms_intro")
+
+    // MARK: - Data
+
+    static let data = String(localized: "data")
+    static let deleteAllData = String(localized: "delete_all_data")
+    static let deleteAllDataConfirm = String(localized: "delete_all_data_confirm")
+    static let deleteAllDataMessage = String(localized: "delete_all_data_message")
+
+    // MARK: - FAQ
+
+    static let faqQ1 = String(localized: "faq_q1")
+    static let faqA1 = String(localized: "faq_a1")
+    static let faqQ2 = String(localized: "faq_q2")
+    static let faqA2 = String(localized: "faq_a2")
+    static let faqQ3 = String(localized: "faq_q3")
+    static let faqA3 = String(localized: "faq_a3")
+    static let faqQ4 = String(localized: "faq_q4")
+    static let faqA4 = String(localized: "faq_a4")
+    static let faqQ5 = String(localized: "faq_q5")
+    static let faqA5 = String(localized: "faq_a5")
+    static let faqQ6 = String(localized: "faq_q6")
+    static let faqA6 = String(localized: "faq_a6")
+    static let faqQ7 = String(localized: "faq_q7")
+    static let faqA7 = String(localized: "faq_a7")
+    static let faqQ8 = String(localized: "faq_q8")
+    static let faqA8 = String(localized: "faq_a8")
+
+    // MARK: - Privacy Policy
+
+    static let privacySection1Title = String(localized: "privacy_section_1_title")
+    static let privacySection1Content = String(localized: "privacy_section_1_content")
+    static let privacySection2Title = String(localized: "privacy_section_2_title")
+    static let privacySection2Content = String(localized: "privacy_section_2_content")
+    static let privacySection3Title = String(localized: "privacy_section_3_title")
+    static let privacySection3Content = String(localized: "privacy_section_3_content")
+    static let privacySection4Title = String(localized: "privacy_section_4_title")
+    static let privacySection4Content = String(localized: "privacy_section_4_content")
+    static let privacySection5Title = String(localized: "privacy_section_5_title")
+    static let privacySection5Content = String(localized: "privacy_section_5_content")
+    static let privacySection6Title = String(localized: "privacy_section_6_title")
+    static let privacySection6Content = String(localized: "privacy_section_6_content")
+
+    // MARK: - Terms of Service
+
+    static let termsSection1Title = String(localized: "terms_section_1_title")
+    static let termsSection1Content = String(localized: "terms_section_1_content")
+    static let termsSection2Title = String(localized: "terms_section_2_title")
+    static let termsSection2Content = String(localized: "terms_section_2_content")
+    static let termsSection3Title = String(localized: "terms_section_3_title")
+    static let termsSection3Content = String(localized: "terms_section_3_content")
+    static let termsSection4Title = String(localized: "terms_section_4_title")
+    static let termsSection4Content = String(localized: "terms_section_4_content")
+    static let termsSection5Title = String(localized: "terms_section_5_title")
+    static let termsSection5Content = String(localized: "terms_section_5_content")
+    static let termsSection6Title = String(localized: "terms_section_6_title")
+    static let termsSection6Content = String(localized: "terms_section_6_content")
+    static let termsSection7Title = String(localized: "terms_section_7_title")
+    static let termsSection7Content = String(localized: "terms_section_7_content")
+    static let termsSection8Title = String(localized: "terms_section_8_title")
+    static let termsSection8Content = String(localized: "terms_section_8_content")
+}

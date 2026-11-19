@@ -9,162 +9,185 @@ import SwiftUI
 import SwiftData
 
 struct DashboardView: View {
-    
+
     // MARK: - Properties
-    
+
     @Query(sort: \Transaction.date, order: .reverse)
     private var transactions: [Transaction]
-    
+
     @Query(sort: \Account.createdAt, order: .forward)
     private var accounts: [Account]
-    
-    @State private var selectedTransaction: Transaction?
-    @State private var selectedAccount: Account?
-    @State private var showingAccountsView = false
-    @Environment(\.tabBarVisibility) private var isTabBarVisible
-    
-    // MARK: - Computed Properties
-    
-    private var filteredTransactions: [Transaction] {
-        if let selectedAccount = selectedAccount {
-            return transactions.filter { $0.account?.id == selectedAccount.id }
-        }
-        return transactions
+
+    @Environment(\.repositories) private var repositories
+    @Environment(\.scenePhase) private var scenePhase
+
+    @StateObject private var viewModel: DashboardViewModel
+
+    @State private var isContentScrolled = false
+
+    private let accountSelection: AccountSelectionStore
+
+    // MARK: - Init
+
+    init(
+        accountSelection: AccountSelectionStore,
+        periodStore: DashboardPeriodStore,
+        limitStore: MonthlyLimitStore
+    ) {
+        self.accountSelection = accountSelection
+        _viewModel = StateObject(
+            wrappedValue: DashboardViewModel(
+                accountSelection: accountSelection,
+                periodStore: periodStore,
+                limitStore: limitStore
+            )
+        )
     }
-    
-    private var balanceData: BalanceData {
-        if let selectedAccount = selectedAccount {
-            return BalanceData(accounts: [selectedAccount])
-        } else if !accounts.isEmpty {
-            return BalanceData(accounts: accounts)
-        } else {
-            return BalanceData(transactions: transactions)
-        }
-    }
-    
-    private var groupedTransactions: [TransactionSection] {
-        TransactionSection.group(filteredTransactions)
-    }
-    
+
     // MARK: - Body
-    
+
     var body: some View {
-        NavigationStack {
+        // Баланс, шапка и секции считаются из одного снимка данных
+        let snapshot = viewModel.makeSnapshot(accounts: accounts, transactions: transactions)
+
+        return NavigationStack {
             VStack(spacing: 0) {
-                accountPickerHeader
-                
-                ScrollView {
-                    VStack(spacing: .zero) {
-                        BalanceCardView(balanceData: balanceData)
-                        
-                        TransactionsListView(
-                            sections: groupedTransactions,
-                            onTransactionTap: handleTransactionTap
-                        )
-                    }
-                    .padding(.bottom, 100)
+                accountPickerHeader(totalBalance: snapshot.totalBalance)
+
+                content(for: snapshot)
+            }
+            .background(AppColor.background)
+            .overlay(alignment: .bottom) { undoToast }
+            .navigationBarHidden(true)
+            .onAppear {
+                viewModel.syncSelectedAccount(with: accounts)
+            }
+            .onChange(of: accounts) { _, newAccounts in
+                viewModel.syncSelectedAccount(with: newAccounts)
+            }
+            .sheet(item: $viewModel.selectedTransaction) { transaction in
+                AddTransactionView(transaction: transaction, accountSelection: accountSelection)
+            }
+            .sheet(isPresented: $viewModel.showingAccountsView) {
+                accountSelectionSheet
+            }
+            .saveErrorAlert(isPresented: $viewModel.showingSaveError)
+            .sheet(isPresented: $viewModel.showingMonthlyLimit) {
+                MonthlyLimitView(limitStore: viewModel.limitStore)
+            }
+            .onReceive(
+                NotificationCenter.default
+                    .publisher(for: .NSCalendarDayChanged)
+                    .receive(on: RunLoop.main)
+            ) { _ in
+                viewModel.refreshToday()
+            }
+            .onChange(of: scenePhase) { _, phase in
+                if phase == .active {
+                    viewModel.refreshToday()
                 }
             }
-            .background(Color(.systemGroupedBackground))
-            .navigationBarHidden(true)
-            .fullScreenCover(item: $selectedTransaction) { transaction in
-                AddTransactionView(transaction: transaction)
-            }
-            .sheet(isPresented: $showingAccountsView) {
-                AccountSelectionSheet(
-                    accounts: accounts,
-                    selectedAccount: selectedAccount,
-                    onSelect: { account in
-                        withAnimation(.spring(response: 0.3, dampingFraction: 0.7)) {
-                            selectedAccount = account
-                        }
-                        showingAccountsView = false
-                    },
-                    onShowAll: {
-                        showingAccountsView = false
-                    }
+        }
+    }
+}
+
+// MARK: - Subviews
+private extension DashboardView {
+
+    func accountPickerHeader(totalBalance: Decimal) -> some View {
+        HStack(spacing: AppSpacing.medium) {
+            AccountPickerButton(
+                selectedAccount: viewModel.selectedAccount,
+                totalBalance: totalBalance,
+                action: viewModel.showAccounts
+            )
+
+            Spacer()
+
+            PeriodMenuButton(
+                selectedPeriod: viewModel.periodFilter.period,
+                onSelect: viewModel.changePeriod
+            )
+        }
+        .padding(.horizontal, AppSpacing.large)
+        .padding(.vertical, AppSpacing.small)
+        .background(AppColor.background)
+        // Список, уехавший под шапку, отделяется линией
+        .overlay(alignment: .bottom) {
+            Divider()
+                .opacity(isContentScrolled ? 1 : 0)
+                .animation(.easeOut(duration: 0.15), value: isContentScrolled)
+        }
+    }
+
+    @ViewBuilder
+    func content(for snapshot: DashboardSnapshot) -> some View {
+        if #available(iOS 18.0, *) {
+            scrollContent(for: snapshot)
+                .onScrollGeometryChange(for: Bool.self) { geometry in
+                    geometry.contentOffset.y > geometry.contentInsets.top
+                } action: { _, isScrolled in
+                    isContentScrolled = isScrolled
+                }
+        } else {
+            scrollContent(for: snapshot)
+        }
+    }
+
+    func scrollContent(for snapshot: DashboardSnapshot) -> some View {
+        ScrollView {
+            VStack(spacing: 0) {
+                BalanceCardView(
+                    balanceData: snapshot.periodBalance,
+                    periodFilter: viewModel.periodFilter,
+                    onPreviousPeriod: viewModel.goToPreviousPeriod,
+                    onNextPeriod: viewModel.goToNextPeriod
+                )
+
+                if viewModel.showsDailyAllowance {
+                    DailyAllowanceCardView(
+                        allowance: snapshot.dailyAllowance,
+                        onTap: viewModel.showMonthlyLimit
+                    )
+                    .padding(.horizontal, AppSpacing.large)
+                    .padding(.bottom, AppSpacing.large)
+                    .transition(.opacity)
+                }
+
+                TransactionsListView(
+                    sections: snapshot.sections,
+                    emptyStateHint: viewModel.emptyStateHint,
+                    isFilteredByPeriod: viewModel.isFilteredByPeriod,
+                    onTransactionTap: viewModel.handleTransactionTap,
+                    onResetPeriod: viewModel.resetPeriod,
+                    onRepeat: { viewModel.repeatTransaction($0, using: repositories.transactions) },
+                    onDelete: { viewModel.deleteTransaction($0, using: repositories.transactions) }
                 )
             }
+            .padding(.bottom, AppSpacing.tabBarBottomInset)
         }
+        .scrollDismissesKeyboard(.immediately)
     }
-    
-    // MARK: - Actions
-    
-    private func handleTransactionTap(_ transaction: Transaction) {
-        UIImpactFeedbackGenerator(style: .light).impactOccurred()
-        withAnimation {
-            selectedTransaction = transaction
-        }
-    }
-}
 
-// MARK: - Account Picker Header
-private extension DashboardView {
-    
-    var accountPickerHeader: some View {
-        HStack(spacing: 12) {
-            Button {
-                UIImpactFeedbackGenerator(style: .light).impactOccurred()
-                showingAccountsView = true
-            } label: {
-                HStack(spacing: 6) {
-                    if let selectedAccount = selectedAccount {
-                        ZStack {
-                            Circle()
-                                .fill(selectedAccount.swiftUIColor.opacity(0.2))
-                                .frame(width: 24, height: 24)
-                            
-                            Image(systemName: selectedAccount.icon)
-                                .font(.system(size: 12, weight: .medium))
-                                .foregroundStyle(selectedAccount.swiftUIColor)
-                        }
-                        
-                        VStack(alignment: .leading, spacing: 1) {
-                            Text(selectedAccount.name)
-                                .font(.system(size: 13, weight: .medium))
-                                .foregroundStyle(.primary)
-                            
-                            Text(selectedAccount.currentBalance.formatted(.currency(code: "KZT")))
-                                .font(.system(size: 11, weight: .regular))
-                                .fontDesign(.rounded)
-                                .foregroundStyle(.secondary)
-                        }
-                    } else {
-                        Image(systemName: "square.stack.3d.up.fill")
-                            .font(.system(size: 16, weight: .medium))
-                            .foregroundStyle(.black)
-                        
-                        VStack(alignment: .leading, spacing: 1) {
-                            Text("Все счета")
-                                .font(.system(size: 13, weight: .medium))
-                                .foregroundStyle(.primary)
-                            
-                            Text(balanceData.balance.formatted(.currency(code: "KZT")))
-                                .font(.system(size: 11, weight: .regular))
-                                .fontDesign(.rounded)
-                                .foregroundStyle(.secondary)
-                        }
-                    }
-                    
-                    Image(systemName: "chevron.down")
-                        .font(.system(size: 10, weight: .semibold))
-                        .foregroundStyle(.secondary)
-                }
-                .padding(.horizontal, 12)
-                .padding(.vertical, 8)
-                .background {
-                    Capsule()
-                        .fill(Color(uiColor: .systemBackground))
-                        .shadow(color: .black.opacity(0.04), radius: 4, y: 1)
-                }
+    @ViewBuilder
+    var undoToast: some View {
+        if let undoAction = viewModel.undoAction {
+            UndoToastView(message: undoAction.message) {
+                viewModel.undoLastAction(using: repositories.transactions)
             }
-            .buttonStyle(.plain)
-            
-            Spacer()
+            .id(undoAction.id)
+            .padding(.horizontal, AppSpacing.large)
+            .padding(.bottom, AppSpacing.tabBarBottomInset)
+            .transition(.move(edge: .bottom).combined(with: .opacity))
         }
-        .padding(.horizontal, 16)
-        .padding(.vertical, 8)
-        .background(Color(.systemGroupedBackground))
+    }
+
+    var accountSelectionSheet: some View {
+        AccountSelectionSheet(
+            selectedAccount: viewModel.selectedAccount,
+            onSelect: { account in
+                viewModel.selectAccount(account)
+            }
+        )
     }
 }
-

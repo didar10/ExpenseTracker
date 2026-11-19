@@ -6,141 +6,204 @@
 //
 
 import Foundation
-import SwiftData
 import SwiftUI
 import UIKit
 
 @MainActor
 final class AccountFormViewModel: ObservableObject {
-    
+
     // MARK: - Input Data
+
     @Published var name: String = ""
-    @Published var selectedIcon: String = "creditcard.fill"
-    @Published var selectedColor: String = "blue"
+    @Published var selectedIcon: String = Snapshot.defaultIcon
+    @Published var selectedColor: String = Snapshot.defaultColor
     @Published var initialBalance: String = ""
     @Published var isDefault: Bool = false
-    
+
+    // MARK: - UI State
+
+    @Published var showingSaveError = false
+
     // MARK: - Private Properties
+
     private(set) var editingAccount: Account?
-    
+
+    /// Состояние формы на момент открытия: по нему определяется, есть ли несохраненные правки
+    private let initialSnapshot: Snapshot
+
     // MARK: - Init
+
     init(account: Account? = nil) {
         self.editingAccount = account
-        
-        guard let account else { return }
-        
-        // Заполняем форму для редактирования
-        name = account.name
-        selectedIcon = account.icon
-        selectedColor = account.color
-        initialBalance = account.initialBalance == 0 ? "" : "\(account.initialBalance)"
-        isDefault = account.isDefault
+        self.initialSnapshot = Snapshot(account: account)
+
+        name = initialSnapshot.name
+        selectedIcon = initialSnapshot.icon
+        selectedColor = initialSnapshot.color
+        initialBalance = initialSnapshot.balance
+        isDefault = initialSnapshot.isDefault
     }
-    
+
     // MARK: - Computed Properties
+
     var isEditMode: Bool {
         editingAccount != nil
     }
-    
+
+    var trimmedName: String {
+        name.trimmingCharacters(in: .whitespacesAndNewlines)
+    }
+
     var isValid: Bool {
-        !name.isEmpty
+        !trimmedName.isEmpty
     }
-    
+
     var navigationTitle: String {
-        isEditMode ? "Редактировать счет" : "Новый счет"
+        isEditMode ? AppString.editAccount : AppString.newAccount
     }
-    
-    var previewName: String {
-        name.isEmpty ? "Название счета" : name
+
+    var saveButtonTitle: String {
+        guard isValid else { return AppString.enterName }
+
+        return isEditMode ? AppString.saveChanges : AppString.createAccount
     }
-    
-    var previewNameColor: Color {
-        name.isEmpty ? .secondary : .primary
+
+    /// Закрытие формы с правками проходит через подтверждение
+    var hasUnsavedChanges: Bool {
+        currentSnapshot != initialSnapshot
     }
-    
-    var previewBalance: String? {
-        guard let balance = balanceDecimal, balance > 0 else {
-            return nil
-        }
-        return balance.formatted(.currency(code: "KZT"))
+
+    private var currentSnapshot: Snapshot {
+        Snapshot(
+            name: name,
+            icon: selectedIcon,
+            color: selectedColor,
+            balance: initialBalance,
+            isDefault: isDefault
+        )
     }
-    
+
     private var balanceDecimal: Decimal? {
         Decimal(string: initialBalance.replacingOccurrences(of: ",", with: "."))
     }
-    
+
     // MARK: - Actions
+
     func selectIcon(_ icon: String) {
         selectedIcon = icon
         provideFeedback(.light)
     }
-    
+
     func selectColor(_ colorName: String) {
         selectedColor = colorName
         provideFeedback(.light)
     }
-    
-    func save(accounts: [Account], using context: ModelContext) {
-        let balance = balanceDecimal ?? 0
-        
-        if let account = editingAccount {
-            // Редактирование существующего счета
-            updateExistingAccount(account, balance: balance, accounts: accounts)
-        } else {
-            // Создание нового счета
-            createNewAccount(balance: balance, accounts: accounts, context: context)
+
+    /// Оставляет в поле баланса только то, что можно превратить в число:
+    /// один минус в начале, цифры и один разделитель дробной части
+    func sanitizeBalanceInput() {
+        let isNegative = initialBalance.hasPrefix("-")
+        var separatorUsed = false
+
+        let digits = initialBalance.filter { character in
+            if character.isNumber { return true }
+
+            guard character == "." || character == "," else { return false }
+            guard !separatorUsed else { return false }
+
+            separatorUsed = true
+            return true
         }
-        
-        try? context.save()
-    }
-    
-    func delete(using context: ModelContext) {
-        guard let account = editingAccount else { return }
-        
-        // Транзакции будут удалены автоматически благодаря deleteRule: .cascade
-        context.delete(account)
-        try? context.save()
-        
-        provideFeedback(.medium)
-    }
-    
-    // MARK: - Private Methods
-    private func updateExistingAccount(_ account: Account, balance: Decimal, accounts: [Account]) {
-        account.name = name
-        account.icon = selectedIcon
-        account.color = selectedColor
-        account.initialBalance = balance
-        
-        // Если делаем этот счет по умолчанию, снимаем флаг с других
-        if isDefault {
-            for acc in accounts where acc.id != account.id {
-                acc.isDefault = false
-            }
+
+        let sanitized = (isNegative ? "-" : "") + digits
+
+        if sanitized != initialBalance {
+            initialBalance = sanitized
         }
-        account.isDefault = isDefault
     }
-    
-    private func createNewAccount(balance: Decimal, accounts: [Account], context: ModelContext) {
-        let newAccount = Account(
-            name: name,
+
+    /// - Returns: false — форма невалидна или запись не удалась; экран остается открытым
+    func save(using repository: AccountRepository) -> Bool {
+        guard isValid else { return false }
+
+        let draft = AccountDraft(
+            name: trimmedName,
             icon: selectedIcon,
             color: selectedColor,
-            initialBalance: balance,
+            initialBalance: balanceDecimal ?? 0,
             isDefault: isDefault
         )
-        
-        // Если делаем этот счет по умолчанию, снимаем флаг с других
-        if isDefault {
-            for acc in accounts {
-                acc.isDefault = false
+
+        do {
+            if let account = editingAccount {
+                try repository.update(account, with: draft)
+            } else {
+                try repository.add(draft)
             }
+            return true
+        } catch {
+            showingSaveError = true
+            return false
         }
-        
-        context.insert(newAccount)
     }
-    
+
+    func delete(using repository: AccountRepository) -> Bool {
+        guard let account = editingAccount else { return false }
+
+        do {
+            try repository.delete(account)
+            provideFeedback(.medium)
+            return true
+        } catch {
+            showingSaveError = true
+            return false
+        }
+    }
+
     // MARK: - Haptic Feedback
+
     private func provideFeedback(_ style: UIImpactFeedbackGenerator.FeedbackStyle) {
         UIImpactFeedbackGenerator(style: style).impactOccurred()
+    }
+}
+
+// MARK: - Snapshot
+
+extension AccountFormViewModel {
+
+    /// Слепок полей формы для сравнения «было / стало»
+    struct Snapshot: Equatable {
+
+        static let defaultIcon = "creditcard.fill"
+        static let defaultColor = AppColorPalette.fallback.rawValue
+
+        let name: String
+        let icon: String
+        let color: String
+        let balance: String
+        let isDefault: Bool
+
+        init(account: Account?) {
+            name = account?.name ?? ""
+            icon = account?.icon ?? Self.defaultIcon
+            color = account?.color ?? Self.defaultColor
+            balance = Self.balanceText(for: account?.initialBalance)
+            isDefault = account?.isDefault ?? false
+        }
+
+        init(name: String, icon: String, color: String, balance: String, isDefault: Bool) {
+            self.name = name
+            self.icon = icon
+            self.color = color
+            self.balance = balance
+            self.isDefault = isDefault
+        }
+
+        /// Нулевой баланс показывается плейсхолдером, а не нулём в поле
+        private static func balanceText(for balance: Decimal?) -> String {
+            guard let balance, balance != 0 else { return "" }
+
+            return "\(balance)"
+        }
     }
 }

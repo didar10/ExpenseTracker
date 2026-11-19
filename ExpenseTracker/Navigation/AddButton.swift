@@ -18,7 +18,7 @@ struct AddButton: View {
         } label: {
             ZStack {
                 Circle()
-                    .fill(Color(uiColor: .systemBackground))
+                    .fill(Color.appCardBackground)
                     .frame(width: 56, height: 56)
                     .overlay(
                         Circle()
@@ -27,10 +27,11 @@ struct AddButton: View {
                 
                 Image(systemName: "plus")
                     .font(.system(size: 24, weight: .semibold))
-                    .foregroundStyle(.black)
+                    .foregroundColor(AppColor.textPrimary)
             }
             .circleShadow()
         }
+        .buttonStyle(PressableScaleButtonStyle())
         .offset(y: isVisible ? 0 : 120)
         .animation(.spring(response: 0.4, dampingFraction: 0.8), value: isVisible)
     }

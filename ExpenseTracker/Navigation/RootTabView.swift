@@ -14,29 +14,49 @@ struct RootTabView: View {
     @State private var tabBarOffset: CGFloat = 0
     @State private var isTabBarVisible = true
     
+    // Состояние на уровне RootTabView сохраняется между переключениями табов:
+    // выбранный счет общий для экранов, ViewModel статистики живет дольше своей View
+    @State private var accountSelection: AccountSelectionStore
+    @State private var dashboardPeriodStore = DashboardPeriodStore()
+    @State private var monthlyLimitStore = MonthlyLimitStore()
+    @State private var statisticsViewModel: StatisticsViewModel
+
+    init() {
+        let accountSelection = AccountSelectionStore()
+
+        _accountSelection = State(initialValue: accountSelection)
+        _statisticsViewModel = State(
+            initialValue: StatisticsViewModel(accountSelection: accountSelection)
+        )
+    }
+    
     var body: some View {
         ZStack(alignment: .bottom) {
             // Content views
             Group {
                 switch selectedTab {
                 case .dashboard:
-                    DashboardView()
+                    DashboardView(
+                        accountSelection: accountSelection,
+                        periodStore: dashboardPeriodStore,
+                        limitStore: monthlyLimitStore
+                    )
                         .environment(\.tabBarVisibility, $isTabBarVisible)
                 case .statistics:
-                    StatisticsView()
+                    StatisticsView(viewModel: statisticsViewModel)
                         .environment(\.tabBarVisibility, $isTabBarVisible)
                 case .plans:
-                    PlansView()
+                    PlansView(limitStore: monthlyLimitStore)
                         .environment(\.tabBarVisibility, $isTabBarVisible)
                 case .settings:
-                    SettingsView()
+                    SettingsView(limitStore: monthlyLimitStore, onDataReset: handleDataReset)
                         .environment(\.tabBarVisibility, $isTabBarVisible)
                 }
             }
             .frame(maxWidth: .infinity, maxHeight: .infinity)
             
             // Tab bar and add button
-            HStack(alignment: .center, spacing: 12) {
+            HStack(alignment: .center, spacing: AppSpacing.medium) {
                 // Modern floating tab bar
                 ModernTabBar(
                     selectedTab: $selectedTab,
@@ -48,12 +68,25 @@ struct RootTabView: View {
                     isAddPresented = true
                 }
             }
-            .padding(.horizontal, 16)
-            .padding(.bottom, 8)
+            .padding(.horizontal, AppSpacing.large)
+            .padding(.bottom, AppSpacing.small)
         }
         .ignoresSafeArea(.keyboard, edges: .bottom)
-        .fullScreenCover(isPresented: $isAddPresented) {
-            AddTransactionView()
+        .sheet(isPresented: $isAddPresented) {
+            AddTransactionView(accountSelection: accountSelection)
+        }
+    }
+
+    // MARK: - Actions
+
+    /// После удаления всех данных возвращаем пользователя на главный экран
+    /// и сбрасываем состояние экранов, живущих дольше своей View
+    private func handleDataReset() {
+        statisticsViewModel.resetAfterDataReset()
+        monthlyLimitStore.reset()
+
+        withAnimation(.spring(response: 0.3, dampingFraction: 0.7)) {
+            selectedTab = .dashboard
         }
     }
 }

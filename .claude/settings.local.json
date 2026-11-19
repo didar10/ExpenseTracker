@@ -1,0 +1,15 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(xcodebuild:*)",
+      "Bash(ls:*)",
+      "Bash(xargs sed:*)",
+      "Bash(echo:*)",
+      "Bash(ruby --version)",
+      "Bash(git rm *)",
+      "mcp__visualize__read_me",
+      "Bash(xargs -I{} echo {})",
+      "Bash(xargs cat)"
+    ]
+  }
+}

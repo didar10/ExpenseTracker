@@ -8,24 +8,52 @@
 import SwiftUI
 
 struct TransactionAmountView: View {
+
+    // MARK: - Properties
+
     let amount: String
-    
+    /// Пока сумму не начали вводить, «0» показывается приглушенно — это плейсхолдер, а не значение
+    let hasInput: Bool
+
+    // MARK: - Computed Properties
+
+    private var amountColor: Color {
+        hasInput ? AppColor.textPrimary : AppColor.textTertiary
+    }
+
+    // MARK: - Body
+
     var body: some View {
-        VStack(spacing: 8) {
-            // Сумма
-            HStack(spacing: 4) {
-                Text(amount.isEmpty ? "0" : amount)
-                    .font(.system(size: 52, weight: .bold, design: .rounded))
-                    .foregroundStyle(.primary)
-                    .minimumScaleFactor(0.5)
-                    .lineLimit(1)
-                
-                AppText("₸", style: .title, color: .secondary)
-                    .offset(y: -4)
-            }
+        HStack(alignment: .firstTextBaseline, spacing: AppSpacing.smaller) {
+            Text(amount)
+                .font(.system(size: AppSize.amountDisplay, weight: .bold, design: .rounded))
+                .monospacedDigit()
+                .foregroundStyle(amountColor)
+                .minimumScaleFactor(0.5)
+                .lineLimit(1)
+                .contentTransition(.numericText())
+                .animation(.snappy(duration: 0.2), value: amount)
+
+            // Символ валюты — часть той же суммы: та же гарнитура и начертание,
+            // вдвое меньший кегль и общая базовая линия с цифрами
+            Text(AppString.currencySymbol)
+                .font(.system(size: AppSize.amountSymbol, weight: .semibold, design: .rounded))
+                .foregroundStyle(AppColor.textSecondary)
         }
         .frame(maxWidth: .infinity)
-        .padding(.vertical, 12)
-        .contentTransition(.numericText())
+        // Сумма — главный объект экрана: занимает верхнюю треть формы,
+        // иначе между комментарием и клавиатурой остается пустая полоса
+        .padding(.vertical, AppSpacing.xxLarge)
+        .accessibilityElement(children: .combine)
+        .accessibilityLabel(AppString.accessibilityAmount)
+        .accessibilityValue(amount)
     }
+}
+
+#Preview {
+    VStack(spacing: AppSpacing.xLarge) {
+        TransactionAmountView(amount: "0", hasInput: false)
+        TransactionAmountView(amount: "1 350 000.75", hasInput: true)
+    }
+    .background(AppColor.background)
 }

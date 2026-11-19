@@ -10,172 +10,247 @@ import SwiftData
 
 struct AddTransactionView: View {
 
-    @Environment(\.modelContext) private var modelContext
+    // MARK: - Properties
+
+    @Environment(\.repositories) private var repositories
     @Environment(\.dismiss) private var dismiss
 
     @StateObject private var viewModel: AddTransactionViewModel
-    
+
+    @FocusState private var isNoteFocused: Bool
+
     @State private var showingAccountPicker = false
+    @State private var showingDiscardConfirmation = false
+    @State private var isContentScrolled = false
 
     @Query(sort: \Category.name)
     private var categories: [Category]
-    
+
     @Query(sort: \Account.createdAt, order: .forward)
     private var accounts: [Account]
 
-    init(transaction: Transaction? = nil) {
+    // MARK: - Init
+
+    init(transaction: Transaction? = nil, accountSelection: AccountSelectionStore) {
         _viewModel = StateObject(
-            wrappedValue: AddTransactionViewModel(transaction: transaction)
+            wrappedValue: AddTransactionViewModel(
+                transaction: transaction,
+                accountSelection: accountSelection
+            )
         )
     }
 
+    // MARK: - Computed Properties
+
+    private var filteredCategories: [Category] {
+        categories.filter { $0.type == viewModel.type }
+    }
+
+    // MARK: - Body
+
     var body: some View {
         NavigationStack {
-            ZStack {
-                VStack(spacing: 0) {
-                    
-                    header
-                    
-                    ScrollView {
-                        VStack(spacing: 14) {
-                            
-                            TransactionAmountView(amount: viewModel.amount)
-                            
-                            // Выбор счета
-                            AccountPickerView(
-                                selectedAccount: $viewModel.selectedAccount,
-                                transactionAmount: viewModel.amount,
-                                transactionType: viewModel.type,
-                                showingAccountPicker: $showingAccountPicker
-                            )
+            VStack(spacing: 0) {
+                header
 
-                            // Выбор категории (только для расходов)
-                            Group {
-                                if viewModel.type == .expense {
-                                    CategorySelectionView(
-                                        categories: categories,
-                                        selectedCategory: $viewModel.selectedCategory,
-                                        onShowAll: {
-                                            viewModel.toggleShowAllCategories()
-                                        }
-                                    )
-                                    .transition(.asymmetric(
-                                        insertion: .move(edge: .trailing).combined(with: .opacity),
-                                        removal: .move(edge: .trailing).combined(with: .opacity)
-                                    ))
-                                }
-                            }
-                            .animation(.spring(response: 0.35, dampingFraction: 0.7), value: viewModel.type)
+                form
 
-                            TransactionDetailsView(
-                                date: $viewModel.date,
-                                note: $viewModel.note
-                            )
-                        }
-                        .padding(.horizontal) // Общий padding для всех элементов
-                        .padding(.top, 10)
-                        .frame(maxWidth: .infinity, alignment: .top) // Фиксируем ширину
-                    }
-                    
-                    Divider()
-                        .padding(.bottom, 8)
-
-                    NumericKeypadView(
-                        isEnterEnabled: viewModel.isSaveEnabled,
-                        onKeyTap: viewModel.handleKeyTap,
-                        onEnterTap: handleSave
-                    )
-                    .padding(.horizontal)
-                    .padding(.bottom, 8)
+                // Клавиатура заметки заменяет цифровую: две клавиатуры одновременно не нужны
+                if !isNoteFocused {
+                    keypad
                 }
-                
-                // Success overlay
+            }
+            .background(AppColor.background)
+            .animation(.easeOut(duration: 0.25), value: isNoteFocused)
+            .overlay {
                 if viewModel.showSuccessAnimation {
-                    SuccessOverlayView(isShowing: viewModel.showSuccessAnimation)
+                    SuccessOverlayView()
+                        .transition(.opacity.combined(with: .scale(scale: 0.92)))
                 }
             }
-            .background(Color(.systemGroupedBackground))
+            .toolbar {
+                ToolbarItemGroup(placement: .keyboard) {
+                    Spacer()
+
+                    Button(AppString.done) { isNoteFocused = false }
+                }
+            }
+            .onChange(of: viewModel.type) {
+                viewModel.resetCategoryIfTypeMismatched()
+            }
+            // Выбор категории завершает ввод заметки
+            .onChange(of: viewModel.selectedCategory) {
+                isNoteFocused = false
+            }
+            .task(id: accounts.count) {
+                viewModel.applyDefaultAccountIfNeeded(from: accounts)
+            }
+            // Введенные данные не теряются молча: закрытие проходит через подтверждение
+            .interactiveDismissDisabled(viewModel.hasUnsavedChanges)
+            .alert(AppString.discardChangesTitle, isPresented: $showingDiscardConfirmation) {
+                Button(AppString.discardChanges, role: .destructive) { dismiss() }
+                Button(AppString.keepEditing, role: .cancel) {}
+            } message: {
+                Text(AppString.discardChangesMessage)
+            }
             .sheet(isPresented: $showingAccountPicker) {
-                AccountPickerSheet(
-                    selectedAccount: $viewModel.selectedAccount,
-                    accounts: accounts
-                )
+                accountSelectionSheet
             }
-            .navigationDestination(isPresented: $viewModel.showAllCategories) {
-                AllCategoriesView(
-                    categories: categories,
-                    selectedCategory: viewModel.selectedCategory,
-                    onSelect: { category in
-                        withAnimation(.spring(response: 0.35, dampingFraction: 0.7)) {
-                            viewModel.selectCategory(category)
-                        }
-                        viewModel.showAllCategories = false
-                    }
-                )
-            }
+            .saveErrorAlert(isPresented: $viewModel.showingSaveError)
         }
     }
-    
-    private func handleSave() {
-        guard viewModel.save(using: modelContext) else { return }
-        
-        withAnimation(.spring(response: 0.3, dampingFraction: 0.7)) {
+}
+
+// MARK: - Actions
+private extension AddTransactionView {
+
+    func handleSave() {
+        guard viewModel.save(using: repositories.transactions) else { return }
+
+        isNoteFocused = false
+
+        withAnimation(.spring(response: 0.3, dampingFraction: 0.8)) {
             viewModel.showSuccessAndDismiss {
                 dismiss()
             }
         }
     }
+
+    func handleClose() {
+        isNoteFocused = false
+
+        guard viewModel.hasUnsavedChanges else {
+            dismiss()
+            return
+        }
+
+        showingDiscardConfirmation = true
+    }
 }
 
-// MARK: - Header
-
+// MARK: - Subviews
 private extension AddTransactionView {
 
     var header: some View {
-        VStack(spacing: 8) {
-            headerContent
-        }
-        .padding(.vertical, 8)
-        .background(Color(.systemGroupedBackground))
-        .frame(maxWidth: .infinity) // Фиксируем ширину
-    }
-    
-    var headerContent: some View {
         ZStack {
-            // Centered typePicker
             HStack {
                 Spacer()
-                TransactionTypePickerView(selectedType: $viewModel.type)
-                    .frame(width: 220, height: 34)
+
+                TransactionTypePickerView(selectedType: $viewModel.type, style: .layered)
+                    .frame(width: AppSize.typePickerWidth, height: AppSize.typePickerHeight)
+
                 Spacer()
             }
-            
-            // Close button on the left
+
             HStack {
                 closeButton
+
                 Spacer()
             }
         }
-        .frame(height: 50)
-        .frame(maxWidth: .infinity) // Фиксируем ширину
-    }
-    
-    var closeButton: some View {
-        Button {
-            UIImpactFeedbackGenerator(style: .light).impactOccurred()
-            dismiss()
-        } label: {
-            ZStack {
-                Circle()
-                    .fill(Color(.secondarySystemGroupedBackground))
-                    .frame(width: 34, height: 34)
-                Image(systemName: "xmark")
-                    .font(.system(size: 16, weight: .semibold))
-                    .foregroundStyle(.black)
-            }
+        .frame(height: AppSize.screenHeader)
+        .frame(maxWidth: .infinity)
+        .padding(.vertical, AppSpacing.small)
+        .padding(.top, AppSpacing.small)
+        .background(AppColor.background)
+        // Контент, уехавший под шапку, отделяется линией — иначе он «прилипает» к переключателю
+        .overlay(alignment: .bottom) {
+            Divider()
+                .opacity(isContentScrolled ? 1 : 0)
+                .animation(.easeOut(duration: 0.15), value: isContentScrolled)
         }
-        .padding(.leading, 12)
-        .fixedSize() // Фиксируем размер кнопки
+        .accessibilityElement(children: .contain)
+        .accessibilityLabel(viewModel.screenTitle)
+    }
+
+    var closeButton: some View {
+        ToolbarIconButton(icon: "xmark", isOutlined: true, action: handleClose)
+            .padding(.leading, AppSpacing.medium)
+            .fixedSize()
+            .accessibilityLabel(AppString.accessibilityClose)
+    }
+
+    @ViewBuilder
+    var form: some View {
+        if #available(iOS 18.0, *) {
+            formContent
+                .onScrollGeometryChange(for: Bool.self) { geometry in
+                    geometry.contentOffset.y > geometry.contentInsets.top
+                } action: { _, isScrolled in
+                    isContentScrolled = isScrolled
+                }
+        } else {
+            formContent
+        }
+    }
+
+    var formContent: some View {
+        ScrollView {
+            VStack(spacing: AppSpacing.large) {
+                TransactionAmountView(
+                    amount: viewModel.amountDisplay,
+                    hasInput: viewModel.hasAmountInput
+                )
+
+                HStack(spacing: AppSpacing.medium) {
+                    AccountPickerView(
+                        account: viewModel.selectedAccount,
+                        predictedBalance: viewModel.predictedBalance
+                    ) {
+                        isNoteFocused = false
+                        showingAccountPicker = true
+                    }
+
+                    DateSelectionView(date: $viewModel.date) {
+                        isNoteFocused = false
+                    }
+                }
+                .frame(height: AppSize.inlineTile)
+
+                CategorySelectionView(
+                    categories: filteredCategories,
+                    type: viewModel.type,
+                    selectedCategory: $viewModel.selectedCategory
+                )
+                .card(cornerRadius: AppRadius.card)
+                .animation(.spring(response: 0.35, dampingFraction: 0.8), value: viewModel.type)
+
+                NoteInputView(note: $viewModel.note, isFocused: $isNoteFocused)
+            }
+            .padding(.horizontal, AppSpacing.large)
+            .padding(.top, AppSpacing.mediumSmall)
+            .padding(.bottom, AppSpacing.small)
+            .frame(maxWidth: .infinity, alignment: .top)
+            // Тап по любому свободному месту формы убирает клавиатуру заметки
+            .contentShape(Rectangle())
+            .onTapGesture { isNoteFocused = false }
+        }
+        .scrollDismissesKeyboard(.interactively)
+        .scrollBounceBehavior(.basedOnSize)
+    }
+
+    var keypad: some View {
+        NumericKeypadView(
+            isEnterEnabled: viewModel.isSaveEnabled,
+            enterTitle: viewModel.saveButtonTitle,
+            disabledHint: viewModel.validationHint,
+            onKeyTap: viewModel.handleKeyTap,
+            onClearTap: viewModel.clearAmount,
+            onEnterTap: handleSave
+        )
+        .padding(.horizontal, AppSpacing.large)
+        .padding(.bottom, AppSpacing.small)
+        .transition(.move(edge: .bottom).combined(with: .opacity))
+    }
+
+    var accountSelectionSheet: some View {
+        AccountSelectionSheet(
+            selectedAccount: viewModel.selectedAccount,
+            onSelect: { account in
+                viewModel.selectedAccount = account
+                showingAccountPicker = false
+            },
+            allowsAllAccounts: false
+        )
     }
 }
-

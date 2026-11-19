@@ -9,194 +9,229 @@ import SwiftUI
 import SwiftData
 
 struct AccountFormView: View {
-    
-    @Environment(\.modelContext) private var modelContext
+
+    // MARK: - Properties
+
+    @Environment(\.repositories) private var repositories
     @Environment(\.dismiss) private var dismiss
-    
-    @Query(sort: \Account.name) private var accounts: [Account]
-    
+
     @StateObject private var viewModel: AccountFormViewModel
-    
+
+    @FocusState private var isBalanceFocused: Bool
+
     @State private var showingDeleteAlert = false
-    
+    @State private var showingDiscardConfirmation = false
+
+    // MARK: - Init
+
     init(account: Account? = nil) {
         _viewModel = StateObject(wrappedValue: AccountFormViewModel(account: account))
     }
-    
+
+    // MARK: - Body
+
     var body: some View {
-        NavigationStack {
-            ZStack {
-                Color(uiColor: .systemGroupedBackground)
-                    .ignoresSafeArea()
-                
-                ScrollView {
-                    VStack(spacing: 20) {
-                        // Превью карточки счета
-                        accountPreviewCard
-                        
-                        // Форма
-                        formContent
-                    }
-                    .padding()
+        ZStack(alignment: .bottom) {
+            AppColor.background
+                .ignoresSafeArea()
+
+            VStack(spacing: 0) {
+                header
+
+                form
+            }
+
+            saveBar
+        }
+        // Введенные данные не теряются молча: закрытие проходит через подтверждение
+        .interactiveDismissDisabled(viewModel.hasUnsavedChanges)
+        .toolbar {
+            ToolbarItemGroup(placement: .keyboard) {
+                Spacer()
+
+                Button(AppString.done) {
+                    isBalanceFocused = false
+                    dismissKeyboard()
                 }
             }
-            .navigationTitle(viewModel.navigationTitle)
-            .navigationBarTitleDisplayMode(.inline)
-            .toolbarBackground(.hidden, for: .navigationBar)
-            .toolbar {
-                ToolbarItem(placement: .navigationBarLeading) {
-                    Button {
-                        dismiss()
-                    } label: {
-                        ZStack {
-                            Circle()
-                                .fill(Color.white)
-                                .frame(width: 40, height: 40)
-                                .shadow(
-                                    color: .black.opacity(0.1),
-                                    radius: 3,
-                                    x: 0,
-                                    y: 2
-                                )
-                            
-                            Image(systemName: "xmark")
-                                .font(.system(size: 13, weight: .semibold))
-                                .foregroundStyle(.black)
-                        }
-                    }
-                }
-                
-                ToolbarItem(placement: .navigationBarTrailing) {
-                    Button {
-                        viewModel.save(accounts: accounts, using: modelContext)
-                        dismiss()
-                    } label: {
-                        ZStack {
-                            Circle()
-                                .fill(viewModel.isValid ? Color.white : Color.white.opacity(0.5))
-                                .frame(width: 40, height: 40)
-                                .shadow(
-                                    color: .black.opacity(viewModel.isValid ? 0.1 : 0.05),
-                                    radius: 3,
-                                    x: 0,
-                                    y: 2
-                                )
-                            
-                            Image(systemName: "checkmark")
-                                .font(.system(size: 14, weight: .bold))
-                                .foregroundStyle(viewModel.isValid ? .black : .gray)
-                        }
-                    }
-                    .disabled(!viewModel.isValid)
-                }
-            }
-            .alert("Удалить счет?", isPresented: $showingDeleteAlert) {
-                Button("Отмена", role: .cancel) { }
-                Button("Удалить", role: .destructive) {
-                    viewModel.delete(using: modelContext)
+        }
+        .saveErrorAlert(isPresented: $viewModel.showingSaveError)
+        .alert(AppString.deleteAccountConfirm, isPresented: $showingDeleteAlert) {
+            Button(AppString.cancel, role: .cancel) { }
+            Button(AppString.delete, role: .destructive) {
+                if viewModel.delete(using: repositories.accounts) {
                     dismiss()
                 }
-            } message: {
-                Text("Счет и все его транзакции будут удалены. Это действие нельзя отменить.")
             }
+        } message: {
+            // Вместе со счетом каскадом удаляются его операции — предупреждаем об этом явно
+            Text(AppString.deleteAccountMessage)
         }
-    }
-    
-    // MARK: - Views
-    
-    private var accountPreviewCard: some View {
-        HStack(spacing: 12) {
-            // Иконка
-            ZStack {
-                RoundedRectangle(cornerRadius: 10, style: .continuous)
-                    .fill(Color(named: viewModel.selectedColor).opacity(0.2))
-                    .frame(width: 44, height: 44)
-                
-                Image(systemName: viewModel.selectedIcon)
-                    .font(.system(size: 20))
-                    .foregroundStyle(Color(named: viewModel.selectedColor))
-            }
-            
-            // Информация
-            HStack {
-                TextField("Название счета", text: $viewModel.name)
-                    .font(.custom("SFProDisplay-Semibold", size: 16))
-                    .foregroundStyle(viewModel.name.isEmpty ? .secondary : .primary)
-                
-                if viewModel.isDefault {
-                    Image(systemName: "star.fill")
-                        .font(.system(size: 11))
-                        .foregroundStyle(.yellow)
-                }
-            }
-            
-            Spacer()
-        }
-        .padding(16)
-        .cardShadow(cornerRadius: 16)
-    }
-    
-    private var formContent: some View {
-        VStack(spacing: 16) {
-            // Начальный баланс
-            FormSection(title: "Начальный баланс (опционально)") {
-                TextField("0", text: $viewModel.initialBalance)
-                    .textFieldStyle(.roundedBorder)
-                    .keyboardType(.decimalPad)
-                    .font(.custom("SFProDisplay-Regular", size: 16))
-            }
-            
-            // Иконка
-            FormSection(title: "Иконка") {
-                IconPickerView(selectedIcon: $viewModel.selectedIcon, onSelect: viewModel.selectIcon)
-            }
-            
-            // Цвет
-            FormSection(title: "Цвет") {
-                ColorPickerView(selectedColor: $viewModel.selectedColor, onSelect: viewModel.selectColor)
-            }
-            
-            // По умолчанию
-            FormSection(title: "") {
-                Toggle(isOn: $viewModel.isDefault) {
-                    VStack(alignment: .leading, spacing: 2) {
-                        AppText("Счет по умолчанию", style: .body)
-                            .color(.primary)
-                        AppText("Будет выбран автоматически при создании транзакций", style: .caption)
-                            .color(.secondary)
-                    }
-                }
-                .tint(.blue)
-            }
-            
-            // Кнопка удаления (только в режиме редактирования)
-            if viewModel.isEditMode {
-                Button {
-                    showingDeleteAlert = true
-                } label: {
-                    HStack {
-                        Spacer()
-                        
-                        HStack(spacing: 8) {
-                            Image(systemName: "trash")
-                                .font(.system(size: 15, weight: .semibold))
-                            
-                            Text("Удалить счет")
-                                .font(.custom("SFProDisplay-Semibold", size: 16))
-                        }
-                        .foregroundStyle(.red)
-                        
-                        Spacer()
-                    }
-                    .padding(16)
-                    .cardShadow(cornerRadius: 12)
-                }
-            }
+        .alert(AppString.discardAccountTitle, isPresented: $showingDiscardConfirmation) {
+            Button(AppString.discardChanges, role: .destructive) { dismiss() }
+            Button(AppString.keepEditing, role: .cancel) { }
+        } message: {
+            Text(AppString.discardChangesMessage)
         }
     }
 }
 
-#Preview {
+// MARK: - Subviews
+private extension AccountFormView {
+
+    var header: some View {
+        SheetHeaderView(title: viewModel.navigationTitle, onClose: handleClose)
+    }
+
+    var form: some View {
+        ScrollView {
+            VStack(spacing: AppSpacing.xLarge) {
+                NamePreviewCardView(
+                    name: $viewModel.name,
+                    icon: viewModel.selectedIcon,
+                    color: Color(named: viewModel.selectedColor),
+                    placeholder: AppString.accountName
+                )
+
+                colorSection
+                iconSection
+                balanceSection
+                defaultSection
+
+                if viewModel.isEditMode {
+                    deleteSection
+                }
+            }
+            .padding(AppSpacing.large)
+            .padding(.bottom, AppSpacing.huge + AppSpacing.xxxLarge)
+        }
+        .scrollDismissesKeyboard(.interactively)
+    }
+
+    var colorSection: some View {
+        ColorPickerView(selectedColor: $viewModel.selectedColor, onSelect: viewModel.selectColor)
+    }
+
+    var iconSection: some View {
+        AccountIconPickerView(
+            selectedIcon: $viewModel.selectedIcon,
+            color: Color(named: viewModel.selectedColor),
+            onSelect: viewModel.selectIcon
+        )
+    }
+
+    var balanceSection: some View {
+        HStack(spacing: AppSpacing.medium) {
+            AppText(AppString.initialBalance, style: .bodySmall)
+                .lineLimit(1)
+                .fixedSize(horizontal: true, vertical: false)
+
+            TextField("0", text: $viewModel.initialBalance)
+                .keyboardType(.decimalPad)
+                .focused($isBalanceFocused)
+                .font(.app(.body))
+                .fontDesign(.rounded)
+                .monospacedDigit()
+                .multilineTextAlignment(.trailing)
+                .onChange(of: viewModel.initialBalance) {
+                    viewModel.sanitizeBalanceInput()
+                }
+
+            AppText(AppString.currencySymbol, style: .body, color: AppColor.textSecondary)
+        }
+        .padding(AppSpacing.large)
+        .frame(minHeight: AppSize.inlineTile)
+        .card(cornerRadius: AppRadius.card, fillColor: AppColor.fieldFill)
+        .contentShape(Rectangle())
+        .onTapGesture {
+            isBalanceFocused = true
+        }
+    }
+
+    var defaultSection: some View {
+        Toggle(isOn: $viewModel.isDefault) {
+            VStack(alignment: .leading, spacing: AppSpacing.xxSmall) {
+                AppText(AppString.defaultAccount, style: .bodySmall)
+
+                AppText(AppString.defaultAccountHint, style: .caption, color: AppColor.textSecondary)
+            }
+        }
+        .tint(AppColor.accent)
+        .padding(AppSpacing.large)
+        .card(cornerRadius: AppRadius.card, fillColor: AppColor.fieldFill)
+    }
+
+    var deleteSection: some View {
+        Button {
+            dismissKeyboard()
+            showingDeleteAlert = true
+        } label: {
+            HStack(spacing: AppSpacing.small) {
+                AppImage.trash
+                    .font(.system(size: AppSize.glyphLarge, weight: .semibold))
+
+                AppText(AppString.deleteAccount, style: .bodySmall, color: AppColor.expense)
+            }
+            .foregroundStyle(AppColor.expense)
+            .frame(maxWidth: .infinity)
+            .padding(AppSpacing.large)
+            .card(cornerRadius: AppRadius.card, fillColor: AppColor.expense.opacity(0.1))
+        }
+        .buttonStyle(PressableScaleButtonStyle())
+    }
+
+    var saveBar: some View {
+        PrimaryActionButton(
+            title: viewModel.saveButtonTitle,
+            isEnabled: viewModel.isValid,
+            action: handleSave
+        )
+        .padding(.horizontal, AppSpacing.large)
+        .padding(.top, AppSpacing.medium)
+        .padding(.bottom, AppSpacing.large)
+        .background(
+            AppColor.background
+                .ignoresSafeArea(edges: .bottom)
+        )
+    }
+}
+
+// MARK: - Actions
+private extension AccountFormView {
+
+    func handleSave() {
+        UIImpactFeedbackGenerator(style: .medium).impactOccurred()
+        dismissKeyboard()
+
+        if viewModel.save(using: repositories.accounts) {
+            dismiss()
+        }
+    }
+
+    func handleClose() {
+        dismissKeyboard()
+
+        guard viewModel.hasUnsavedChanges else {
+            dismiss()
+            return
+        }
+
+        showingDiscardConfirmation = true
+    }
+
+    func dismissKeyboard() {
+        isBalanceFocused = false
+
+        UIApplication.shared.sendAction(
+            #selector(UIResponder.resignFirstResponder),
+            to: nil,
+            from: nil,
+            for: nil
+        )
+    }
+}
+
+#Preview("Новый счет") {
     AccountFormView()
         .modelContainer(for: [Account.self], inMemory: true)
 }

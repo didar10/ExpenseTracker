@@ -7,39 +7,65 @@
 
 import SwiftUI
 
-/// Компонент для отображения финансового показателя (доход/расход)
 struct FinancialIndicatorView: View {
-    let icon: String
+
+    // MARK: - Properties
+
+    let icon: Image
     let color: Color
     let amount: Decimal
-    
+    /// Подпись для VoiceOver: на экране показателя различает только цвет стрелки
+    let accessibilityTitle: String
+
+    // MARK: - Body
+
     var body: some View {
-        HStack(spacing: 6) {
-            Image(systemName: icon)
-                .font(.system(size: 16))
+        HStack(spacing: AppSpacing.smaller) {
+            icon
+                .font(.system(size: AppSize.glyphLarge))
                 .foregroundStyle(color)
-            
-            // Применяем .rounded design на уровне view
-            Text(amount.formatted(.currency(code: "KZT")))
+
+            Text(amount.formatted(.currency(code: AppString.currencyCode)))
                 .font(.app(.bodySmall))
                 .fontDesign(.rounded)
-                .foregroundStyle(.primary)
+                .monospacedDigit()
+                .foregroundStyle(AppColor.textPrimary)
+                .lineLimit(1)
+                .minimumScaleFactor(0.7)
+                .contentTransition(.numericText())
+                .animation(.snappy(duration: Constants.amountDuration), value: amount)
         }
+        .accessibilityElement(children: .combine)
+        .accessibilityLabel(accessibilityTitle)
+        .accessibilityValue(amount.formatted(.currency(code: AppString.currencyCode)))
     }
 }
 
-#Preview("Income") {
-    FinancialIndicatorView(
-        icon: "arrow.down.circle.fill",
-        color: .green,
-        amount: 150000
-    )
+// MARK: - Constants
+
+private extension FinancialIndicatorView {
+
+    enum Constants {
+        static let amountDuration: Double = 0.25
+    }
 }
 
-#Preview("Expense") {
-    FinancialIndicatorView(
-        icon: "arrow.up.circle.fill",
-        color: .red,
-        amount: 75000
-    )
+#Preview {
+    HStack(spacing: AppSpacing.xxLarge) {
+        FinancialIndicatorView(
+            icon: AppImage.incomeArrow,
+            color: AppColor.income,
+            amount: 150000,
+            accessibilityTitle: AppString.incomes
+        )
+
+        FinancialIndicatorView(
+            icon: AppImage.expenseArrow,
+            color: AppColor.expense,
+            amount: 75000,
+            accessibilityTitle: AppString.expenses
+        )
+    }
+    .padding(AppSpacing.large)
+    .background(AppColor.background)
 }

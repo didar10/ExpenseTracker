@@ -6,94 +6,103 @@
 //
 
 import SwiftUI
-import SwiftData
 
 struct AccountPickerView: View {
-    
-    @Binding var selectedAccount: Account?
-    let transactionAmount: String
-    let transactionType: TransactionType
-    @Binding var showingAccountPicker: Bool
-    
-    @Query(sort: \Account.createdAt, order: .forward) private var accounts: [Account]
-    
-    private var amountDecimal: Decimal {
-        Decimal(string: transactionAmount.replacingOccurrences(of: ",", with: ".")) ?? 0
+
+    // MARK: - Properties
+
+    let account: Account?
+    /// Баланс счета после этой операции; nil — сумма еще не введена, показываем текущий баланс
+    let predictedBalance: Decimal?
+    let onTap: () -> Void
+
+    // MARK: - Computed Properties
+
+    private var balance: Decimal? {
+        predictedBalance ?? account?.currentBalance
     }
-    
-    private var predictedBalance: Decimal? {
-        guard let account = selectedAccount, amountDecimal > 0 else { return nil }
-        
-        if transactionType == .income {
-            return account.currentBalance + amountDecimal
-        } else {
-            return account.currentBalance - amountDecimal
-        }
+
+    private var balanceText: String {
+        balance?.formatted(.currency(code: AppString.currencyCode)) ?? ""
     }
-    
+
+    /// Уход счета в минус — единственное, что подсвечивается цветом в этой плитке
+    private var balanceColor: Color {
+        (balance ?? 0) < 0 ? AppColor.expense : AppColor.textPrimary
+    }
+
+    // MARK: - Body
+
     var body: some View {
-        Button {
-            showingAccountPicker = true
-        } label: {
-            HStack {
-                if let account = selectedAccount {
-                    // Показываем выбранный счет
-                    HStack(spacing: 12) {
-                        ZStack {
-                            RoundedRectangle(cornerRadius: 8, style: .continuous)
-                                .fill(account.swiftUIColor.opacity(0.2))
-                                .frame(width: 36, height: 36)
-                            
-                            Image(systemName: account.icon)
-                                .font(.system(size: 16))
-                                .foregroundStyle(account.swiftUIColor)
-                        }
-                        
-                        VStack(alignment: .leading, spacing: 2) {
-                            AppText(account.name, style: .caption)
-                                .color(.secondary)
-                            
-                            if let predicted = predictedBalance, amountDecimal > 0 {
-                                // Показываем изменение баланса
-                                Text(predicted.formatted(.currency(code: "KZT")))
-                                    .font(.system(size: 15, weight: .semibold))
-                                    .fontDesign(.rounded)
-                                    .foregroundStyle(transactionType == .income ? .green : .red)
-                            } else {
-                                // Показываем текущий баланс
-                                Text(account.currentBalance.formatted(.currency(code: "KZT")))
-                                    .font(.system(size: 15, weight: .semibold))
-                                    .fontDesign(.rounded)
-                                    .foregroundStyle(.black)
-                            }
-                        }
-                        
-                        Spacer()
-                    }
+        Button(action: onTap) {
+            HStack(spacing: AppSpacing.mediumSmall) {
+                if let account {
+                    accountIcon(for: account)
+                    accountDetails(for: account)
                 } else {
-                    // Показываем плейсхолдер
-                    HStack {
-                        Image(systemName: "creditcard")
-                            .foregroundStyle(.secondary)
-                        
-                        AppText("Выберите счет", style: .body)
-                            .color(.secondary)
-                        
-                        Spacer()
-                    }
+                    placeholder
                 }
             }
-            .padding(12)
-            .background {
-                RoundedRectangle(cornerRadius: 12, style: .continuous)
-                    .fill(Color(uiColor: .systemBackground))
-            }
+            .padding(.horizontal, AppSpacing.medium)
+            .frame(maxWidth: .infinity, alignment: .leading)
+            .frame(height: AppSize.inlineTile)
+            .card(cornerRadius: AppRadius.card)
         }
-        .onAppear {
-            // Автоматически выбираем счет по умолчанию, если он есть
-            if selectedAccount == nil {
-                selectedAccount = accounts.first { $0.isDefault } ?? accounts.first
-            }
+        .buttonStyle(PressableScaleButtonStyle())
+        .accessibilityLabel(account?.name ?? AppString.chooseAccount)
+        .accessibilityValue(balanceText)
+        .accessibilityHint(AppString.selectAccount)
+    }
+}
+
+// MARK: - Subviews
+private extension AccountPickerView {
+
+    func accountIcon(for account: Account) -> some View {
+        ZStack {
+            RoundedRectangle(cornerRadius: AppRadius.small, style: .continuous)
+                .fill(account.swiftUIColor.opacity(0.2))
+                .frame(width: AppSize.tileIcon, height: AppSize.tileIcon)
+
+            Image(systemName: account.icon)
+                .font(.system(size: AppSize.glyphMedium))
+                .foregroundStyle(account.swiftUIColor)
+        }
+    }
+
+    func accountDetails(for account: Account) -> some View {
+        VStack(alignment: .leading, spacing: AppSpacing.xxSmall) {
+            Text(account.name)
+                .font(.app(.microCaption))
+                .foregroundStyle(AppColor.textSecondary)
+                .lineLimit(1)
+
+            Text(balanceText)
+                .font(.app(.bodySmall))
+                .fontDesign(.rounded)
+                .monospacedDigit()
+                .foregroundStyle(balanceColor)
+                .lineLimit(1)
+                .minimumScaleFactor(0.8)
+                .contentTransition(.numericText())
+                .animation(.snappy(duration: 0.2), value: balance)
+        }
+        .frame(maxWidth: .infinity, alignment: .leading)
+    }
+
+    var placeholder: some View {
+        HStack(spacing: AppSpacing.mediumSmall) {
+            AppImage.creditcard
+                .font(.system(size: AppSize.glyphXLarge))
+                .foregroundStyle(AppColor.textSecondary)
+
+            Text(AppString.chooseAccount)
+                .font(.app(.bodySmaller))
+                .foregroundStyle(AppColor.textSecondary)
+                .lineLimit(1)
+                .minimumScaleFactor(0.8)
+
+            Spacer(minLength: 0)
         }
     }
 }

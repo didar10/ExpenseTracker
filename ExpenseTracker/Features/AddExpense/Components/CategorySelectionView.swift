@@ -6,101 +6,182 @@
 //
 
 import SwiftUI
+import SwiftData
 
 struct CategorySelectionView: View {
+
+    // MARK: - Properties
+
     let categories: [Category]
+    let type: TransactionType
     @Binding var selectedCategory: Category?
-    let onShowAll: () -> Void
-    
+
+    @Query private var transactions: [Transaction]
+
+    @State private var usageCounts: [UUID: Int] = [:]
+    @State private var pinnedCategoryID: UUID?
+    @State private var showingPicker = false
+
+    private let frequentCount = 4
+
+    // MARK: - Computed Properties
+
+    /// Частые категории сверху; счетчики пересчитываются не на каждый рендер, а по `task(id:)`
+    private var frequentCategories: [Category] {
+        categories.sorted { lhs, rhs in
+            let lhsCount = usageCounts[lhs.id] ?? 0
+            let rhsCount = usageCounts[rhs.id] ?? 0
+            if lhsCount != rhsCount { return lhsCount > rhsCount }
+            return lhs.name.localizedCaseInsensitiveCompare(rhs.name) == .orderedAscending
+        }
+    }
+
+    private var displayCategories: [Category] {
+        var result: [Category] = []
+
+        if let pinnedCategoryID,
+           let pinned = categories.first(where: { $0.id == pinnedCategoryID }) {
+            result.append(pinned)
+        }
+
+        for category in frequentCategories {
+            if result.count >= frequentCount { break }
+            if !result.contains(where: { $0.id == category.id }) {
+                result.append(category)
+            }
+        }
+
+        return result
+    }
+
+    // MARK: - Body
+
     var body: some View {
-        VStack(alignment: .leading, spacing: 8) {
-            HStack(spacing: 12) {
-                ForEach(Array(categories.prefix(4))) { category in
-                    CategoryItemView(
-                        category: category,
-                        isSelected: selectedCategory?.id == category.id
-                    )
-                    .onTapGesture {
-                        UIImpactFeedbackGenerator(style: .medium).impactOccurred()
-                        withAnimation(.spring(response: 0.35, dampingFraction: 0.7)) {
-                            selectedCategory = category
-                        }
-                    }
+        HStack(alignment: .top, spacing: AppSpacing.small) {
+            if displayCategories.isEmpty {
+                emptyState
+            } else {
+                ForEach(displayCategories) { category in
+                    categoryItem(category)
+                        .frame(maxWidth: .infinity)
                 }
-                
-                // Circular "More" button
-                MoreCategoriesButton(onTap: onShowAll)
             }
-            .padding(.horizontal, 4)
-            .padding(.vertical, 6)
+
+            moreButton
+                .frame(maxWidth: .infinity)
         }
-        .padding(.vertical, 4)
+        .padding(.horizontal, AppSpacing.xSmall)
+        .padding(.vertical, AppSpacing.small)
+        .animation(.spring(response: 0.3, dampingFraction: 0.8), value: displayCategories.map(\.id))
+        .sensoryFeedback(.selection, trigger: selectedCategory?.id)
+        .task(id: usageKey) { recalculateUsageCounts() }
+        .sheet(isPresented: $showingPicker) {
+            CategoriesListView(onSelect: handleSheetSelection, initialType: type)
+        }
+    }
+
+    // MARK: - Actions
+
+    /// Пересчет нужен при смене типа и при появлении новых операций, а не на каждый проход `body`
+    private var usageKey: String {
+        "\(type.rawValue)-\(transactions.count)"
+    }
+
+    private func recalculateUsageCounts() {
+        var counts: [UUID: Int] = [:]
+
+        for transaction in transactions where transaction.type == type {
+            guard let id = transaction.category?.id else { continue }
+            counts[id, default: 0] += 1
+        }
+
+        usageCounts = counts
+    }
+
+    private func handleSheetSelection(_ category: Category) {
+        pinnedCategoryID = category.id
+        selectedCategory = category
+    }
+
+    private func handleCategoryTap(_ category: Category) {
+        if selectedCategory?.id == category.id {
+            selectedCategory = nil
+        } else {
+            selectedCategory = category
+        }
     }
 }
 
-// MARK: - Category Item View
+// MARK: - Subviews
+private extension CategorySelectionView {
 
-struct CategoryItemView: View {
-    let category: Category
-    let isSelected: Bool
-    
-    var body: some View {
-        VStack(spacing: 8) {
-            ZStack {
-                Circle()
-                    .fill(Color(hex: category.colorHex).opacity(isSelected ? 1.0 : 0.15))
-                    .frame(width: 48, height: 48)
-                    .overlay {
-                        if isSelected {
-                            Circle()
-                                .strokeBorder(Color(hex: category.colorHex).opacity(0.3), lineWidth: 3)
-                                .scaleEffect(1.15)
-                        }
-                    }
+    func categoryItem(_ category: Category) -> some View {
+        let isSelected = selectedCategory?.id == category.id
+        let color = Color(hex: category.colorHex)
 
-                Image(systemName: category.icon)
-                    .font(.system(size: 20, weight: .semibold))
-                    .foregroundStyle(isSelected ? .white : Color(hex: category.colorHex))
-                    .symbolEffect(.bounce, value: isSelected)
+        return Button {
+            handleCategoryTap(category)
+        } label: {
+            VStack(spacing: AppSpacing.small) {
+                ZStack {
+                    Circle()
+                        .fill(color.opacity(isSelected ? 1 : 0.2))
+                        .frame(width: AppSize.iconLarge, height: AppSize.iconLarge)
+
+                    Image(systemName: category.icon)
+                        .font(.system(size: AppSize.glyphXLarge, weight: .regular))
+                        .foregroundStyle(isSelected ? AppColor.textWhite : AppColor.textPrimary)
+                }
+
+                Text(category.name)
+                    .font(.app(isSelected ? .microCaptionStrong : .microCaption))
+                    .foregroundStyle(isSelected ? AppColor.textPrimary : AppColor.textSecondary)
+                    .lineLimit(2)
+                    .multilineTextAlignment(.center)
+                    .minimumScaleFactor(0.85)
+                    .frame(maxWidth: .infinity)
             }
-            
-            Text(category.name)
-                .font(.app(.microCaption))
-                .fontWeight(isSelected ? .semibold : .medium)
-                .foregroundStyle(isSelected ? .primary : .secondary)
-                .lineLimit(1)
-                .truncationMode(.tail)
-                .multilineTextAlignment(.center)
-                .frame(width: 60)
         }
+        .buttonStyle(PressableScaleButtonStyle())
+        .accessibilityLabel(category.name)
+        .accessibilityAddTraits(isSelected ? [.isSelected, .isButton] : .isButton)
     }
-}
 
-// MARK: - More Categories Button
+    var moreButton: some View {
+        Button {
+            showingPicker = true
+        } label: {
+            VStack(spacing: AppSpacing.small) {
+                ZStack {
+                    Circle()
+                        .fill(AppColor.neutralFill)
+                        .frame(width: AppSize.iconLarge, height: AppSize.iconLarge)
 
-struct MoreCategoriesButton: View {
-    let onTap: () -> Void
-    
-    var body: some View {
-        VStack(spacing: 8) {
-            ZStack {
-                Circle()
-                    .fill(Color(.secondarySystemGroupedBackground))
-                    .frame(width: 48, height: 48)
-                Image(systemName: "ellipsis")
-                    .font(.system(size: 20, weight: .semibold))
-                    .foregroundStyle(.secondary)
+                    AppImage.ellipsis
+                        .font(.system(size: AppSize.glyphXLarge, weight: .regular))
+                        .foregroundStyle(AppColor.textSecondary)
+                }
+
+                Text(AppString.more)
+                    .font(.app(.microCaption))
+                    .foregroundStyle(AppColor.textSecondary)
+                    .lineLimit(1)
+                    .frame(maxWidth: .infinity)
             }
-            AppText("Еще", style: .microCaption, color: .secondary)
-                .lineLimit(1)
-                .truncationMode(.tail)
-                .multilineTextAlignment(.center)
-                .frame(width: 60)
         }
-        .contentShape(Rectangle())
-        .onTapGesture {
-            UIImpactFeedbackGenerator(style: .light).impactOccurred()
-            onTap()
-        }
+        .buttonStyle(PressableScaleButtonStyle())
+        .accessibilityLabel(AppString.allCategories)
+    }
+
+    /// Для выбранного типа операций категорий еще нет — объясняем, где их создать
+    var emptyState: some View {
+        Text(AppString.noCategoriesForType)
+            .font(.app(.caption))
+            .foregroundStyle(AppColor.textSecondary)
+            .multilineTextAlignment(.leading)
+            .fixedSize(horizontal: false, vertical: true)
+            .frame(maxWidth: .infinity, alignment: .leading)
+            .padding(.leading, AppSpacing.small)
+            .frame(height: AppSize.inlineTile)
     }
 }

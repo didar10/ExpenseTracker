@@ -7,37 +7,39 @@
 
 import SwiftUI
 
-/// Секция формы с лейблом
 struct CategoryFormSectionView<Content: View>: View {
+
+    // MARK: - Properties
+
     let title: String
     let content: Content
-    
+
     init(title: String, @ViewBuilder content: () -> Content) {
         self.title = title
         self.content = content()
     }
-    
+
+    // MARK: - Body
+
     var body: some View {
-        VStack(alignment: .leading, spacing: 12) {
-            Text(title)
-                .font(.system(size: 15, weight: .semibold))
-                .foregroundStyle(.secondary)
-                .padding(.horizontal, 4)
-            
+        VStack(alignment: .leading, spacing: AppSpacing.medium) {
+            AppText(title, style: .bodySmall, color: AppColor.textSecondary)
+                .padding(.horizontal, AppSpacing.xSmall)
+
             content
         }
     }
 }
 
 #Preview {
-    CategoryFormSectionView(title: "Название") {
-        TextField("Введите название", text: .constant(""))
-            .padding(16)
+    CategoryFormSectionView(title: AppString.name) {
+        TextField(AppString.enterName, text: .constant(""))
+            .padding(AppSpacing.large)
             .background(
-                RoundedRectangle(cornerRadius: 16)
-                    .fill(Color(.systemBackground))
+                RoundedRectangle(cornerRadius: AppRadius.card)
+                    .fill(AppColor.cardBackground)
             )
     }
-    .padding()
-    .background(Color(.systemGroupedBackground))
+    .padding(AppSpacing.large)
+    .background(AppColor.background)
 }

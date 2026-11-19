@@ -7,25 +7,48 @@
 
 import SwiftUI
 
-/// Компонент для отображения пустого состояния
 struct EmptyStateView: View {
+
+    // MARK: - Properties
+
+    var hint: String = AppString.noTransactionsHint
+    /// Задан, когда список пуст из-за фильтра периода: предлагаем его сбросить
+    var resetAction: (() -> Void)?
+
+    // MARK: - Body
+
     var body: some View {
-        VStack(spacing: 16) {
-            Image(systemName: "tray")
-                .font(.system(size: 56))
-                .foregroundStyle(.tertiary)
-            
-            VStack(spacing: 8) {
-                AppText("Нет транзакций", style: .title)
-                
-                AppText("Нажмите + чтобы добавить первую транзакцию", style: .bodySmall, color: .secondary, alignment: .center)
+        VStack(spacing: AppSpacing.large) {
+            AppImage.emptyState
+                .font(.system(size: AppSize.glyphEmptyState))
+                .foregroundStyle(AppColor.textTertiary)
+
+            VStack(spacing: AppSpacing.small) {
+                AppText(AppString.noTransactions, style: .title)
+
+                AppText(hint, style: .bodySmall, color: AppColor.textSecondary, alignment: .center)
+            }
+
+            if let resetAction {
+                PillActionButton(title: AppString.periodAllTime, action: resetAction)
             }
         }
-        .padding(40)
+        .padding(.horizontal, AppSpacing.xLarge)
+        .padding(.vertical, AppSpacing.huge)
         .frame(maxWidth: .infinity)
+        .accessibilityElement(children: .contain)
     }
 }
 
-#Preview {
+#Preview("Нет операций") {
     EmptyStateView()
+        .background(AppColor.background)
+}
+
+#Preview("Пусто за период") {
+    EmptyStateView(
+        hint: AppString.noTransactionsInPeriod("Август"),
+        resetAction: {}
+    )
+    .background(AppColor.background)
 }

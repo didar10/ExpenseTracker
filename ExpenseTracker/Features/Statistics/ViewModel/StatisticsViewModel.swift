@@ -7,140 +7,196 @@
 
 import Foundation
 import SwiftUI
-
-/// Период для фильтрации статистики
-enum StatisticsPeriod: String, CaseIterable, Identifiable {
-    case today = "Сегодня"
-    case yesterday = "Вчера"
-    case week = "Неделя"
-    case month = "Месяц"
-    case lastMonth = "Прошлый месяц"
-    case year = "Год"
-    case lastYear = "Прошлый год"
-    case allTime = "Все время"
-    
-    var id: String { rawValue }
-    
-    var dateInterval: DateInterval {
-        let calendar = Calendar.current
-        let now = Date()
-        
-        switch self {
-        case .today:
-            let start = calendar.startOfDay(for: now)
-            let end = calendar.date(byAdding: .day, value: 1, to: start)!
-            return DateInterval(start: start, end: end)
-            
-        case .yesterday:
-            let start = calendar.date(byAdding: .day, value: -1, to: calendar.startOfDay(for: now))!
-            let end = calendar.startOfDay(for: now)
-            return DateInterval(start: start, end: end)
-            
-        case .week:
-            let start = calendar.date(from: calendar.dateComponents([.yearForWeekOfYear, .weekOfYear], from: now))!
-            let end = calendar.date(byAdding: .weekOfYear, value: 1, to: start)!
-            return DateInterval(start: start, end: end)
-            
-        case .month:
-            return calendar.dateInterval(of: .month, for: now)!
-            
-        case .lastMonth:
-            let lastMonth = calendar.date(byAdding: .month, value: -1, to: now)!
-            return calendar.dateInterval(of: .month, for: lastMonth)!
-            
-        case .year:
-            return calendar.dateInterval(of: .year, for: now)!
-            
-        case .lastYear:
-            let lastYear = calendar.date(byAdding: .year, value: -1, to: now)!
-            return calendar.dateInterval(of: .year, for: lastYear)!
-            
-        case .allTime:
-            // От далекого прошлого до далекого будущего
-            let start = calendar.date(from: DateComponents(year: 2000, month: 1, day: 1))!
-            let end = calendar.date(from: DateComponents(year: 2100, month: 1, day: 1))!
-            return DateInterval(start: start, end: end)
-        }
-    }
-}
+import SwiftData
 
 /// ViewModel для экрана статистики
+@MainActor
 @Observable
 final class StatisticsViewModel {
     
     // MARK: - Properties
     
     var selectedPeriod: StatisticsPeriod = .month
-    var selectedAccount: Account?
+    private(set) var periodOffset: Int = 0
+
+    /// Тип операций меняется биндингом из переключателя в шапке,
+    /// поэтому пересчет статистики висит на самом свойстве
+    var selectedType: TransactionType = .expense {
+        didSet {
+            guard oldValue != selectedType else { return }
+            calculateStatistics()
+        }
+    }
+
     private(set) var statistics: [CategoryStatistic] = []
-    private(set) var totalExpenses: Decimal = 0
-    
+    private(set) var totalAmount: Decimal = 0
+    /// Считается при загрузке данных: сумма балансов перебирает все операции счета,
+    /// а шапка обращается к ней на каждый проход body
+    private(set) var totalBalance: Decimal = 0
+
     private var transactions: [Transaction] = []
+    private(set) var accounts: [Account] = []
     
+    var modelContext: ModelContext?
+
+    private let accountSelection: AccountSelectionStore
+
+    // MARK: - Init
+
+    init(accountSelection: AccountSelectionStore) {
+        self.accountSelection = accountSelection
+    }
+
     // MARK: - Computed Properties
+
+    /// Выбранный счет общий для вкладок, поэтому хранится в AccountSelectionStore
+    var selectedAccount: Account? {
+        get { accountSelection.selectedAccount }
+        set { accountSelection.selectedAccount = newValue }
+    }
     
     var isEmpty: Bool {
         statistics.isEmpty
     }
     
     var periodInterval: DateInterval {
-        selectedPeriod.dateInterval
+        selectedPeriod.dateInterval(offset: periodOffset)
+    }
+
+    /// Заголовок выбранного периода с учетом сдвига: «Сегодня», «Август», «2025», …
+    var periodTitle: String {
+        selectedPeriod.title(offset: periodOffset)
+    }
+
+    /// Доступны ли стрелки переключения периода
+    var isPeriodNavigable: Bool {
+        selectedPeriod.isNavigable
+    }
+
+    /// Вперед можно двигаться только до текущего периода
+    var canGoToNextPeriod: Bool {
+        isPeriodNavigable && periodOffset < 0
+    }
+    
+    /// Подпись в центре диаграммы — зависит от выбранного типа операций
+    var totalTitle: String {
+        selectedType == .income ? AppString.incomes : AppString.expenses
+    }
+    
+    /// Подсказка пустого состояния — зависит от выбранного типа операций
+    var emptyStateHint: String {
+        selectedType == .income ? AppString.noDataHintIncome : AppString.noDataHint
+    }
+
+    /// Данных нет из-за фильтра периода, а не потому, что операций нет вовсе:
+    /// экран предлагает посмотреть за все время
+    var isFilteredByPeriod: Bool {
+        selectedPeriod != .allTime
+    }
+    
+    // MARK: - Initialization
+    
+    /// Устанавливает ModelContext и загружает данные
+    func setup(with modelContext: ModelContext) {
+        self.modelContext = modelContext
+        fetchData()
     }
     
     // MARK: - Methods
     
-    /// Обновляет транзакции и пересчитывает статистику
-    func updateTransactions(_ transactions: [Transaction]) {
-        self.transactions = transactions
+    /// Загружает данные из ModelContext
+    func fetchData() {
+        guard let modelContext = modelContext else { return }
+        
+        // Загружаем транзакции
+        let transactionDescriptor = FetchDescriptor<Transaction>(
+            sortBy: [SortDescriptor(\.date, order: .reverse)]
+        )
+        transactions = (try? modelContext.fetch(transactionDescriptor)) ?? []
+        
+        // Загружаем счета
+        let accountDescriptor = FetchDescriptor<Account>(
+            sortBy: [SortDescriptor(\.createdAt, order: .forward)]
+        )
+        accounts = (try? modelContext.fetch(accountDescriptor)) ?? []
+
+        // Счет мог быть удален на другом экране, пока вкладка была неактивна
+        accountSelection.removeSelectionIfDeleted(from: accounts)
+
+        totalBalance = accounts.reduce(0) { $0 + $1.currentBalance }
+
         calculateStatistics()
     }
     
-    /// Изменяет выбранный счет
-    func changeAccount(_ account: Account?) {
-        selectedAccount = account
+    /// Сбрасывает состояние после удаления всех данных и перезагружает справочники
+    func resetAfterDataReset() {
+        selectedAccount = nil
+        fetchData()
+    }
+    
+    /// Счет хранится в общем сторе и меняется снаружи — экрану остается пересчитать статистику
+    func refreshStatistics() {
         calculateStatistics()
     }
     
-    /// Изменяет выбранный период
+    /// Изменяет выбранный период и сбрасывает сдвиг на текущий
     func changePeriod(_ period: StatisticsPeriod) {
         selectedPeriod = period
+        periodOffset = 0
+        calculateStatistics()
+    }
+
+    /// Сброс фильтра из пустого состояния: показать статистику за все время
+    func resetPeriod() {
+        changePeriod(.allTime)
+    }
+
+    /// Переключает на предыдущий период: прошлый день, неделю, месяц или год
+    func goToPreviousPeriod() {
+        guard isPeriodNavigable else { return }
+        periodOffset -= 1
+        calculateStatistics()
+    }
+
+    /// Переключает на следующий период, но не дальше текущего
+    func goToNextPeriod() {
+        guard canGoToNextPeriod else { return }
+        periodOffset += 1
         calculateStatistics()
     }
     
     /// Возвращает транзакции для конкретной категории
     func transactions(for category: Category) -> [Transaction] {
-        expenses.filter { $0.category == category }
+        filteredTransactions.filter { $0.category == category }
     }
     
     // MARK: - Private Methods
     
-    private var expenses: [Transaction] {
+    /// Операции выбранного типа за выбранный период по выбранному счету
+    private var filteredTransactions: [Transaction] {
         transactions.filter {
-            $0.type == .expense &&
+            $0.type == selectedType &&
             periodInterval.contains($0.date) &&
             (selectedAccount == nil || $0.account == selectedAccount)
         }
     }
     
     private func calculateStatistics() {
-        // Группируем расходы по категориям
-        let grouped = Dictionary(grouping: expenses) { $0.category }
-        
-        // Создаем статистику для каждой категории
-        statistics = grouped.compactMap { category, transactions in
-            guard let category else { return nil }
-            
-            let sum = transactions.reduce(0) { $0 + $1.amount }
-            
-            return CategoryStatistic(
-                category: category,
-                amount: sum,
-                transactionCount: transactions.count
-            )
-        }
-        .sorted { $0.amount > $1.amount }
-        
-        // Считаем общую сумму расходов
-        totalExpenses = expenses.reduce(0) { $0 + $1.amount }
+        // Фильтр перебирает все операции, поэтому считаем его один раз на пересчет
+        let periodTransactions = filteredTransactions
+
+        statistics = Dictionary(grouping: periodTransactions) { $0.category }
+            .compactMap { category, transactions in
+                guard let category else { return nil }
+
+                return CategoryStatistic(
+                    category: category,
+                    amount: transactions.reduce(0) { $0 + $1.amount },
+                    transactionCount: transactions.count
+                )
+            }
+            .sorted { $0.amount > $1.amount }
+
+        totalAmount = periodTransactions.reduce(0) { $0 + $1.amount }
     }
 }

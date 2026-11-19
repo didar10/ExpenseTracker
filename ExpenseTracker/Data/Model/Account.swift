@@ -37,8 +37,16 @@ final class Account {
         self.isDefault = isDefault
     }
     
+    /// Удаленный счет остается в уже отрисованных списках до обновления запроса,
+    /// а чтение его связей роняет SwiftData: такие модели считаются пустыми
+    var isAvailable: Bool {
+        !isDeleted && modelContext != nil
+    }
+
     /// Текущий баланс счета (начальный баланс + все транзакции)
     var currentBalance: Decimal {
+        guard isAvailable else { return 0 }
+
         var balance = initialBalance
         
         for transaction in transactions {
@@ -54,14 +62,18 @@ final class Account {
     
     /// Общий доход по счету
     var totalIncome: Decimal {
-        transactions
+        guard isAvailable else { return 0 }
+
+        return transactions
             .filter { $0.type == .income }
             .reduce(0) { $0 + $1.amount }
     }
     
     /// Общие расходы по счету
     var totalExpenses: Decimal {
-        transactions
+        guard isAvailable else { return 0 }
+
+        return transactions
             .filter { $0.type == .expense }
             .reduce(0) { $0 + $1.amount }
     }

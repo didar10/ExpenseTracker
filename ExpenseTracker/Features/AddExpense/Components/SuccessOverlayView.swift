@@ -8,29 +8,39 @@
 import SwiftUI
 
 struct SuccessOverlayView: View {
-    let isShowing: Bool
-    
+
+    // MARK: - Properties
+
+    @State private var isBounced = false
+
+    // MARK: - Body
+
     var body: some View {
         ZStack {
-            Color.black.opacity(0.3)
+            AppColor.scrim
                 .ignoresSafeArea()
-            
-            VStack(spacing: 16) {
-                Image(systemName: "checkmark.circle.fill")
-                    .font(.system(size: 60))
-                    .foregroundStyle(.green)
-                    .symbolEffect(.bounce, value: isShowing)
-                
-                AppText("Сохранено!", style: .section)
-                    .color(.white)
+
+            VStack(spacing: AppSpacing.large) {
+                AppImage.checkmarkCircleFill
+                    .font(.system(size: AppSize.glyphHuge))
+                    .foregroundStyle(AppColor.income)
+                    .symbolEffect(.bounce, value: isBounced)
+
+                AppText(AppString.saved, style: .section)
+                    .color(AppColor.textPrimary)
             }
-            .padding(32)
+            .padding(AppSpacing.xxxLarge)
             .background {
-                RoundedRectangle(cornerRadius: 20)
+                RoundedRectangle(cornerRadius: AppRadius.card, style: .continuous)
                     .fill(.ultraThinMaterial)
             }
-            .scaleEffect(isShowing ? 1.0 : 0.5)
-            .opacity(isShowing ? 1.0 : 0)
         }
+        .accessibilityElement(children: .combine)
+        .accessibilityLabel(AppString.saved)
+        .onAppear { isBounced = true }
     }
+}
+
+#Preview {
+    SuccessOverlayView()
 }

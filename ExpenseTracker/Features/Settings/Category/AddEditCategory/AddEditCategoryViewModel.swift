@@ -9,72 +9,80 @@ import Foundation
 import SwiftUI
 import SwiftData
 
-/// ViewModel для создания/редактирования категории
+@MainActor
 @Observable
 final class AddEditCategoryViewModel {
-    
+
     // MARK: - Properties
-    
+
     var formData: CategoryFormData
-    var showIconPicker = false
-    
+    var showingSaveError = false
+
     private let category: Category?
-    
+
+    /// Состояние формы на момент открытия: по нему определяется, есть ли несохраненные правки
+    private let initialFormData: CategoryFormData
+
     // MARK: - Computed Properties
-    
+
     var isEditMode: Bool {
         category != nil
     }
-    
+
     var canSave: Bool {
         formData.isValid
     }
-    
+
     var title: String {
-        isEditMode ? "Редактировать" : "Новая категория"
+        isEditMode ? AppString.editCategory : AppString.newCategory
     }
-    
+
     var saveButtonTitle: String {
-        isEditMode ? "Сохранить изменения" : "Создать категорию"
+        if !canSave {
+            return AppString.enterName
+        }
+        return isEditMode ? AppString.saveChanges : AppString.createCategory
     }
-    
-    // MARK: - Initialization
-    
+
+    /// Закрытие формы с правками проходит через подтверждение
+    var hasUnsavedChanges: Bool {
+        formData != initialFormData
+    }
+
+    // MARK: - Init
+
     init(category: Category? = nil) {
         self.category = category
-        
-        if let category {
-            self.formData = CategoryFormData(from: category)
-        } else {
-            self.formData = CategoryFormData()
-        }
+
+        let formData = category.map(CategoryFormData.init(from:)) ?? CategoryFormData()
+
+        self.formData = formData
+        self.initialFormData = formData
     }
-    
-    // MARK: - Methods
-    
-    func toggleIconPicker() {
-        showIconPicker.toggle()
-    }
-    
-    func save(context: ModelContext) -> Bool {
+
+    // MARK: - Actions
+
+    /// - Returns: false — форма невалидна или запись не удалась; экран остается открытым
+    func save(using repository: CategoryRepository) -> Bool {
         guard canSave else { return false }
-        
-        if let category {
-            // Редактирование существующей категории
-            category.name = formData.trimmedName
-            category.icon = formData.icon
-            category.colorHex = formData.colorHex
-        } else {
-            // Создание новой категории
-            let newCategory = Category(
-                name: formData.trimmedName,
-                icon: formData.icon,
-                colorHex: formData.colorHex
-            )
-            context.insert(newCategory)
+
+        let draft = CategoryDraft(
+            name: formData.trimmedName,
+            icon: formData.icon,
+            colorHex: formData.colorHex,
+            type: formData.type
+        )
+
+        do {
+            if let category {
+                try repository.update(category, with: draft)
+            } else {
+                try repository.add(draft)
+            }
+            return true
+        } catch {
+            showingSaveError = true
+            return false
         }
-        
-        try? context.save()
-        return true
     }
 }

@@ -9,185 +9,157 @@ import SwiftUI
 import SwiftData
 
 struct CategoryTransactionsView: View {
-    
+
+    // MARK: - Properties
+
     let category: Category
-    let period: StatisticsPeriod
+    let periodTitle: String
     let transactions: [Transaction]
-    
+
     @Environment(\.dismiss) private var dismiss
-    @Environment(\.tabBarVisibility) private var isTabBarVisible
-    
+
+    // MARK: - Body
+
     var body: some View {
         ZStack {
-            Color(.systemGroupedBackground)
+            AppColor.background
                 .ignoresSafeArea()
-            
-            if transactions.isEmpty {
-                emptyState
-            } else {
-                transactionsList
-            }
-        }
-        .navigationTitle("")
-        .navigationBarTitleDisplayMode(.inline)
-        .navigationBarBackButtonHidden(true)
-        .toolbarBackground(.hidden, for: .navigationBar)
-        .toolbar {
-            ToolbarItem(placement: .principal) {
-                VStack(spacing: 2) {
-                    Text(category.name)
-                        .font(.system(size: 17, weight: .semibold))
-                        .foregroundStyle(.primary)
-                    
-                    Text(period.rawValue)
-                        .font(.system(size: 13, weight: .regular))
-                        .foregroundStyle(.secondary)
+
+            VStack(spacing: 0) {
+                header
+
+                if transactions.isEmpty {
+                    emptyState
+                        .frame(maxWidth: .infinity, maxHeight: .infinity)
+                } else {
+                    transactionsList
                 }
             }
-            
-            ToolbarItem(placement: .navigationBarLeading) {
-                Button {
-                    isTabBarVisible.wrappedValue = true
-                    dismiss()
-                } label: {
-                    ZStack {
-                        Circle()
-                            .fill(Color.white)
-                            .frame(width: 40, height: 40)
-                            .shadow(
-                                color: .black.opacity(0.1),
-                                radius: 3,
-                                x: 0,
-                                y: 2
-                            )
-                        
-                        Image(systemName: "chevron.left")
-                            .font(.system(size: 14, weight: .semibold))
-                            .foregroundStyle(.black)
-                    }
-                }
-            }
-        }
-        .onAppear {
-            isTabBarVisible.wrappedValue = false
         }
     }
 }
 
-// MARK: - UI Components
+// MARK: - Subviews
+
 private extension CategoryTransactionsView {
-    
+
+    var header: some View {
+        ZStack {
+            VStack(spacing: AppSpacing.xxSmall) {
+                AppText(category.name, style: .bodySmall)
+
+                AppText(periodTitle, style: .caption, color: AppColor.textSecondary)
+            }
+
+            HStack {
+                ToolbarIconButton(icon: "xmark", isOutlined: true) {
+                    dismiss()
+                }
+
+                Spacer()
+            }
+        }
+        .padding(.horizontal, AppSpacing.large)
+        .padding(.vertical, AppSpacing.small)
+        .padding(.top, AppSpacing.medium)
+    }
+
     var transactionsList: some View {
         ScrollView {
-            VStack(spacing: 16) {
-                // Header card with total
+            VStack(spacing: 0) {
                 totalCard
-                
-                // Transactions grouped by date
-                VStack(spacing: 12) {
+                    .padding(.horizontal, AppSpacing.large)
+                    .padding(.top, AppSpacing.large)
+
+                VStack(spacing: 0) {
                     ForEach(groupedTransactions, id: \.date) { group in
-                        VStack(spacing: 0) {
-                            // Date header
-                            HStack {
-                                Text(group.date, style: .date)
-                                    .font(.app(.sectionHeader))
-                                    .foregroundStyle(.secondary)
-                                
-                                Spacer()
-                                
-                                Text(group.total.formatted(.currency(code: "KZT")))
-                                    .font(.app(.sectionHeader))
-                                    .fontDesign(.rounded)
-                                    .foregroundStyle(.secondary)
-                            }
-                            .padding(.horizontal, 16)
-                            .padding(.vertical, 8)
-                            
-                            // Transactions for this date
-                            VStack(spacing: 0) {
-                                ForEach(Array(group.transactions.enumerated()), id: \.element.id) { index, transaction in
-                                    TransactionRowView(transaction: transaction)
-                                        .padding(.horizontal, 16)
-                                    
-                                    if index < group.transactions.count - 1 {
-                                        Divider()
-                                            .padding(.leading, 66)
-                                    }
-                                }
+                        VStack(alignment: .leading, spacing: AppSpacing.small) {
+                            SectionHeaderView(date: group.date)
+                                .padding(.bottom, AppSpacing.xSmall)
+
+                            ForEach(group.transactions) { transaction in
+                                TransactionRowView(transaction: transaction)
                             }
                         }
-                        .cardShadow(cornerRadius: 16)
+                        .padding(.horizontal, AppSpacing.large)
+                        .padding(.bottom, AppSpacing.medium)
                     }
                 }
+                .padding(.top, AppSpacing.large)
             }
-            .padding()
-            .padding(.bottom, 32)
+            .padding(.bottom, AppSpacing.xxxLarge)
         }
     }
-    
+
     var totalCard: some View {
-        HStack(spacing: 16) {
+        HStack(spacing: AppSpacing.large) {
             ZStack {
-                RoundedRectangle(cornerRadius: 12, style: .continuous)
+                RoundedRectangle(cornerRadius: AppRadius.large, style: .continuous)
                     .fill(Color(hex: category.colorHex).opacity(0.15))
-                    .frame(width: 56, height: 56)
-                
+                    .frame(width: AppSize.iconXXLarge, height: AppSize.iconXXLarge)
+
                 Image(systemName: category.icon)
                     .foregroundStyle(Color(hex: category.colorHex))
-                    .font(.system(size: 26, weight: .semibold))
+                    .font(.system(size: AppSize.glyphBig, weight: .semibold))
             }
-            
-            VStack(alignment: .leading, spacing: 4) {
-                AppText("Всего за период", style: .sectionHeader, color: .secondary)
-                
-                Text(totalAmount.formatted(.currency(code: "KZT")))
-                    .font(.system(size: 22, weight: .bold))
+
+            VStack(alignment: .leading, spacing: AppSpacing.xSmall) {
+                AppText(AppString.totalForPeriod, style: .sectionHeader, color: AppColor.textSecondary)
+
+                Text(totalAmount.formatted(.currency(code: AppString.currencyCode)))
+                    .font(.app(.title))
                     .fontDesign(.rounded)
-                    .foregroundStyle(Color(hex: category.colorHex))
+                    .foregroundStyle(AppColor.textPrimary)
             }
-            
+
             Spacer()
         }
-        .padding(16)
-        .cardShadow(cornerRadius: 16)
+        .padding(AppSpacing.large)
+        .cardShadow(cornerRadius: AppRadius.card)
     }
-    
+
     var emptyState: some View {
-        VStack(spacing: 12) {
+        VStack(spacing: AppSpacing.medium) {
             Image(systemName: category.icon)
-                .font(.system(size: 48))
+                .font(.system(size: AppSize.glyphEmptyState))
                 .foregroundStyle(Color(hex: category.colorHex).opacity(0.5))
                 .symbolRenderingMode(.hierarchical)
-            
-            VStack(spacing: 6) {
-                AppText("Нет транзакций", style: .section)
-                
-                AppText("За выбранный период нет транзакций в категории «\(category.name)»", style: .sectionHeader, color: .secondary, alignment: .center)
-                    .padding(.horizontal, 32)
+
+            VStack(spacing: AppSpacing.smaller) {
+                AppText(AppString.noTransactions, style: .section)
+
+                AppText(
+                    AppString.noTransactionsForPeriod(category: category.name),
+                    style: .sectionHeader,
+                    color: AppColor.textSecondary,
+                    alignment: .center
+                )
+                .padding(.horizontal, AppSpacing.xxxLarge)
             }
         }
     }
 }
 
 // MARK: - Data Processing
+
 private extension CategoryTransactionsView {
-    
+
     struct TransactionGroup {
         let date: Date
         let transactions: [Transaction]
         let total: Decimal
     }
-    
+
     var totalAmount: Decimal {
         transactions.reduce(0) { $0 + $1.amount }
     }
-    
+
     var groupedTransactions: [TransactionGroup] {
         let calendar = Calendar.current
         let grouped = Dictionary(grouping: transactions) { transaction in
             calendar.startOfDay(for: transaction.date)
         }
-        
+
         return grouped.map { date, transactions in
             let sorted = transactions.sorted { $0.date > $1.date }
             let total = transactions.reduce(0) { $0 + $1.amount }

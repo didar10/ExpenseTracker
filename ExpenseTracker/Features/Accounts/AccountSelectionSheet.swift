@@ -6,199 +6,253 @@
 //
 
 import SwiftUI
+import SwiftData
 
 struct AccountSelectionSheet: View {
-    
-    let accounts: [Account]
+
+    // MARK: - Properties
+
     let selectedAccount: Account?
     let onSelect: (Account?) -> Void
-    let onShowAll: () -> Void
-    
+    /// Разрешён ли вариант «Все счета»: при вводе операции счет обязателен
+    var allowsAllAccounts: Bool = true
+
+    /// Список счетов читается своим запросом, а не приходит снимком от экрана-родителя:
+    /// после удаления родитель может отдать массив с уже невалидной моделью, обращение
+    /// к её свойствам роняет SwiftData
+    @Query(sort: \Account.createdAt, order: .forward)
+    private var accounts: [Account]
+
     @Environment(\.dismiss) private var dismiss
+    @Environment(\.repositories) private var repositories
+
     @State private var showingAddAccount = false
     @State private var editingAccount: Account?
-    
+    @State private var isEditing = false
+    @State private var accountToDelete: Account?
+    @State private var showDeleteAlert = false
+    @State private var showingSaveError = false
+
+    // MARK: - Computed Properties
+
+    private var totalBalance: Decimal {
+        accounts.reduce(Decimal.zero) { $0 + $1.currentBalance }
+    }
+
+    private var isAllAccountsSelected: Bool {
+        selectedAccount == nil
+    }
+
+    // MARK: - Body
+
     var body: some View {
-        NavigationStack {
-            ZStack {
-                Color(uiColor: .systemGroupedBackground)
-                    .ignoresSafeArea()
-                
-                ScrollView {
-                    VStack(spacing: 12) {
-                        // Все счета
-                        Button {
-                            UIImpactFeedbackGenerator(style: .light).impactOccurred()
-                            onSelect(nil)
-                        } label: {
-                            allAccountsRow
-                        }
-                        .buttonStyle(.plain)
-                        
-                        // Список счетов
-                        ForEach(accounts) { account in
-                            accountRow(account)
-                        }
-                    }
-                    .padding()
-                }
+        ZStack(alignment: .bottomTrailing) {
+            AppColor.background
+                .ignoresSafeArea()
+
+            VStack(spacing: 0) {
+                header
+
+                content
             }
-            .navigationTitle("Выбор счета")
-            .navigationBarTitleDisplayMode(.inline)
-            .toolbarBackground(.hidden, for: .navigationBar)
-            .toolbar {
-                ToolbarItem(placement: .navigationBarLeading) {
-                    Button {
-                        dismiss()
-                    } label: {
-                        ZStack {
-                            Circle()
-                                .fill(Color.white)
-                                .frame(width: 40, height: 40)
-                                .shadow(
-                                    color: .black.opacity(0.1),
-                                    radius: 3,
-                                    x: 0,
-                                    y: 2
-                                )
-                            
-                            Image(systemName: "xmark")
-                                .font(.system(size: 13, weight: .semibold))
-                                .foregroundStyle(.black)
-                        }
+
+            if !isEditing && !accounts.isEmpty {
+                AddFloatingButton(title: AppString.newAccountShort) {
+                    showingAddAccount = true
+                }
+                .padding(.trailing, AppSpacing.large)
+                .padding(.bottom, AppSpacing.xxxLarge)
+                .transition(.scale(scale: 0.9).combined(with: .opacity))
+            }
+        }
+        // Список опустел — редактировать больше нечего
+        .onChange(of: accounts.isEmpty) { _, isEmpty in
+            if isEmpty {
+                isEditing = false
+            }
+        }
+        .sheet(isPresented: $showingAddAccount) {
+            AccountFormView()
+        }
+        .sheet(item: $editingAccount) { account in
+            AccountFormView(account: account)
+        }
+        .saveErrorAlert(isPresented: $showingSaveError)
+        .alert(AppString.deleteAccountConfirm, isPresented: $showDeleteAlert) {
+            Button(AppString.cancel, role: .cancel) {
+                accountToDelete = nil
+            }
+            Button(AppString.delete, role: .destructive, action: deleteAccount)
+        } message: {
+            // Вместе со счетом каскадом удаляются его операции — предупреждаем об этом явно
+            Text(AppString.deleteAccountMessage)
+        }
+    }
+}
+
+// MARK: - Subviews
+private extension AccountSelectionSheet {
+
+    var header: some View {
+        SheetHeaderView(title: AppString.selectAccount) {
+            dismiss()
+        } trailing: {
+            if !accounts.isEmpty {
+                EditToggleButton(isEditing: isEditing) {
+                    withAnimation(.easeInOut(duration: 0.2)) {
+                        isEditing.toggle()
                     }
                 }
-                
-                ToolbarItem(placement: .navigationBarTrailing) {
-                    Button {
-                        UIImpactFeedbackGenerator(style: .light).impactOccurred()
+                .accessibilityLabel(isEditing ? AppString.done : AppString.edit)
+            }
+        }
+    }
+
+    @ViewBuilder
+    var content: some View {
+        ScrollView {
+            VStack(spacing: AppSpacing.large) {
+                if accounts.isEmpty {
+                    EmptyAccountsView {
                         showingAddAccount = true
-                    } label: {
-                        ZStack {
-                            Circle()
-                                .fill(Color.white)
-                                .frame(width: 40, height: 40)
-                                .shadow(
-                                    color: .black.opacity(0.1),
-                                    radius: 3,
-                                    x: 0,
-                                    y: 2
-                                )
-                            
-                            Image(systemName: "plus")
-                                .font(.system(size: 15, weight: .semibold))
-                                .foregroundStyle(.black)
-                        }
                     }
+                } else {
+                    if allowsAllAccounts {
+                        allAccountsRow
+                    }
+
+                    accountsList
                 }
             }
-            .sheet(isPresented: $showingAddAccount) {
-                AccountFormView()
+            .padding(AppSpacing.large)
+            // Плавающая кнопка не должна перекрывать последнюю строку списка
+            .padding(.bottom, AppSpacing.huge + AppSpacing.xxxLarge)
+        }
+        .scrollBounceBehavior(.basedOnSize)
+    }
+
+    @ViewBuilder
+    var allAccountsRow: some View {
+        if isEditing {
+            allAccountsRowContent
+        } else {
+            Button {
+                UIImpactFeedbackGenerator(style: .light).impactOccurred()
+                onSelect(nil)
+            } label: {
+                allAccountsRowContent
             }
-            .sheet(item: $editingAccount) { account in
-                AccountFormView(account: account)
-            }
+            .buttonStyle(HighlightRowButtonStyle(cornerRadius: AppRadius.xLarge))
+            .accessibilityAddTraits(isAllAccountsSelected ? .isSelected : [])
         }
     }
-    
-    private var allAccountsRow: some View {
-        HStack(spacing: 16) {
+
+    var allAccountsRowContent: some View {
+        HStack(spacing: AppSpacing.medium) {
             ZStack {
-                RoundedRectangle(cornerRadius: 12, style: .continuous)
-                    .fill(Color.blue.opacity(0.2))
-                    .frame(width: 56, height: 56)
-                
-                Image(systemName: "square.stack.3d.up.fill")
-                    .font(.system(size: 24))
-                    .foregroundStyle(.blue)
+                RoundedRectangle(cornerRadius: AppRadius.medium, style: .continuous)
+                    .fill(AppColor.accent.opacity(0.2))
+                    .frame(width: AppSize.iconMedium, height: AppSize.iconMedium)
+
+                AppImage.allAccounts
+                    .font(.system(size: AppSize.glyphLarge, weight: .semibold))
+                    .foregroundStyle(AppColor.accent)
             }
-            
-            VStack(alignment: .leading, spacing: 4) {
-                AppText("Все счета", style: .section)
-                    .color(.primary)
-                
-                AppText("Показать транзакции по всем счетам", style: .caption)
-                    .color(.secondary)
-            }
-            
-            Spacer()
-            
-            if selectedAccount == nil {
-                Image(systemName: "checkmark.circle.fill")
-                    .font(.system(size: 24))
-                    .foregroundStyle(.blue)
+            .accessibilityHidden(true)
+
+            AppText(AppString.allAccounts, style: .bodySmall)
+
+            Spacer(minLength: AppSpacing.small)
+
+            Text(totalBalance.formatted(.currency(code: AppString.currencyCode)))
+                .font(.app(.caption))
+                .fontDesign(.rounded)
+                .monospacedDigit()
+                .foregroundStyle(AppColor.textSecondary)
+                .lineLimit(1)
+
+            AppImage.checkmark
+                .font(.system(size: AppSize.glyphMedium, weight: .semibold))
+                .foregroundStyle(AppColor.accent)
+                .opacity(isAllAccountsSelected ? 1 : 0)
+                .accessibilityHidden(true)
+        }
+        .padding(.vertical, AppSpacing.small)
+        .padding(.horizontal, AppSpacing.large)
+        .frame(minHeight: AppSize.iconLarge)
+        .card(cornerRadius: AppRadius.xLarge)
+        .contentShape(Rectangle())
+        .accessibilityElement(children: .combine)
+    }
+
+    var accountsList: some View {
+        // Отступы совпадают со строкой «Все счета»: одинаковая высота строк в обеих карточках
+        VStack(spacing: 0) {
+            ForEach(Array(accounts.enumerated()), id: \.element.id) { index, account in
+                accountRowContent(for: account)
+
+                if index < accounts.count - 1 {
+                    Divider()
+                        .padding(.leading, AppSize.iconMedium + AppSpacing.medium)
+                }
             }
         }
-        .padding(16)
-        .cardShadow(cornerRadius: 16)
+        .padding(.vertical, AppSpacing.small)
+        .padding(.horizontal, AppSpacing.large)
+        .card(cornerRadius: AppRadius.xLarge)
     }
-    
-    private func accountRow(_ account: Account) -> some View {
-        HStack(spacing: 12) {
-            // Основная кнопка выбора счета
+
+    @ViewBuilder
+    func accountRowContent(for account: Account) -> some View {
+        if isEditing {
+            AccountRowView(
+                account: account,
+                isEditing: true,
+                onEdit: {
+                    UIImpactFeedbackGenerator(style: .light).impactOccurred()
+                    editingAccount = account
+                },
+                onDelete: {
+                    accountToDelete = account
+                    showDeleteAlert = true
+                }
+            )
+        } else {
             Button {
                 UIImpactFeedbackGenerator(style: .light).impactOccurred()
                 onSelect(account)
             } label: {
-                HStack(spacing: 12) {
-                    ZStack {
-                        RoundedRectangle(cornerRadius: 10, style: .continuous)
-                            .fill(account.swiftUIColor.opacity(0.2))
-                            .frame(width: 44, height: 44)
-                        
-                        Image(systemName: account.icon)
-                            .font(.system(size: 20, weight: .medium))
-                            .foregroundStyle(account.swiftUIColor)
-                    }
-                    
-                    HStack(spacing: 4) {
-                        Text(account.name)
-                            .font(.system(size: 15, weight: .medium))
-                            .foregroundStyle(.primary)
-                        
-                        if account.isDefault {
-                            Image(systemName: "star.fill")
-                                .font(.system(size: 10))
-                                .foregroundStyle(.yellow)
-                        }
-                    }
-                    
-                    Spacer(minLength: 8)
-                    
-                    HStack(spacing: 8) {
-                        Text(account.currentBalance.formatted(.currency(code: "KZT")))
-                            .font(.system(size: 14, weight: .semibold))
-                            .fontDesign(.rounded)
-                            .foregroundStyle(.secondary)
-                        
-                        if selectedAccount?.id == account.id {
-                            Image(systemName: "checkmark.circle.fill")
-                                .font(.system(size: 20))
-                                .foregroundStyle(.blue)
-                        }
-                    }
-                }
+                AccountRowView(
+                    account: account,
+                    isEditing: false,
+                    isSelected: account === selectedAccount,
+                    onEdit: {},
+                    onDelete: {}
+                )
             }
-            .buttonStyle(.plain)
-            
-            // Кнопка редактирования
-            Button {
-                UIImpactFeedbackGenerator(style: .light).impactOccurred()
-                editingAccount = account
-            } label: {
-                ZStack {
-                    Circle()
-                        .fill(Color(uiColor: .secondarySystemGroupedBackground))
-                        .frame(width: 40, height: 40)
-                    
-                    Image(systemName: "pencil")
-                        .font(.system(size: 16, weight: .semibold))
-                        .foregroundStyle(.black)
-                }
-            }
+            .buttonStyle(HighlightRowButtonStyle(cornerRadius: AppRadius.medium))
         }
-        .padding(.horizontal, 14)
-        .padding(.vertical, 10)
-        .cardShadow(cornerRadius: 14)
     }
+}
+
+// MARK: - Actions
+private extension AccountSelectionSheet {
+
+    func deleteAccount() {
+        guard let accountToDelete else { return }
+
+        self.accountToDelete = nil
+
+        do {
+            try repositories.accounts.delete(accountToDelete)
+            UINotificationFeedbackGenerator().notificationOccurred(.success)
+        } catch {
+            showingSaveError = true
+        }
+    }
+}
+
+#Preview {
+    AccountSelectionSheet(selectedAccount: nil, onSelect: { _ in })
+        .modelContainer(for: [Account.self], inMemory: true)
 }

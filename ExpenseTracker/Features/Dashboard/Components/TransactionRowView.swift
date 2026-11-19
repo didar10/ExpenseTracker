@@ -10,119 +10,197 @@ import SwiftData
 
 struct TransactionRowView: View {
 
-    let transaction: Transaction
+    // MARK: - Properties
 
-    @Environment(\.modelContext) private var context
-    @State private var showDeleteConfirmation = false
+    let transaction: Transaction
+    /// Не задан там, где строка только показывает операцию (список категории):
+    /// тогда она не кнопка и не предлагает редактирование
+    var onTap: (() -> Void)?
+    var onRepeat: (() -> Void)?
+    /// Не задан — строка удаляет операцию сама, с подтверждением.
+    /// Задан — удаление сразу, отмену предлагает экран
+    var onDelete: (() -> Void)?
+
+    @Environment(\.repositories) private var repositories
+
+    @State private var showingDeleteConfirmation = false
+    @State private var showingSaveError = false
+
+    // MARK: - Body
 
     var body: some View {
-        HStack(spacing: 12) {
-
-            iconView
-
-            VStack(alignment: .leading, spacing: 4) {
-                HStack(spacing: 6) {
-                    AppText(title, style: .bodySmaller)
-                    
-                    if let note = transaction.note, !note.isEmpty {
-                        Image(systemName: "text.bubble")
-                            .font(.system(size: 10))
-                            .foregroundStyle(.tertiary)
+        row
+            .accessibilityElement(children: .combine)
+            .accessibilityLabel(accessibilityLabel)
+            .accessibilityActions { accessibilityActionButtons }
+            .contextMenu {
+                if let onTap {
+                    Button(action: onTap) {
+                        Label { Text(AppString.edit) } icon: { AppImage.pencil }
                     }
                 }
 
+                if let onRepeat {
+                    Button(action: onRepeat) {
+                        Label { Text(AppString.repeatTransaction) } icon: { AppImage.repeatAction }
+                    }
+                }
+
+                Button(role: .destructive, action: requestDelete) {
+                    Label { Text(AppString.delete) } icon: { AppImage.trash }
+                }
+            }
+            .alert(AppString.deleteTransaction, isPresented: $showingDeleteConfirmation) {
+                Button(AppString.delete, role: .destructive) { delete() }
+                Button(AppString.cancel, role: .cancel) {}
+            } message: {
+                Text(AppString.cannotUndo)
+            }
+            .saveErrorAlert(isPresented: $showingSaveError)
+    }
+}
+
+// MARK: - Actions
+private extension TransactionRowView {
+
+    func requestDelete() {
+        if let onDelete {
+            onDelete()
+        } else {
+            showingDeleteConfirmation = true
+        }
+    }
+
+    func delete() {
+        do {
+            try withAnimation(.easeOut(duration: 0.2)) {
+                try repositories.transactions.delete(transaction)
+            }
+            UINotificationFeedbackGenerator().notificationOccurred(.warning)
+        } catch {
+            showingSaveError = true
+        }
+    }
+}
+
+// MARK: - Subviews
+private extension TransactionRowView {
+
+    /// Контекстное меню неудобно в VoiceOver — те же действия в ротор
+    @ViewBuilder
+    var accessibilityActionButtons: some View {
+        if let onRepeat {
+            Button(AppString.repeatTransaction, action: onRepeat)
+        }
+
+        if onDelete != nil {
+            Button(AppString.delete, action: requestDelete)
+        }
+    }
+
+    @ViewBuilder
+    var row: some View {
+        if let onTap {
+            Button(action: onTap) {
+                rowContent
+            }
+            .buttonStyle(HighlightRowButtonStyle())
+            .accessibilityHint(AppString.edit)
+        } else {
+            rowContent
+        }
+    }
+
+    var rowContent: some View {
+        HStack(spacing: AppSpacing.medium) {
+            iconView
+
+            VStack(alignment: .leading, spacing: AppSpacing.xSmall) {
+                AppText(title, style: .bodySmaller)
+                    .lineLimit(1)
+
                 if let note = transaction.note, !note.isEmpty {
-                    AppText(note, style: .microCaption, color: .secondary)
+                    AppText(note, style: .microCaption, color: AppColor.textSecondary)
                         .lineLimit(1)
                 }
             }
 
-            Spacer()
-            
-            // Применяем .rounded design на уровне view
+            Spacer(minLength: AppSpacing.small)
+
             Text(amountText)
                 .font(.app(.bodySmaller))
                 .fontDesign(.rounded)
+                .monospacedDigit()
                 .foregroundStyle(amountColor)
+                .lineLimit(1)
+                .minimumScaleFactor(0.8)
         }
-        .padding(.vertical, 8)
-        .padding(.horizontal, 2)
+        .padding(.horizontal, AppSpacing.mediumSmall)
+        .padding(.vertical, AppSpacing.medium)
         .contentShape(Rectangle())
-        .contextMenu {
-            Button {
-                showDeleteConfirmation = true
-            } label: {
-                Label("Удалить", systemImage: "trash")
-            }
-        }
-        .confirmationDialog("Удалить транзакцию?", isPresented: $showDeleteConfirmation, titleVisibility: .visible) {
-            Button("Удалить", role: .destructive) {
-                delete()
-            }
-            Button("Отмена", role: .cancel) { }
-        }
+        .cardShadow(cornerRadius: AppRadius.card)
     }
-}
-
-// MARK: - Logic
-private extension TransactionRowView {
-
-    func delete() {
-        UINotificationFeedbackGenerator().notificationOccurred(.warning)
-        
-        withAnimation {
-            context.delete(transaction)
-        }
-
-        do {
-            try context.save()
-        } catch {
-            print("❌ Failed to delete transaction:", error)
-        }
-    }
-}
-
-// MARK: - UI helpers
-private extension TransactionRowView {
 
     var iconView: some View {
         ZStack {
             Circle()
-                .fill(iconBackgroundColor.opacity(0.15))
-                .frame(width: 38, height: 38)
+                .fill(iconColor.opacity(0.15))
+                .frame(width: AppSize.iconMedium, height: AppSize.iconMedium)
 
-            Image(systemName: iconName)
-                .foregroundStyle(iconBackgroundColor)
-                .font(.system(size: 18, weight: .semibold))
+            transactionIcon
+                .foregroundStyle(iconColor)
+                .font(.system(size: AppSize.glyphRow, weight: .semibold))
                 .symbolRenderingMode(.hierarchical)
         }
-        .circleShadow()
     }
+}
+
+// MARK: - Computed Properties
+private extension TransactionRowView {
 
     var title: String {
         transaction.type == .income
-        ? "Доход"
-        : transaction.category?.name ?? "Расход"
+        ? AppString.income
+        : transaction.category?.name ?? AppString.noCategory
     }
 
-    var iconName: String {
+    var transactionIcon: Image {
         transaction.type == .income
-        ? "arrow.down.circle.fill"
-        : transaction.category?.icon ?? "questionmark.circle.fill"
+        ? AppImage.incomeArrow
+        : Image(systemName: transaction.category?.icon ?? Constants.fallbackIcon)
     }
 
-    var iconBackgroundColor: Color {
+    var iconColor: Color {
         transaction.type == .income
-        ? .green
-        : Color(hex: transaction.category?.colorHex ?? "#34C759")
+        ? AppColor.income
+        : Color(hex: transaction.category?.colorHex ?? Constants.fallbackColorHex)
     }
 
     var amountText: String {
-        let sign = transaction.type == .income ? "+" : "−"
-        return "\(sign) \(transaction.amount.formatted(.currency(code: "KZT")))"
+        let sign = transaction.type == .income ? Constants.plusSign : Constants.minusSign
+        return "\(sign) \(transaction.amount.formatted(.currency(code: AppString.currencyCode)))"
     }
 
     var amountColor: Color {
-        transaction.type == .income ? .green : .primary
+        transaction.type == .income ? AppColor.income : AppColor.textPrimary
+    }
+
+    /// VoiceOver читает строку целиком: категория, сумма и комментарий
+    var accessibilityLabel: String {
+        [title, amountText, transaction.note ?? ""]
+            .filter { !$0.isEmpty }
+            .joined(separator: ", ")
+    }
+}
+
+// MARK: - Constants
+private extension TransactionRowView {
+
+    enum Constants {
+        static let fallbackIcon = "minus"
+        static let fallbackColorHex = "#8E8E93"
+        static let plusSign = "+"
+        /// Минус для сумм — типографский, а не дефис
+        static let minusSign = "−"
     }
 }

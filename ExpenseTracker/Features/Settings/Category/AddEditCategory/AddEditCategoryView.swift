@@ -9,155 +9,149 @@ import SwiftUI
 import SwiftData
 
 struct AddEditCategoryView: View {
-    
+
     // MARK: - Properties
-    
-    @Environment(\.modelContext) private var context
+
+    @Environment(\.repositories) private var repositories
     @Environment(\.dismiss) private var dismiss
-    @Environment(\.tabBarVisibility) private var isTabBarVisible
-    
+
     @State private var viewModel: AddEditCategoryViewModel
-    
-    // MARK: - Initialization
-    
+    @State private var showingDiscardConfirmation = false
+
+    // MARK: - Init
+
     init(category: Category? = nil) {
         _viewModel = State(initialValue: AddEditCategoryViewModel(category: category))
     }
-    
+
     // MARK: - Body
-    
+
     var body: some View {
-        ZStack {
-            Color(.systemGroupedBackground)
+        ZStack(alignment: .bottom) {
+            AppColor.background
                 .ignoresSafeArea()
-            
-            ScrollView {
-                VStack(spacing: 20) {
-                    CategoryPreviewCardView(
-                        name: viewModel.formData.name,
-                        icon: viewModel.formData.icon,
-                        colorHex: viewModel.formData.colorHex
-                    )
-                    
-                    nameSection
-                    
-                    iconSection
-                    
-                    colorSection
-                    
-                    CategorySaveButtonView(
-                        title: viewModel.saveButtonTitle,
-                        isEnabled: viewModel.canSave,
-                        action: handleSave
-                    )
-                }
-                .padding()
-                .padding(.bottom, 40)
+
+            VStack(spacing: 0) {
+                header
+
+                form
             }
+
+            saveBar
         }
-        .navigationTitle(viewModel.title)
-        .navigationBarTitleDisplayMode(.inline)
+        .toolbar(.hidden, for: .navigationBar)
         .navigationBarBackButtonHidden(true)
-        .toolbarBackground(.hidden, for: .navigationBar)
+        // Введенные данные не теряются молча: закрытие проходит через подтверждение
+        .interactiveDismissDisabled(viewModel.hasUnsavedChanges)
         .toolbar {
-            ToolbarItem(placement: .navigationBarLeading) {
-                Button {
-                    isTabBarVisible.wrappedValue = true
-                    dismiss()
-                } label: {
-                    ZStack {
-                        Circle()
-                            .fill(Color.white)
-                            .frame(width: 40, height: 40)
-                            .shadow(
-                                color: .black.opacity(0.1),
-                                radius: 3,
-                                x: 0,
-                                y: 2
-                            )
-                        
-                        Image(systemName: "chevron.left")
-                            .font(.system(size: 14, weight: .semibold))
-                            .foregroundStyle(.black)
-                    }
-                }
+            ToolbarItemGroup(placement: .keyboard) {
+                Spacer()
+
+                Button(AppString.done, action: dismissKeyboard)
             }
         }
-        .onAppear {
-            isTabBarVisible.wrappedValue = false
-        }
-        .sheet(isPresented: $viewModel.showIconPicker) {
-            NavigationStack {
-                IconPickerSheet(selectedIcon: $viewModel.formData.icon)
-            }
-        }
-    }
-    
-    // MARK: - UI Sections
-    
-    private var nameSection: some View {
-        CategoryFormSectionView(title: "Название") {
-            TextField("Введите название", text: $viewModel.formData.name)
-                .font(.system(size: 17))
-                .padding(16)
-                .background(
-                    RoundedRectangle(cornerRadius: 16, style: .continuous)
-                        .fill(Color(uiColor: .systemBackground))
-                )
-                .overlay(
-                    RoundedRectangle(cornerRadius: 16, style: .continuous)
-                        .strokeBorder(Color.black.opacity(0.08), lineWidth: 1)
-                )
-        }
-    }
-    
-    private var iconSection: some View {
-        CategoryFormSectionView(title: "Иконка") {
-            CategoryIconPickerButtonView(
-                icon: viewModel.formData.icon,
-                colorHex: viewModel.formData.colorHex,
-                action: viewModel.toggleIconPicker
-            )
-        }
-    }
-    
-    private var colorSection: some View {
-        CategoryFormSectionView(title: "Цвет") {
-            CategoryColorPickerView(colorHex: $viewModel.formData.colorHex)
-        }
-    }
-    
-    // MARK: - Actions
-    
-    private func handleSave() {
-        UIImpactFeedbackGenerator(style: .medium).impactOccurred()
-        
-        withAnimation {
-            if viewModel.save(context: context) {
-                isTabBarVisible.wrappedValue = true
-                dismiss()
-            }
+        .saveErrorAlert(isPresented: $viewModel.showingSaveError)
+        .alert(AppString.discardCategoryTitle, isPresented: $showingDiscardConfirmation) {
+            Button(AppString.discardChanges, role: .destructive) { dismiss() }
+            Button(AppString.keepEditing, role: .cancel) { }
+        } message: {
+            Text(AppString.discardChangesMessage)
         }
     }
 }
 
-// MARK: - Preview
+// MARK: - Subviews
+private extension AddEditCategoryView {
 
-#Preview("New Category") {
-    NavigationStack {
-        AddEditCategoryView()
+    var header: some View {
+        SheetHeaderView(title: viewModel.title, onClose: handleClose)
     }
-}
 
-#Preview("Edit Category") {
-    NavigationStack {
-        AddEditCategoryView(
-            category: Category(
-                name: "Продукты",
-                icon: "cart.fill",
-                colorHex: "#FF6B6B"
-            )
+    var form: some View {
+        ScrollView {
+            VStack(spacing: AppSpacing.xLarge) {
+                NamePreviewCardView(
+                    name: $viewModel.formData.name,
+                    icon: viewModel.formData.icon,
+                    color: Color(hex: viewModel.formData.colorHex),
+                    placeholder: AppString.categoryName
+                )
+
+                TransactionTypePickerView(
+                    selectedType: $viewModel.formData.type,
+                    backgroundColor: AppColor.fieldFill
+                )
+
+                colorSection
+                iconSection
+            }
+            .padding(AppSpacing.large)
+            .padding(.bottom, AppSpacing.huge + AppSpacing.xxxLarge)
+        }
+        .scrollDismissesKeyboard(.interactively)
+    }
+
+    var colorSection: some View {
+        ColorPickerView(selectedColor: $viewModel.formData.colorHex, palette: .hex)
+    }
+
+    var iconSection: some View {
+        IconPicker(
+            selectedIcon: $viewModel.formData.icon,
+            color: Color(hex: viewModel.formData.colorHex)
+        )
+    }
+
+    var saveBar: some View {
+        PrimaryActionButton(
+            title: viewModel.saveButtonTitle,
+            isEnabled: viewModel.canSave,
+            action: handleSave
+        )
+        .padding(.horizontal, AppSpacing.large)
+        .padding(.top, AppSpacing.medium)
+        .padding(.bottom, AppSpacing.large)
+        .background(
+            AppColor.background
+                .ignoresSafeArea(edges: .bottom)
         )
     }
 }
 
+// MARK: - Actions
+private extension AddEditCategoryView {
+
+    func handleSave() {
+        UIImpactFeedbackGenerator(style: .medium).impactOccurred()
+        dismissKeyboard()
+
+        if viewModel.save(using: repositories.categories) {
+            dismiss()
+        }
+    }
+
+    func handleClose() {
+        dismissKeyboard()
+
+        guard viewModel.hasUnsavedChanges else {
+            dismiss()
+            return
+        }
+
+        showingDiscardConfirmation = true
+    }
+
+    func dismissKeyboard() {
+        UIApplication.shared.sendAction(
+            #selector(UIResponder.resignFirstResponder),
+            to: nil,
+            from: nil,
+            for: nil
+        )
+    }
+}
+
+#Preview("Новая категория") {
+    AddEditCategoryView()
+        .modelContainer(for: [Category.self], inMemory: true)
+}

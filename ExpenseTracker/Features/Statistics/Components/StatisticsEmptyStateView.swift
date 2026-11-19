@@ -7,27 +7,33 @@
 
 import SwiftUI
 
-/// Пустое состояние для экрана статистики
+/// Текстовая часть пустого состояния статистики — стоит в центре пустой диаграммы
 struct StatisticsEmptyStateView: View {
+
+    // MARK: - Properties
+
+    let hint: String
+
+    // MARK: - Body
+
     var body: some View {
-        VStack(spacing: 12) {
-            Image(systemName: "chart.pie")
-                .font(.system(size: 48))
-                .foregroundStyle(.tertiary)
-                .symbolRenderingMode(.hierarchical)
-            
-            VStack(spacing: 6) {
-                AppText("Нет данных", style: .section)
-                
-                AppText("Добавьте расходы за выбранный период", style: .sectionHeader, color: .secondary, alignment: .center)
-            }
+        VStack(spacing: AppSpacing.smaller) {
+            AppText(AppString.noData, style: .section, alignment: .center)
+
+            AppText(
+                hint,
+                style: .sectionHeader,
+                color: AppColor.textSecondary,
+                alignment: .center
+            )
         }
-        .padding(.vertical, 32)
+        .frame(maxWidth: .infinity)
+        .accessibilityElement(children: .combine)
     }
 }
 
 #Preview {
-    StatisticsEmptyStateView()
-        .padding()
-        .background(Color(.systemGroupedBackground))
+    StatisticsEmptyStateView(hint: AppString.noDataHint)
+        .padding(AppSpacing.large)
+        .background(AppColor.background)
 }
