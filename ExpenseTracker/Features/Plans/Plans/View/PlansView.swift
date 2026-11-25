@@ -164,5 +164,8 @@ private extension PlansView {
 }
 
 #Preview {
-    PlansView(limitStore: MonthlyLimitStore(defaults: UserDefaults(suiteName: "preview") ?? .standard))
+    let fixture = FixtureEnvironment(.sample)
+
+    PlansView(limitStore: fixture.limitStore)
+        .fixture(fixture)
 }

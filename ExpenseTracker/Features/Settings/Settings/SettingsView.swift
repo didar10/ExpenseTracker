@@ -45,6 +45,9 @@ struct SettingsView: View {
                         generalSection
                         informationSection
                         dataSection
+                        #if DEBUG
+                        debugSection
+                        #endif
                         appInfoSection
                     }
                     .padding(AppSpacing.large)
@@ -65,6 +68,14 @@ struct SettingsView: View {
             } message: {
                 Text(AppString.deleteAllDataMessage)
             }
+            #if DEBUG
+            .alert(AppString.debugLoadFixtureConfirm, isPresented: $viewModel.showingLoadFixtureAlert) {
+                Button(AppString.cancel, role: .cancel) {}
+                Button(AppString.load, role: .destructive, action: handleLoadFixture)
+            } message: {
+                Text(AppString.debugLoadFixtureMessage)
+            }
+            #endif
         }
     }
 }
@@ -142,6 +153,31 @@ private extension SettingsView {
         }
     }
 
+    #if DEBUG
+    var debugSection: some View {
+        SettingsSectionView(title: AppString.debugSection) {
+            SettingsRowView(
+                icon: AppImage.designSystemCatalog,
+                iconColor: AppColor.accent,
+                title: AppString.dsCatalogTitle
+            ) {
+                coordinator.show(.designSystemCatalog)
+            }
+
+            SettingsRowDivider()
+
+            SettingsRowView(
+                icon: AppImage.loadFixture,
+                iconColor: AppColor.warning,
+                title: AppString.debugLoadFixture,
+                showsChevron: false
+            ) {
+                viewModel.prepareLoadFixture()
+            }
+        }
+    }
+    #endif
+
     var appInfoSection: some View {
         VStack(spacing: AppSpacing.small) {
             AppText(AppString.appName, style: .sectionHeader, color: AppColor.textSecondary)
@@ -164,9 +200,23 @@ private extension SettingsView {
         UINotificationFeedbackGenerator().notificationOccurred(.success)
         onDataReset()
     }
+
+    #if DEBUG
+    func handleLoadFixture() {
+        let fixture = Fixture.sample
+        guard viewModel.confirmLoadFixture(fixture, using: repositories.appData) else { return }
+
+        // Общий сброс обнуляет лимит и возвращает на главный экран — лимит фикстуры ставится после него
+        onDataReset()
+        viewModel.applyFixtureLimit(fixture)
+        UINotificationFeedbackGenerator().notificationOccurred(.success)
+    }
+    #endif
 }
 
 #Preview {
-    SettingsView(limitStore: MonthlyLimitStore())
-        .modelContainer(for: [Account.self, Category.self, Transaction.self, BudgetPlan.self], inMemory: true)
+    let fixture = FixtureEnvironment(.sample)
+
+    SettingsView(limitStore: fixture.limitStore)
+        .fixture(fixture)
 }

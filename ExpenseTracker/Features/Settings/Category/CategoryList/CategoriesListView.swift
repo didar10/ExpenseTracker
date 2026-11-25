@@ -205,5 +205,5 @@ private extension CategoriesListView {
 
 #Preview {
     CategoriesListView()
-        .modelContainer(for: [Category.self], inMemory: true)
+        .fixture(FixtureEnvironment(.sample))
 }

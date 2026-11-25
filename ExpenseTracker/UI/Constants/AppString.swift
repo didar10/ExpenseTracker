@@ -285,6 +285,23 @@ enum AppString {
     static let deleteAllDataConfirm = String(localized: "delete_all_data_confirm")
     static let deleteAllDataMessage = String(localized: "delete_all_data_message")
 
+    // MARK: - Debug
+
+    #if DEBUG
+    static let debugSection = String(localized: "debug_section")
+    static let debugLoadFixture = String(localized: "debug_load_fixture")
+    static let debugLoadFixtureConfirm = String(localized: "debug_load_fixture_confirm")
+    static let debugLoadFixtureMessage = String(localized: "debug_load_fixture_message")
+    static let load = String(localized: "load")
+    static let dsCatalogTitle = String(localized: "ds_catalog_title")
+    static let dsCatalogColors = String(localized: "ds_catalog_colors")
+    static let dsCatalogCategoryColors = String(localized: "ds_catalog_category_colors")
+    static let dsCatalogFonts = String(localized: "ds_catalog_fonts")
+    static let dsCatalogStrokesAndShadows = String(localized: "ds_catalog_strokes_and_shadows")
+    static let dsCatalogRadii = String(localized: "ds_catalog_radii")
+    static let dsCatalogSpacing = String(localized: "ds_catalog_spacing")
+    #endif
+
     // MARK: - FAQ
 
     static let faqQ1 = String(localized: "faq_q1")

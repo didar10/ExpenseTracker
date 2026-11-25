@@ -13,6 +13,9 @@ enum SettingsRoute: Identifiable, Hashable {
     case privacyPolicy
     case helpSupport
     case termsOfService
+    #if DEBUG
+    case designSystemCatalog
+    #endif
 
     var id: Self { self }
 }

@@ -254,5 +254,5 @@ private extension AccountSelectionSheet {
 
 #Preview {
     AccountSelectionSheet(selectedAccount: nil, onSelect: { _ in })
-        .modelContainer(for: [Account.self], inMemory: true)
+        .fixture(FixtureEnvironment(.sample))
 }

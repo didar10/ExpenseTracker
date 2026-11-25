@@ -16,6 +16,9 @@ final class SettingsViewModel {
 
     var showingDeleteAllDataAlert = false
     var showingSaveError = false
+    #if DEBUG
+    var showingLoadFixtureAlert = false
+    #endif
 
     @ObservationIgnored
     private let limitStore: MonthlyLimitStore
@@ -63,4 +66,29 @@ final class SettingsViewModel {
             return false
         }
     }
+
+    #if DEBUG
+    func prepareLoadFixture() {
+        showingLoadFixtureAlert = true
+    }
+
+    /// Заменяет все данные фикстурой. Лимит выставляет `applyFixtureLimit(_:)`:
+    /// его нужно вызвать после общего сброса экранов, который лимит обнуляет
+    /// - Returns: false — загрузка не удалась
+    func confirmLoadFixture(_ fixture: Fixture, using repository: AppDataRepository) -> Bool {
+        showingLoadFixtureAlert = false
+
+        do {
+            try repository.replaceAllData(with: fixture)
+            return true
+        } catch {
+            showingSaveError = true
+            return false
+        }
+    }
+
+    func applyFixtureLimit(_ fixture: Fixture) {
+        limitStore.setLimit(fixture.monthlyLimit)
+    }
+    #endif
 }

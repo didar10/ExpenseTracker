@@ -21,6 +21,10 @@ enum AppImage {
     static let chevronUp = Image(systemName: "chevron.up")
     static let trash = Image(systemName: "trash")
     static let trashFill = Image(systemName: "trash.fill")
+    #if DEBUG
+    static let loadFixture = Image(systemName: "arrow.triangle.2.circlepath")
+    static let designSystemCatalog = Image(systemName: "paintpalette.fill")
+    #endif
     static let pencil = Image(systemName: "pencil")
     static let starFill = Image(systemName: "star.fill")
     static let calendar = Image(systemName: "calendar")

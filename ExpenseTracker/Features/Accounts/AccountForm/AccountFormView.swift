@@ -233,5 +233,5 @@ private extension AccountFormView {
 
 #Preview("Новый счет") {
     AccountFormView()
-        .modelContainer(for: [Account.self], inMemory: true)
+        .fixture(FixtureEnvironment(.empty))
 }

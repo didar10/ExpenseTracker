@@ -153,5 +153,5 @@ private extension AddEditCategoryView {
 
 #Preview("Новая категория") {
     AddEditCategoryView()
-        .modelContainer(for: [Category.self], inMemory: true)
+        .fixture(FixtureEnvironment(.empty))
 }

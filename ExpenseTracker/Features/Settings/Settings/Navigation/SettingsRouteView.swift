@@ -33,6 +33,12 @@ struct SettingsRouteView: View {
         case .termsOfService:
             LegalDocumentView(document: .termsOfService)
                 .settingsSheetPresentation()
+
+        #if DEBUG
+        case .designSystemCatalog:
+            DSCatalogView()
+                .settingsSheetPresentation()
+        #endif
         }
     }
 }
