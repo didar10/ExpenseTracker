@@ -51,16 +51,10 @@ enum AppSize {
     static let keypadDigit: CGFloat = 28
     /// Иконка операции в строке списка
     static let glyphRow: CGFloat = 18
-    /// Высота полоски прогресса в карточке
-    static let progressBar: CGFloat = 6
     /// Переключатель-капсула с подписью «Вкл» / «Выкл»
     static let pillToggleWidth: CGFloat = 64
     static let pillToggleHeight: CGFloat = 30
     static let pillToggleKnobInset: CGFloat = 3
-    /// Отметка «сегодня» на полоске бюджета
-    static let progressMarkerWidth: CGFloat = 3
-    static let progressMarkerHeight: CGFloat = 12
-    static let progressMarkerBorder: CGFloat = 1
 
     // MARK: - Onboarding
 

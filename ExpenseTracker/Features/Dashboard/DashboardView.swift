@@ -119,9 +119,7 @@ struct DashboardView: View {
                 viewModel.selectAccount(account)
             }
         }
-        .sheet(isPresented: $viewModel.showingMonthlyLimit) {
-            MonthlyLimitView(limitStore: viewModel.limitStore)
-        }
+        .monthlyLimitSheet(isPresented: $viewModel.showingMonthlyLimit, limitStore: viewModel.limitStore)
         .saveErrorAlert(isPresented: $viewModel.showingSaveError)
         .onReceive(
             NotificationCenter.default

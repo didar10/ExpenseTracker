@@ -18,18 +18,26 @@ final class BudgetPlan {
     var period: BudgetPeriod
     var createdAt: Date
     var isActive: Bool
+    /// Неистраченный остаток переходит на следующий период. Пока только хранится
+    var carriesOverRemainder: Bool = true
+    /// Предупредить, когда потрачено 80% бюджета. Пока только хранится
+    var warnsNearLimit: Bool = true
     
     init(
         category: Category,
         monthlyLimit: Decimal,
         period: BudgetPeriod = .month,
-        isActive: Bool = true
+        isActive: Bool = true,
+        carriesOverRemainder: Bool = true,
+        warnsNearLimit: Bool = true
     ) {
         self.category = category
         self.monthlyLimit = monthlyLimit
         self.period = period
         self.createdAt = Date()
         self.isActive = isActive
+        self.carriesOverRemainder = carriesOverRemainder
+        self.warnsNearLimit = warnsNearLimit
     }
 }
 

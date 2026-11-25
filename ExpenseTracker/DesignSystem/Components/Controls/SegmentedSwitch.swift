@@ -8,7 +8,7 @@
 import SwiftUI
 
 /// Переключатель из равных сегментов: Расходы | Доходы, Карта | Наличные | Вклад.
-/// Выбранный сегмент залит accent, сегменты разделены обводкой
+/// Выбранный сегмент залит accent (или ink — период бюджета), сегменты разделены обводкой
 struct SegmentedSwitch<Value: Hashable>: View {
 
     // MARK: - Types
@@ -18,12 +18,36 @@ struct SegmentedSwitch<Value: Hashable>: View {
         let title: String
         /// Иконка перед названием: ↗ Расходы / ↙ Доходы в статистике
         var icon: Image?
+        /// false — сегмент виден, но не выбирается
+        var isEnabled = true
+    }
+
+    /// Заливка выбранного сегмента
+    enum Fill {
+        case accent
+        /// Черная заливка, светлый текст — `AddBudget.html` (.periodS)
+        case ink
+
+        fileprivate var background: Color {
+            switch self {
+            case .accent: return DS.Color.accent
+            case .ink: return DS.Color.ink
+            }
+        }
+
+        fileprivate var foreground: Color {
+            switch self {
+            case .accent: return DS.Color.onAccent
+            case .ink: return DS.Color.bg
+            }
+        }
     }
 
     // MARK: - Properties
 
     @Binding var selection: Value
     let options: [Option]
+    var fill: Fill = .accent
 
     @Environment(\.accessibilityReduceMotion) private var reduceMotion
 
@@ -72,12 +96,13 @@ private extension SegmentedSwitch {
                     .lineLimit(1)
                     .minimumScaleFactor(Constants.minimumScale)
             }
-            .foregroundStyle(isSelected ? DS.Color.onAccent : DS.Color.ink2)
+            .foregroundStyle(isSelected ? fill.foreground : DS.Color.ink2)
             .padding(.horizontal, DS.Spacing.sm)
             .frame(maxWidth: .infinity, maxHeight: .infinity)
-            .background(isSelected ? DS.Color.accent : .clear)
+            .background(isSelected ? fill.background : .clear)
         }
         .buttonStyle(.outlineClickSegment)
+        .disabled(!option.isEnabled)
         .accessibilityAddTraits(isSelected ? .isSelected : [])
     }
 }

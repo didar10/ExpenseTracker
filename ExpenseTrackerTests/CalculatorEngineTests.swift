@@ -58,6 +58,13 @@ struct CalculatorEngineTests {
         #expect(engine("1234567").expressionText == "1\(nbsp)234\(nbsp)567")
     }
 
+    @Test func tripleZeroAppendsThreeZeros() {
+        var engine = engine("12")
+        engine.input(.tripleZero)
+
+        #expect(engine.expressionText == "12\(nbsp)000")
+    }
+
     @Test func leadingZeroIsReplaced() {
         #expect(engine("05").expressionText == "5")
         #expect(engine("00").expressionText == "0")

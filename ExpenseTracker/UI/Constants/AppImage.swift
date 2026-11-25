@@ -15,7 +15,6 @@ enum AppImage {
     static let plus = Image(systemName: "plus")
     static let checkmark = Image(systemName: "checkmark")
     static let checkmarkCircleFill = Image(systemName: "checkmark.circle.fill")
-    static let chevronLeft = Image(systemName: "chevron.left")
     static let chevronRight = Image(systemName: "chevron.right")
     static let chevronDown = Image(systemName: "chevron.down")
     static let chevronUp = Image(systemName: "chevron.up")
@@ -45,7 +44,6 @@ enum AppImage {
     static let incomeFallback = Image(systemName: "banknote")
     static let undo = Image(systemName: "arrow.uturn.backward")
     static let dailyLimit = Image(systemName: "gauge.with.needle")
-    static let warningTriangle = Image(systemName: "exclamationmark.triangle.fill")
     static let dataUnavailable = Image(systemName: "externaldrive.badge.exclamationmark")
 
     // MARK: - Transactions
@@ -75,7 +73,6 @@ enum AppImage {
 
     // MARK: - Plans
 
-    static let chartBarDoc = Image(systemName: "chart.bar.doc.horizontal")
 
     // MARK: - Onboarding
 

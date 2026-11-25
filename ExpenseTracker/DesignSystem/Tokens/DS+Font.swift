@@ -28,6 +28,8 @@ extension DS {
         static let amountXL = SwiftUI.Font.custom(FontName.unboundedBold.rawValue, size: Size.amountXL, relativeTo: .largeTitle)
         /// Знак ₸ после суммы при вводе — Unbounded Medium 48
         static let amountXLSign = SwiftUI.Font.custom(FontName.unboundedMedium.rawValue, size: Size.amountXL, relativeTo: .largeTitle)
+        /// Знак ₸ после суммы на листе лимита — Unbounded Medium 22
+        static let amountSignS = SwiftUI.Font.custom(FontName.unboundedMedium.rawValue, size: Size.amountS, relativeTo: .title2)
         /// Знак ₸ после суммы на низком экране — Unbounded Medium 40
         static let amountLSign = SwiftUI.Font.custom(FontName.unboundedMedium.rawValue, size: Size.amountL, relativeTo: .largeTitle)
         /// Месяц в календаре — Unbounded Bold 16
@@ -36,6 +38,10 @@ extension DS {
         static let amountL = SwiftUI.Font.custom(FontName.unboundedBold.rawValue, size: Size.amountL, relativeTo: .largeTitle)
         /// Сумма в карточке «Можно потратить сегодня» — Unbounded Bold 28
         static let amountM = SwiftUI.Font.custom(FontName.unboundedBold.rawValue, size: Size.amountM, relativeTo: .title)
+        /// Сумма нового бюджета — Unbounded Bold 44
+        static let amountInput = SwiftUI.Font.custom(FontName.unboundedBold.rawValue, size: Size.amountInput, relativeTo: .largeTitle)
+        /// Остаток лимита в карточке бюджетов — Unbounded Bold 34
+        static let amountLimit = SwiftUI.Font.custom(FontName.unboundedBold.rawValue, size: Size.amountLimit, relativeTo: .largeTitle)
         /// Баланс в компактной шапке при прокрутке — Unbounded Bold 22
         static let amountS = SwiftUI.Font.custom(FontName.unboundedBold.rawValue, size: Size.amountS, relativeTo: .title2)
 
@@ -49,6 +55,10 @@ extension DS {
         static let bodySmall = SwiftUI.Font.subheadline
         /// Подписи — SF 13
         static let caption = SwiftUI.Font.footnote
+        /// Мелкая подсказка над кнопкой — SF 12
+        static let captionSmall = SwiftUI.Font.caption
+        /// Подписи с акцентом: пилюля лимита, плашка темпа — SF Semibold 13
+        static let captionBold = SwiftUI.Font.footnote.weight(.semibold)
         /// Подписи контролов: пилюля счета, период, поле — SF Semibold 15
         static let control = SwiftUI.Font.subheadline.weight(.semibold)
         /// Сегменты переключателя — SF Bold 15
@@ -80,6 +90,10 @@ extension DS {
         static let calendarDay = SwiftUI.Font.custom(FontName.jetBrainsMonoMedium.rawValue, size: Size.calendarDay, relativeTo: .subheadline)
         /// Время на листе даты — JetBrains Mono Bold 16
         static let time = SwiftUI.Font.custom(FontName.jetBrainsMonoBold.rawValue, size: Size.time, relativeTo: .callout)
+        /// Бейдж процента бюджета — JetBrains Mono Bold 12
+        static let badge = SwiftUI.Font.custom(FontName.jetBrainsMonoBold.rawValue, size: Size.moneySmall, relativeTo: .caption)
+        /// Сумма внутри мелкой подсказки — JetBrains Mono Bold 12
+        static let moneySmallBold = SwiftUI.Font.custom(FontName.jetBrainsMonoBold.rawValue, size: Size.moneySmall, relativeTo: .caption)
         /// Мелкие суммы и даты — JetBrains Mono Medium 12
         static let moneySmall = SwiftUI.Font.custom(FontName.jetBrainsMonoMedium.rawValue, size: Size.moneySmall, relativeTo: .caption)
     }
@@ -95,6 +109,8 @@ extension DS.Font {
         static let dialogTitle: CGFloat = 20
         static let amountXL: CGFloat = 48
         static let amountL: CGFloat = 40
+        static let amountInput: CGFloat = 44
+        static let amountLimit: CGFloat = 34
         static let amountM: CGFloat = 28
         static let amountS: CGFloat = 22
         static let label: CGFloat = 12

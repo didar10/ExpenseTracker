@@ -30,11 +30,13 @@ struct OutlineClickStyle: ButtonStyle {
     var fill: Color = DS.Color.surface
     /// Цвет содержимого в покое; на подсветке всегда onAccent
     var foreground: Color = DS.Color.ink
+    /// Цвет обводки: ink, у опасного действия — danger
+    var borderColor: Color = DS.Color.ink
 
     // MARK: - Body
 
     func makeBody(configuration: Configuration) -> some View {
-        OutlineClickBody(shape: shape, fill: fill, foreground: foreground, isPressed: configuration.isPressed) {
+        OutlineClickBody(shape: shape, fill: fill, foreground: foreground, borderColor: borderColor, isPressed: configuration.isPressed) {
             configuration.label
         }
     }
@@ -48,6 +50,11 @@ extension ButtonStyle where Self == OutlineClickStyle {
 
     static func outlineClick(radius: CGFloat, fill: Color = DS.Color.surface) -> OutlineClickStyle {
         OutlineClickStyle(shape: .bordered(radius: radius), fill: fill)
+    }
+
+    /// Опасное действие без тени: «Убрать лимит» — красные текст и обводка
+    static var outlineClickDanger: OutlineClickStyle {
+        OutlineClickStyle(foreground: DS.Color.danger, borderColor: DS.Color.danger)
     }
 
     static var outlineClickSegment: OutlineClickStyle {
@@ -65,6 +72,7 @@ struct OutlineClickBody<Label: View>: View {
     let shape: OutlineClickStyle.Shape
     let fill: Color
     var foreground: Color = DS.Color.ink
+    var borderColor: Color = DS.Color.ink
     let isPressed: Bool
     @ViewBuilder let label: Label
 
@@ -117,7 +125,7 @@ private extension OutlineClickBody {
     var border: some View {
         if case .bordered = shape {
             backgroundShape.strokeBorder(
-                DS.Color.ink,
+                borderColor,
                 lineWidth: isActive ? DS.Stroke.pressed : DS.Stroke.regular
             )
         }

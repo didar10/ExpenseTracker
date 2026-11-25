@@ -15,8 +15,6 @@ enum AppString {
     static let currencySymbol = "₸"
     /// Неразрывный пробел между разрядами суммы: 1 350 000
     static let amountGroupingSeparator = "\u{00A0}"
-    /// Разделитель дробной части суммы на клавиатуре
-    static let amountDecimalSeparator = "."
     static let save = String(localized: "save")
     static let cancel = String(localized: "cancel")
     static let ok = String(localized: "ok")
@@ -67,7 +65,6 @@ enum AppString {
     static let monthlyLimitPromptTitle = String(localized: "monthly_limit_prompt_title")
     static let monthlyLimitPromptHint = String(localized: "monthly_limit_prompt_hint")
     static let removeMonthlyLimit = String(localized: "remove_monthly_limit")
-    static let amountPlaceholder = String(localized: "amount_placeholder")
     static let showLimitOnDashboard = String(localized: "show_limit_on_dashboard")
     static let toggleOn = String(localized: "toggle_on")
     static let toggleOff = String(localized: "toggle_off")
@@ -210,43 +207,141 @@ enum AppString {
     static let addNew = String(localized: "add_new")
     static let categoryNameExample = String(localized: "category_name_example")
 
-    // MARK: - Plans
+    // MARK: - Budgets
 
     static let budgets = String(localized: "budgets")
-    static let noBudgets = String(localized: "no_budgets")
-    static let noBudgetsHint = String(localized: "no_budgets_hint")
-    static let createBudget = String(localized: "create_budget")
     static let deleteBudgetConfirm = String(localized: "delete_budget_confirm")
     static let newBudget = String(localized: "new_budget")
-    static let totalBudget = String(localized: "total_budget")
-    static let spent = String(localized: "spent")
-    static let remaining = String(localized: "remaining")
-    static let exceeded = String(localized: "exceeded")
-    static let outOf = String(localized: "out_of")
+    static let createBudget = String(localized: "create_budget")
+    static let addBudgetPerMonth = String(localized: "add_budget_per_month")
+    static let addBudgetSwipeHint = String(localized: "add_budget_swipe_hint")
+    static let addBudgetPresetMinusTen = String(localized: "add_budget_preset_minus_ten")
+    static let addBudgetPresetThreeMonths = String(localized: "add_budget_preset_three_months")
+    static let addBudgetCarryOver = String(localized: "add_budget_carry_over")
+    static let addBudgetWarnNearLimit = String(localized: "add_budget_warn_near_limit")
+    static let addBudgetPeriod = String(localized: "add_budget_period")
+    private static let addBudgetUnallocatedHintFormat = String(localized: "add_budget_unallocated_hint")
+    private static let addBudgetOverLimitHintFormat = String(localized: "add_budget_over_limit_hint")
+
+    /// «Из лимита 250 000 ₸ останется нераспределено 20 000 ₸»
+    static func addBudgetUnallocatedHint(_ limit: String, _ rest: String) -> String {
+        String(format: addBudgetUnallocatedHintFormat, limit, rest)
+    }
+
+    /// «Бюджеты превысят лимит 250 000 ₸ на 5 000 ₸»
+    static func addBudgetOverLimitHint(_ limit: String, _ excess: String) -> String {
+        String(format: addBudgetOverLimitHintFormat, limit, excess)
+    }
+
+    /// «в октябре 18 400 ₸» — подпись категории в ленте нового бюджета
+    static func addBudgetSpentInMonth(_ amount: String, month: Int) -> String {
+        // Ключ собирается в рантайме — как в `spentInMonth`
+        let monthName = Bundle.main.localizedString(forKey: "month_in_\(month)", value: nil, table: nil)
+        return String(format: String(localized: "add_budget_spent_in_month"), monthName, amount)
+    }
     static let category = String(localized: "category")
-    static let limit = String(localized: "limit")
-    static let period = String(localized: "period")
+    static let budgetsChooseMonthHint = String(localized: "budgets_choose_month_hint")
+    private static let budgetsEditLimitLabelFormat = String(localized: "budgets_edit_limit_label")
+    static let budgetsLeft = String(localized: "budgets_left")
+    static let budgetsOverLimit = String(localized: "budgets_over_limit")
+    private static let budgetsSpentFormat = String(localized: "budgets_spent")
+    private static let budgetsPerDayFormat = String(localized: "budgets_per_day")
+    static let budgetsPaceNormal = String(localized: "budgets_pace_normal")
+    static let budgetsPaceFast = String(localized: "budgets_pace_fast")
+    static let budgetsPaceLimitExceeded = String(localized: "budgets_pace_limit_exceeded")
+    private static let budgetsPaceSlowerFormat = String(localized: "budgets_pace_slower")
+    private static let budgetsPaceFasterFormat = String(localized: "budgets_pace_faster")
+    static let budgetsPaceExact = String(localized: "budgets_pace_exact")
+    private static let budgetsPaceExceededByFormat = String(localized: "budgets_pace_exceeded_by")
+    static let budgetsLimitPromptTitle = String(localized: "budgets_limit_prompt_title")
+    static let budgetsLimitPromptHint = String(localized: "budgets_limit_prompt_hint")
+    static let budgetsCategories = String(localized: "budgets_categories")
+    private static let budgetsAllocatedOfFormat = String(localized: "budgets_allocated_of")
+    private static let budgetsAllocatedFormat = String(localized: "budgets_allocated")
+    private static let budgetsSpentOfLimitFormat = String(localized: "budgets_spent_of_limit")
+    static let budgetsBadgeExceeded = String(localized: "budgets_badge_exceeded")
+    private static let budgetsPercentFormat = String(localized: "budgets_percent")
+    private static let budgetsLeftPerDayFormat = String(localized: "budgets_left_per_day")
+    private static let budgetsLeftAmountFormat = String(localized: "budgets_left_amount")
+    private static let budgetsExceededByFormat = String(localized: "budgets_exceeded_by")
+    static let budgetsLimitUsedUp = String(localized: "budgets_limit_used_up")
+    static let budgetsAddCategoryBudget = String(localized: "budgets_add_category_budget")
+    private static let budgetsUnallocatedFormat = String(localized: "budgets_unallocated")
+    private static let budgetsOverAllocatedFormat = String(localized: "budgets_over_allocated")
+    static let budgetsEmptyTitle = String(localized: "budgets_empty_title")
+    static let budgetsEmptyHint = String(localized: "budgets_empty_hint")
+    static let budgetsSetMonthlyLimit = String(localized: "budgets_set_monthly_limit")
+    static let budgetsHowItWorks = String(localized: "budgets_how_it_works")
+    static let budgetsStepLimitTitle = String(localized: "budgets_step_limit_title")
+    static let budgetsStepLimitSubtitle = String(localized: "budgets_step_limit_subtitle")
+    static let budgetsStepCategoriesTitle = String(localized: "budgets_step_categories_title")
+    static let budgetsStepCategoriesSubtitle = String(localized: "budgets_step_categories_subtitle")
+    static let budgetsStepHintsTitle = String(localized: "budgets_step_hints_title")
+    static let budgetsStepHintsSubtitle = String(localized: "budgets_step_hints_subtitle")
+    static let budgetRowHint = String(localized: "budget_row_hint")
     static let allCategoriesUsed = String(localized: "all_categories_used")
     static let allCategoriesUsedHint = String(localized: "all_categories_used_hint")
     static let selectCategory = String(localized: "select_category")
     static let searchCategory = String(localized: "search_category")
-    static let chooseCategory = String(localized: "choose_category")
-    static let budgetsLimitPromptTitle = String(localized: "budgets_limit_prompt_title")
-    static let budgetsLimitPromptHint = String(localized: "budgets_limit_prompt_hint")
-    private static let monthlyLimitRemainingPerDay = String(localized: "monthly_limit_remaining_per_day")
-    private static let budgetsAllocated = String(localized: "budgets_allocated")
-    private static let budgetsOverAllocated = String(localized: "budgets_over_allocated")
 
-    static func monthlyLimitRemainingPerDay(_ remaining: String, _ perDay: String) -> String {
-        String(format: monthlyLimitRemainingPerDay, remaining, perDay)
+    static func budgetsEditLimitLabel(_ amount: String) -> String {
+        String(format: budgetsEditLimitLabelFormat, amount)
+    }
+
+    static func budgetsSpent(_ amount: String) -> String {
+        String(format: budgetsSpentFormat, amount)
+    }
+
+    static func budgetsPerDay(_ amount: String, _ days: Int) -> String {
+        String(format: budgetsPerDayFormat, amount, days)
+    }
+
+    static func budgetsPaceSlower(_ percent: Int) -> String {
+        String(format: budgetsPaceSlowerFormat, percent)
+    }
+
+    static func budgetsPaceFaster(_ percent: Int) -> String {
+        String(format: budgetsPaceFasterFormat, percent)
+    }
+
+    static func budgetsPaceExceededBy(_ amount: String) -> String {
+        String(format: budgetsPaceExceededByFormat, amount)
+    }
+
+    static func budgetsAllocatedOf(_ allocated: String, _ limit: String) -> String {
+        String(format: budgetsAllocatedOfFormat, allocated, limit)
     }
 
     static func budgetsAllocated(_ amount: String) -> String {
-        String(format: budgetsAllocated, amount)
+        String(format: budgetsAllocatedFormat, amount)
+    }
+
+    static func budgetsSpentOfLimit(_ spent: String, _ limit: String) -> String {
+        String(format: budgetsSpentOfLimitFormat, spent, limit)
+    }
+
+    static func budgetsPercent(_ percent: Int) -> String {
+        String(format: budgetsPercentFormat, percent)
+    }
+
+    static func budgetsLeftPerDay(_ remaining: String, _ perDay: String) -> String {
+        String(format: budgetsLeftPerDayFormat, remaining, perDay)
+    }
+
+    static func budgetsLeftAmount(_ amount: String) -> String {
+        String(format: budgetsLeftAmountFormat, amount)
+    }
+
+    static func budgetsExceededBy(_ amount: String) -> String {
+        String(format: budgetsExceededByFormat, amount)
+    }
+
+    static func budgetsUnallocated(_ amount: String) -> String {
+        String(format: budgetsUnallocatedFormat, amount)
     }
 
     static func budgetsOverAllocated(_ amount: String) -> String {
-        String(format: budgetsOverAllocated, amount)
+        String(format: budgetsOverAllocatedFormat, amount)
     }
 
     // MARK: - Statistics
@@ -268,8 +363,6 @@ enum AppString {
     static let periodAllTime = String(localized: "statistics_period_all_time")
     /// Пункт меню периода на главной — с «ё», как в `MainPeriodMenu.html`
     static let periodAllTimeMenu = String(localized: "period_all_time_menu")
-    static let previousPeriod = String(localized: "statistics_previous_period")
-    static let nextPeriod = String(localized: "statistics_next_period")
 
     static func noTransactionsForPeriod(category: String) -> String {
         String(format: noTransactionsForPeriod, category)
@@ -345,6 +438,8 @@ enum AppString {
     static let calculatorKeyDivide = String(localized: "calculator_key_divide")
     static let calculatorKeyComma = String(localized: "calculator_key_comma")
     static let calculatorKeyBackspace = String(localized: "calculator_key_backspace")
+    static let calculatorTripleZero = String(localized: "calculator_triple_zero")
+    static let calculatorKeyTripleZero = String(localized: "calculator_key_triple_zero")
 
     // MARK: - Category Carousel
 

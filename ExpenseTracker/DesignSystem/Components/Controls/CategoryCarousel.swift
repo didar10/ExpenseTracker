@@ -67,6 +67,8 @@ struct CategoryCarousel: View {
     /// nil — «Без категории». Пока в центре «Поиск» или «Все категории», выбор не меняется
     @Binding var selection: UUID?
     let style: Style
+    /// Подпись рядом с «Без категории»: «выберите категорию свайпом»; nil — без подписи
+    var noCategoryCaption: String?
     let onSearch: () -> Void
     let onAllCategories: () -> Void
 
@@ -79,12 +81,14 @@ struct CategoryCarousel: View {
         categories: [CarouselCategory],
         selection: Binding<UUID?>,
         style: Style = .regular,
+        noCategoryCaption: String? = nil,
         onSearch: @escaping () -> Void,
         onAllCategories: @escaping () -> Void
     ) {
         self.categories = categories
         self._selection = selection
         self.style = style
+        self.noCategoryCaption = noCategoryCaption
         self.onSearch = onSearch
         self.onAllCategories = onAllCategories
         // Начальная позиция задается до первой раскладки, иначе лента стартует со сдвигом
@@ -256,6 +260,11 @@ private extension CategoryCarousel {
                 Text(AppString.carouselAllCategoriesHint).foregroundStyle(DS.Color.ink2)
             case .noCategory:
                 Text(AppString.noCategory).foregroundStyle(DS.Color.ink)
+                if let noCategoryCaption {
+                    Text(noCategoryCaption)
+                        .font(metrics.captionFont)
+                        .foregroundStyle(DS.Color.ink2)
+                }
             case .category(let id):
                 if let category = categories.first(where: { $0.id == id }) {
                     Text(category.title).foregroundStyle(DS.Color.ink)

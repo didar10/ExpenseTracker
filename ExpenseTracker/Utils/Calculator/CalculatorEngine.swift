@@ -38,6 +38,8 @@ enum CalculatorKey: Hashable {
     case comma
     case `operator`(CalculatorOperator)
     case backspace
+    /// «000» — клавиатура суммы без операторов: лимит на месяц
+    case tripleZero
 
     // MARK: - Init
 
@@ -168,6 +170,7 @@ struct CalculatorEngine: Equatable {
         case .comma: inputComma()
         case .operator(let op): inputOperator(op)
         case .backspace: deleteLast()
+        case .tripleZero: (0..<Limits.tripleZeroCount).forEach { _ in inputDigit(0) }
         }
     }
 
@@ -339,6 +342,7 @@ private enum Limits {
     static let integerDigits = 9
     static let fractionDigits = 2
     static let groupSize = 3
+    static let tripleZeroCount = 3
     static let comma: Character = ","
     static let groupSeparator: Character = "\u{00A0}"
     static let posix = Locale(identifier: "en_US_POSIX")

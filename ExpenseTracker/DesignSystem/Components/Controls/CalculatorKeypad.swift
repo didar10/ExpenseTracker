@@ -9,27 +9,60 @@ import SwiftUI
 
 /// Клавиатура калькулятора 4×4: цифры, «,», «⌫» и операторы.
 /// Операторы — черные, «,» и «⌫» — на фоне bg; нажатие — `OutlineClickStyle`.
-/// Клавиши 50 pt, при нехватке места — до 40 pt
+/// Клавиши 50 pt, при нехватке места — до 40 pt.
+///
+/// Раскладка `.amount` — 3×4 без операторов и запятой: целая сумма с «000» (лимит на месяц)
 struct CalculatorKeypad: View {
+
+    // MARK: - Types
+
+    enum Layout {
+        /// 4×4 с операторами — новая операция
+        case calculator
+        /// 3×4: 1–9, «000», 0, «⌫» — `Design/html/MonthlyLimit.html` (.kp)
+        case amount
+
+        fileprivate var rows: [[CalculatorKey]] {
+            switch self {
+            case .calculator:
+                return [
+                    [.digit(1), .digit(2), .digit(3), .operator(.plus)],
+                    [.digit(4), .digit(5), .digit(6), .operator(.minus)],
+                    [.digit(7), .digit(8), .digit(9), .operator(.multiply)],
+                    [.comma, .digit(0), .backspace, .operator(.divide)]
+                ]
+            case .amount:
+                return [
+                    [.digit(1), .digit(2), .digit(3)],
+                    [.digit(4), .digit(5), .digit(6)],
+                    [.digit(7), .digit(8), .digit(9)],
+                    [.tripleZero, .digit(0), .backspace]
+                ]
+            }
+        }
+
+        fileprivate var keyHeight: CGFloat {
+            switch self {
+            case .calculator: return Metrics.keyHeight
+            case .amount: return Metrics.amountKeyHeight
+            }
+        }
+    }
 
     // MARK: - Properties
 
+    var layout: Layout = .calculator
     let onKey: (CalculatorKey) -> Void
-
-    private static let rows: [[CalculatorKey]] = [
-        [.digit(1), .digit(2), .digit(3), .operator(.plus)],
-        [.digit(4), .digit(5), .digit(6), .operator(.minus)],
-        [.digit(7), .digit(8), .digit(9), .operator(.multiply)],
-        [.comma, .digit(0), .backspace, .operator(.divide)]
-    ]
 
     // MARK: - Body
 
     var body: some View {
+        let rows = layout.rows
+
         Grid(horizontalSpacing: DS.Spacing.sm, verticalSpacing: DS.Spacing.sm) {
-            ForEach(Self.rows.indices, id: \.self) { row in
+            ForEach(rows.indices, id: \.self) { row in
                 GridRow {
-                    ForEach(Self.rows[row], id: \.self) { key in
+                    ForEach(rows[row], id: \.self) { key in
                         keyButton(key)
                     }
                 }
@@ -51,7 +84,7 @@ private extension CalculatorKeypad {
             label(for: key)
                 .font(style.font)
                 // На низком экране (iPhone SE) клавиши ужимаются, чтобы экран обошелся без прокрутки
-                .frame(maxWidth: .infinity, minHeight: Metrics.minimumKeyHeight, maxHeight: Metrics.keyHeight)
+                .frame(maxWidth: .infinity, minHeight: Metrics.minimumKeyHeight, maxHeight: layout.keyHeight)
         }
         .buttonStyle(OutlineClickStyle(
             shape: .bordered(radius: DS.Radius.control),
@@ -66,6 +99,7 @@ private extension CalculatorKeypad {
         switch key {
         case .digit(let digit): Text(String(digit))
         case .comma: Text(verbatim: ",")
+        case .tripleZero: Text(AppString.calculatorTripleZero)
         case .operator(let op): Text(op.symbol)
         case .backspace:
             DS.Icon.backspace
@@ -100,6 +134,11 @@ private struct KeyAppearance {
             foreground = DS.Color.ink
             font = DS.Font.key
             accessibilityLabel = AppString.calculatorKeyBackspace
+        case .tripleZero:
+            fill = DS.Color.surface
+            foreground = DS.Color.ink
+            font = DS.Font.key
+            accessibilityLabel = AppString.calculatorKeyTripleZero
         case .operator(let op):
             fill = DS.Color.ink
             foreground = DS.Color.bg
@@ -123,6 +162,8 @@ private struct KeyAppearance {
 private enum Metrics {
     /// Размеры из `Design/html/AddTransaction.html` (.keys, .key)
     static let keyHeight: CGFloat = 50
+    /// `Design/html/MonthlyLimit.html` (.kp span)
+    static let amountKeyHeight: CGFloat = 44
     static let minimumKeyHeight: CGFloat = 40
 }
 
@@ -150,6 +191,9 @@ private struct CalculatorKeypadPreview: View {
                 .frame(maxWidth: .infinity)
             }
             CalculatorKeypad { engine.input($0) }
+            DSPreviewCase("Сумма · 3×4") {
+                CalculatorKeypad(layout: .amount) { _ in }
+            }
             DSPreviewCase("Нажатые клавиши: цифра и оператор") {
                 HStack(spacing: DS.Spacing.sm) {
                     OutlineClickBody(shape: .bordered(radius: DS.Radius.control), fill: DS.Color.surface, isPressed: true) {

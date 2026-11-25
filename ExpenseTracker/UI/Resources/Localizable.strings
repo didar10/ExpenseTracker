@@ -40,7 +40,6 @@
 "monthly_limit_prompt_title" = "Сколько можно тратить в день?";
 "monthly_limit_prompt_hint" = "Задайте лимит на месяц — посчитаем сумму на каждый день";
 "remove_monthly_limit" = "Убрать лимит";
-"amount_placeholder" = "0";
 "show_limit_on_dashboard" = "Лимит на главном экране";
 "toggle_on" = "Вкл";
 "toggle_off" = "Выкл";
@@ -48,7 +47,7 @@
 "spent_percent" = "Потрачено %d%%";
 "month_remaining_days" = "Осталось %@ · %d дн.";
 "monthly_limit_footer" = "Лимит на месяц: %@";
-"monthly_limit_per_day_hint" = "Примерно %@ в день";
+"monthly_limit_per_day_hint" = "≈ %@ в день";
 
 /* Accounts */
 "select_account" = "Выбор счета";
@@ -148,31 +147,65 @@
 "add_new" = "Новая";
 "category_name_example" = "Например, Кофе";
 
-/* Plans */
+/* Budgets */
 "budgets" = "Бюджеты";
-"no_budgets" = "Нет бюджетов";
-"no_budgets_hint" = "Создайте бюджет для отслеживания расходов по категориям";
-"create_budget" = "Создать бюджет";
 "delete_budget_confirm" = "Удалить бюджет?";
 "new_budget" = "Новый бюджет";
-"total_budget" = "Общий бюджет";
-"spent" = "Потрачено";
-"remaining" = "Осталось:";
-"out_of" = "из";
-"exceeded" = "Превышено на";
+"create_budget" = "Создать бюджет";
+"add_budget_per_month" = "в месяц";
+"add_budget_swipe_hint" = "выберите категорию свайпом";
+"add_budget_spent_in_month" = "в %@ %@";
+"add_budget_preset_minus_ten" = "−10%";
+"add_budget_preset_three_months" = "3 мес";
+"add_budget_carry_over" = "Переносить остаток";
+"add_budget_warn_near_limit" = "Предупредить на 80%";
+"add_budget_unallocated_hint" = "Из лимита %@ останется нераспределено %@";
+"add_budget_over_limit_hint" = "Бюджеты превысят лимит %@ на %@";
+"add_budget_period" = "Период бюджета";
+"category" = "Категория";
+"budgets_choose_month_hint" = "Открывает выбор месяца";
+"budgets_edit_limit_label" = "Изменить лимит на месяц, %@";
+"budgets_left" = "осталось";
+"budgets_over_limit" = "сверх лимита";
+"budgets_spent" = "потрачено %@";
+"budgets_per_day" = "≈ %@ в день · %d дн.";
+"budgets_pace_normal" = "Темп в норме";
+"budgets_pace_fast" = "Темп выше плана";
+"budgets_pace_limit_exceeded" = "Лимит превышен";
+"budgets_pace_slower" = "— тратите на %d%% медленнее плана";
+"budgets_pace_faster" = "— тратите на %d%% быстрее плана";
+"budgets_pace_exact" = "— тратите ровно по плану";
+"budgets_pace_exceeded_by" = "— на %@";
 "budgets_limit_prompt_title" = "Задайте лимит на месяц";
 "budgets_limit_prompt_hint" = "Общая сумма на все траты — бюджеты категорий покажут, как она распределена";
-"monthly_limit_remaining_per_day" = "Осталось %@ · примерно %@ в день";
-"budgets_allocated" = "По категориям распределено %@";
-"budgets_over_allocated" = "Бюджеты категорий больше лимита на %@";
-"category" = "Категория";
-"limit" = "Лимит";
-"period" = "Период";
+"budgets_categories" = "Категории";
+"budgets_allocated_of" = "распределено %@ из %@";
+"budgets_allocated" = "распределено %@";
+"budgets_spent_of_limit" = "%@ / %@";
+"budgets_badge_exceeded" = "Превышен";
+"budgets_percent" = "%d%%";
+"budgets_left_per_day" = "Осталось %@ · %@/день";
+"budgets_left_amount" = "Осталось %@";
+"budgets_exceeded_by" = "Превышено на %@";
+"budgets_limit_used_up" = "Лимит исчерпан";
+"budgets_add_category_budget" = "Бюджет на категорию";
+"budgets_unallocated" = "не распределено %@";
+"budgets_over_allocated" = "распределено больше лимита на %@";
+"budgets_empty_title" = "Бюджетов пока нет";
+"budgets_empty_hint" = "Задайте лимит на месяц — каждый день покажем, сколько ещё можно потратить";
+"budgets_set_monthly_limit" = "Задать лимит на месяц";
+"budgets_how_it_works" = "Как это работает";
+"budgets_step_limit_title" = "Лимит на месяц";
+"budgets_step_limit_subtitle" = "Общая сумма на все траты";
+"budgets_step_categories_title" = "Бюджеты категорий";
+"budgets_step_categories_subtitle" = "Как распределить лимит: еда, дом, транспорт";
+"budgets_step_hints_title" = "Подсказки";
+"budgets_step_hints_subtitle" = "Предупредим на 80% и при превышении";
+"budget_row_hint" = "Удержание — меню действий";
 "all_categories_used" = "Все категории уже используются";
 "all_categories_used_hint" = "Создайте новую категорию, чтобы запланировать ещё один бюджет";
 "select_category" = "Выберите категорию";
 "search_category" = "Поиск категории";
-"choose_category" = "Выбрать категорию";
 
 /* Statistics */
 "expenses" = "Расходы";
@@ -191,8 +224,6 @@
 "statistics_period_year" = "Год";
 "statistics_period_all_time" = "Все время";
 "period_all_time_menu" = "Всё время";
-"statistics_previous_period" = "Предыдущий период";
-"statistics_next_period" = "Следующий период";
 
 /* Settings */
 "app_name" = "ExpenseTracker";
@@ -238,6 +269,8 @@
 "calculator_key_divide" = "Разделить";
 "calculator_key_comma" = "Запятая";
 "calculator_key_backspace" = "Стереть";
+"calculator_triple_zero" = "000";
+"calculator_key_triple_zero" = "Три нуля";
 
 /* Category Carousel */
 "carousel_search_hint" = "Нажмите, чтобы найти";

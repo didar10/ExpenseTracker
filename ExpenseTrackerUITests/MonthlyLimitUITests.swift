@@ -7,8 +7,7 @@
 
 import XCTest
 
-/// Проверяет само поле ввода, а не только ViewModel: форматирование проходило
-/// тесты логики, но в SwiftUI TextField терялось при быстром наборе
+/// Лист «Лимит на месяц» с главной: сумма набирается клавиатурой 3×4 и показывается с разрядами
 final class MonthlyLimitUITests: XCTestCase {
 
     // MARK: - Constants
@@ -16,11 +15,13 @@ final class MonthlyLimitUITests: XCTestCase {
     /// Совпадают с AccessibilityID в приложении
     private enum Identifier {
         static let dailyAllowanceCard = "dashboard.dailyAllowanceCard"
-        static let amountField = "monthlyLimit.amountField"
+        static let amount = "monthlyLimit.amount"
     }
 
     private let groupingSeparator = "\u{00A0}"
     private let timeout: TimeInterval = 5
+    /// Больше, чем цифр в самой длинной сумме: стирает лимит с прошлого запуска
+    private let clearPresses = 12
 
     // MARK: - Setup
 
@@ -31,7 +32,7 @@ final class MonthlyLimitUITests: XCTestCase {
     // MARK: - Tests
 
     @MainActor
-    func testTypedLimitIsGroupedInField() throws {
+    func testKeypadInputIsGrouped() throws {
         let app = XCUIApplication()
         app.launch()
 
@@ -44,26 +45,22 @@ final class MonthlyLimitUITests: XCTestCase {
         XCTAssertTrue(card.waitForExistence(timeout: timeout))
         card.tap()
 
-        let field = app.textFields[Identifier.amountField]
-        XCTAssertTrue(field.waitForExistence(timeout: timeout))
-        field.tap()
-
-        // Лимит мог остаться с прошлого запуска — очищаем поле
-        if let current = field.value as? String, current.contains(where: \.isNumber), current != "0" {
-            field.typeText(String(repeating: XCUIKeyboardKey.delete.rawValue, count: current.count))
+        let backspace = app.buttons["Стереть"]
+        XCTAssertTrue(backspace.waitForExistence(timeout: timeout))
+        for _ in 0..<clearPresses {
+            backspace.tap()
         }
 
-        // Набор одним махом: SwiftUI TextField на нем терял форматирование («50 0000»)
-        field.typeText("500000")
+        app.buttons["5"].tap()
+        app.buttons["Три нуля"].tap()
+        app.buttons["Три нуля"].tap()
 
-        XCTAssertEqual(field.value as? String, "500\(groupingSeparator)000")
+        let amount = app.staticTexts[Identifier.amount]
+        XCTAssertTrue(amount.label.hasPrefix("5\(groupingSeparator)000\(groupingSeparator)000"))
 
-        field.typeText("0")
+        backspace.tap()
 
-        XCTAssertEqual(field.value as? String, "5\(groupingSeparator)000\(groupingSeparator)000")
-
-        field.typeText(XCUIKeyboardKey.delete.rawValue)
-
-        XCTAssertEqual(field.value as? String, "500\(groupingSeparator)000")
+        XCTAssertTrue(amount.label.hasPrefix("500\(groupingSeparator)000"))
+        XCTAssertTrue(app.buttons["Сохранить"].isEnabled)
     }
 }

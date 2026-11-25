@@ -43,7 +43,7 @@ struct RootTabView: View {
                 .tag(TabItem.statistics)
                 .toolbar(.hidden, for: .tabBar)
 
-            PlansView(limitStore: monthlyLimitStore)
+            BudgetsView(limitStore: monthlyLimitStore)
                 .tag(TabItem.plans)
                 .toolbar(.hidden, for: .tabBar)
 

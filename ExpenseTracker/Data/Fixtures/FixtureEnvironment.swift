@@ -17,7 +17,7 @@ import SwiftUI
 /// ```swift
 /// #Preview("Данные") {
 ///     let fixture = FixtureEnvironment(.sample)
-///     PlansView(limitStore: fixture.limitStore)
+///     BudgetsView(limitStore: fixture.limitStore)
 ///         .fixture(fixture)
 /// }
 /// ```

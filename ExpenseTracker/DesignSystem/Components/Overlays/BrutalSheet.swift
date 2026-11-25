@@ -39,6 +39,19 @@ extension View {
         }
     }
 
+    /// Лист со своей шапкой: только фон, радиус и граббер-заглушка системы скрыта.
+    /// Граббер рисует содержимое — `SheetGrabber`
+    func brutalCustomSheet<SheetContent: View>(
+        isPresented: Binding<Bool>,
+        detents: Set<PresentationDetent> = [.large],
+        @ViewBuilder content: @escaping () -> SheetContent
+    ) -> some View {
+        sheet(isPresented: isPresented) {
+            content()
+                .brutalSheetPresentation(detents: detents)
+        }
+    }
+
     fileprivate func brutalSheetPresentation(detents: Set<PresentationDetent>) -> some View {
         presentationDetents(detents)
             .presentationBackground(DS.Color.bg)
@@ -80,11 +93,7 @@ struct BrutalSheetLayout<Content: View>: View {
 
     var body: some View {
         VStack(spacing: .zero) {
-            Capsule()
-                .fill(DS.Color.grabber)
-                .frame(width: Metrics.grabberWidth, height: Metrics.grabberHeight)
-                .padding(.bottom, DS.Spacing.md)
-                .accessibilityHidden(true)
+            SheetGrabber()
 
             header
                 .padding(.bottom, Metrics.headerBottom)
@@ -116,6 +125,23 @@ struct BrutalSheetLayout<Content: View>: View {
             }
             .buttonStyle(.outlineClick)
         }
+    }
+}
+
+// MARK: - Grabber
+
+/// Серый граббер листа 40×5 с отступом 12 снизу
+struct SheetGrabber: View {
+
+    /// Отступ листа сверху до граббера
+    static let topPadding = Metrics.topPadding
+
+    var body: some View {
+        Capsule()
+            .fill(DS.Color.grabber)
+            .frame(width: Metrics.grabberWidth, height: Metrics.grabberHeight)
+            .padding(.bottom, DS.Spacing.md)
+            .accessibilityHidden(true)
     }
 }
 
