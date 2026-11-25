@@ -5,23 +5,32 @@
 //  Created by Didar on 20.12.2025.
 //
 
-import SwiftUI
 import SwiftData
+import SwiftUI
 
+/// Экран «Новая операция» и его режим редактирования: сумма калькулятором,
+/// счет и дата пилюлями, заметка, лента категорий. Лист во всю высоту, без темной обводки
 struct AddTransactionView: View {
 
     // MARK: - Properties
 
     @Environment(\.repositories) private var repositories
     @Environment(\.dismiss) private var dismiss
+    @Environment(\.accessibilityReduceMotion) private var reduceMotion
 
     @StateObject private var viewModel: AddTransactionViewModel
 
     @FocusState private var isNoteFocused: Bool
 
-    @State private var showingAccountPicker = false
-    @State private var showingDiscardConfirmation = false
-    @State private var isContentScrolled = false
+    @State private var showingAccountSheet = false
+    @State private var showingDateSheet = false
+    @State private var categorySheet: CategoryListSheetMode?
+    @State private var showingDiscardAlert = false
+    @State private var showingDeleteAlert = false
+    /// Удаление выполняется после закрытия листа: экран не должен читать удаленную модель
+    @State private var isDeletionConfirmed = false
+    /// Лист ниже `Metrics.compactHeight` (iPhone SE): сумма мельче, зазоры меньше
+    @State private var isCompact = false
 
     @Query(sort: \Category.name)
     private var categories: [Category]
@@ -29,91 +38,267 @@ struct AddTransactionView: View {
     @Query(sort: \Account.createdAt, order: .forward)
     private var accounts: [Account]
 
+    /// Удаление операции в режиме редактирования; nil — кнопки удаления нет
+    private let onDelete: ((Transaction) -> Void)?
+
     // MARK: - Init
 
-    init(transaction: Transaction? = nil, accountSelection: AccountSelectionStore) {
+    init(
+        transaction: Transaction? = nil,
+        accountSelection: AccountSelectionStore,
+        onDelete: ((Transaction) -> Void)? = nil
+    ) {
         _viewModel = StateObject(
             wrappedValue: AddTransactionViewModel(
                 transaction: transaction,
                 accountSelection: accountSelection
             )
         )
+        self.onDelete = onDelete
     }
 
     // MARK: - Computed Properties
 
-    private var filteredCategories: [Category] {
-        categories.filter { $0.type == viewModel.type }
+    /// Категории текущего типа в порядке названий — для листа «Категории»
+    private var typeCategories: [CarouselCategory] {
+        let matching = categories.filter { $0.type == viewModel.type }
+        let spending = AddTransactionViewModel.monthlySpending(of: matching)
+        return CategoryCarouselItems.make(from: matching, spending: spending)
+    }
+
+    private var categorySelection: Binding<UUID?> {
+        Binding {
+            viewModel.selectedCategory?.id
+        } set: { id in
+            viewModel.selectedCategory = id.flatMap { id in categories.first { $0.id == id } }
+        }
+    }
+
+    private var canDelete: Bool {
+        viewModel.isEditing && onDelete != nil
     }
 
     // MARK: - Body
 
     var body: some View {
-        NavigationStack {
-            VStack(spacing: 0) {
-                header
+        VStack(spacing: .zero) {
+            header
 
-                form
+            AmountHeaderView(
+                expression: viewModel.expressionText,
+                amount: viewModel.amountText,
+                isPlaceholder: viewModel.isAmountPlaceholder,
+                errorMessage: viewModel.errorMessage,
+                isCompact: isCompact
+            )
 
-                // Клавиатура заметки заменяет цифровую: две клавиатуры одновременно не нужны
-                if !isNoteFocused {
-                    keypad
-                }
-            }
-            .background(AppColor.background)
-            .animation(.easeOut(duration: 0.25), value: isNoteFocused)
-            .overlay {
-                if viewModel.showSuccessAnimation {
-                    SuccessOverlayView()
-                        .transition(.opacity.combined(with: .scale(scale: 0.92)))
-                }
-            }
-            .toolbar {
-                ToolbarItemGroup(placement: .keyboard) {
-                    Spacer()
+            metaPills
+                .padding(.top, DS.Spacing.sm)
 
-                    Button(AppString.done) { isNoteFocused = false }
-                }
-            }
-            .onChange(of: viewModel.type) {
-                viewModel.resetCategoryIfTypeMismatched()
-            }
-            // Выбор категории завершает ввод заметки
-            .onChange(of: viewModel.selectedCategory) {
+            NoteField(text: $viewModel.note, isFocused: $isNoteFocused)
+                .padding(.top, Metrics.noteTop)
+
+            carousel
+                .padding(.top, DS.Spacing.md)
+                .padding(.horizontal, -DS.Spacing.xl)
+
+            Spacer(minLength: isCompact ? .zero : DS.Spacing.sm)
+
+            CalculatorKeypad { key in
                 isNoteFocused = false
+                viewModel.input(key)
             }
-            .task(id: accounts.count) {
-                viewModel.applyDefaultAccountIfNeeded(from: accounts)
-            }
-            // Введенные данные не теряются молча: закрытие проходит через подтверждение
-            .interactiveDismissDisabled(viewModel.hasUnsavedChanges)
-            .alert(AppString.discardChangesTitle, isPresented: $showingDiscardConfirmation) {
-                Button(AppString.discardChanges, role: .destructive) { dismiss() }
-                Button(AppString.keepEditing, role: .cancel) {}
-            } message: {
-                Text(AppString.discardChangesMessage)
-            }
-            .sheet(isPresented: $showingAccountPicker) {
-                accountSelectionSheet
-            }
-            .saveErrorAlert(isPresented: $viewModel.showingSaveError)
+            // Клавиши забирают место раньше пустого промежутка над ними
+            .layoutPriority(1)
+
+            saveButton
+                .padding(.top, Metrics.saveTop)
         }
+        .padding(.horizontal, DS.Spacing.xl)
+        .padding(.top, Metrics.topPadding)
+        .padding(.bottom, DS.Spacing.sm)
+        .background(DS.Color.bg)
+        .onGeometryChange(for: Bool.self) { $0.size.height < Metrics.compactHeight } action: { isCompact = $0 }
+        // Клавиатура заметки перекрывает калькулятор, а не сдвигает экран
+        .ignoresSafeArea(.keyboard)
+        .presentationDetents([.large])
+        .presentationBackground(DS.Color.bg)
+        .presentationCornerRadius(DS.Radius.sheet)
+        .presentationDragIndicator(.hidden)
+        // Введенные данные не теряются молча: закрытие проходит через подтверждение
+        .interactiveDismissDisabled(viewModel.hasUnsavedChanges)
+        .sensoryFeedback(.impact(weight: .light), trigger: viewModel.calculator)
+        .sensoryFeedback(.error, trigger: viewModel.errorMessage) { _, message in message != nil }
+        .sensoryFeedback(.success, trigger: viewModel.isSaved) { _, isSaved in isSaved }
+        .onChange(of: viewModel.type) {
+            viewModel.resetCategoryIfTypeMismatched()
+        }
+        .task(id: accounts.count) {
+            viewModel.applyDefaultAccountIfNeeded(from: accounts)
+        }
+        .onDisappear(perform: deleteIfConfirmed)
+        .brutalSheet(isPresented: $showingAccountSheet, title: AppString.accountSheetTitle) {
+            AccountPickerSheetContent(selectedAccount: viewModel.selectedAccount) { account in
+                viewModel.selectedAccount = account
+                showingAccountSheet = false
+            }
+        }
+        .brutalSheet(isPresented: $showingDateSheet, title: AppString.date, actionTitle: AppString.cancel, detents: [.large]) {
+            DatePickerSheetContent(date: viewModel.date) { date in
+                viewModel.date = date
+                showingDateSheet = false
+            }
+        }
+        .brutalSheet(item: $categorySheet, title: { _ in AppString.categories }, detents: [.large]) { mode in
+            CategoryListSheetContent(
+                categories: typeCategories,
+                selection: viewModel.selectedCategory?.id,
+                focusesSearch: mode == .search
+            ) { id in
+                categorySelection.wrappedValue = id
+                categorySheet = nil
+            }
+        }
+        .brutalAlert(
+            isPresented: $showingDiscardAlert,
+            title: AppString.discardChangesTitle,
+            message: AppString.discardChangesMessage,
+            confirmTitle: AppString.discardChanges
+        ) {
+            dismiss()
+        }
+        .brutalAlert(
+            isPresented: $showingDeleteAlert,
+            title: AppString.deleteTransactionTitle,
+            message: deleteMessage,
+            confirmTitle: AppString.delete
+        ) {
+            isDeletionConfirmed = true
+            dismiss()
+        }
+        .saveErrorAlert(isPresented: $viewModel.showingSaveError)
+    }
+}
+
+// MARK: - Subviews
+
+private extension AddTransactionView {
+
+    var header: some View {
+        HStack(spacing: Metrics.headerSpacing) {
+            IconButton(icon: DS.Icon.close, accessibilityLabel: AppString.accessibilityClose, action: handleClose)
+
+            SegmentedSwitch(
+                selection: $viewModel.type,
+                options: [
+                    .init(value: .expense, title: AppString.expense),
+                    .init(value: .income, title: AppString.income)
+                ]
+            )
+            .accessibilityLabel(AppString.transactionType)
+
+            if canDelete {
+                deleteButton
+            } else {
+                Color.clear
+                    .frame(width: DS.Size.control, height: DS.Size.control)
+                    .accessibilityHidden(true)
+            }
+        }
+        .accessibilityElement(children: .contain)
+        .accessibilityLabel(viewModel.screenTitle)
+    }
+
+    var deleteButton: some View {
+        Button {
+            isNoteFocused = false
+            showingDeleteAlert = true
+        } label: {
+            DS.Icon.trash
+                .font(.system(size: DS.Size.iconL, weight: .semibold))
+                .frame(height: DS.Size.control)
+        }
+        .buttonStyle(PressIntoShadowStyle(variant: .danger))
+        .frame(width: DS.Size.control)
+        .accessibilityLabel(AppString.deleteTransactionLabel)
+    }
+
+    var metaPills: some View {
+        let rules = TransactionDateRules()
+
+        return HStack(spacing: DS.Spacing.sm) {
+            if let account = viewModel.selectedAccount, account.isAvailable {
+                MetaPill(
+                    leading: .badge(Image(systemName: account.icon), account.swiftUIColor),
+                    title: account.name,
+                    value: MoneyFormat.money(account.currentBalance),
+                    accessibilityHint: AppString.dsChooseAccountHint,
+                    action: openAccountSheet
+                )
+            } else {
+                MetaPill(
+                    leading: .icon(AppImage.creditcard),
+                    title: AppString.chooseAccount,
+                    value: "",
+                    accessibilityHint: AppString.dsChooseAccountHint,
+                    action: openAccountSheet
+                )
+            }
+
+            MetaPill(
+                leading: .icon(DS.Icon.calendar),
+                title: rules.pillTitle(for: viewModel.date),
+                value: rules.timeText(for: viewModel.date),
+                accessibilityHint: AppString.selectDate
+            ) {
+                isNoteFocused = false
+                showingDateSheet = true
+            }
+        }
+        .lineLimit(1)
+        .minimumScaleFactor(Metrics.pillMinimumScale)
+    }
+
+    var carousel: some View {
+        CategoryCarousel(
+            categories: CarouselCategory.orderedBySpend(typeCategories),
+            selection: categorySelection,
+            onSearch: { openCategorySheet(.search) },
+            onAllCategories: { openCategorySheet(.browse) }
+        )
+        // Смена «Расход/Доход» — другой набор категорий: лента собирается заново
+        .id(viewModel.type)
+    }
+
+    var saveButton: some View {
+        let state = viewModel.saveButtonState
+
+        return PrimaryButton(
+            title: state.title,
+            icon: state.showsEqualsSign ? DS.Icon.equal : nil,
+            action: handleSave
+        )
+        .disabled(!state.isEnabled)
+    }
+
+    var deleteMessage: String? {
+        guard let transaction = viewModel.editingTransaction else { return nil }
+
+        let title = transaction.note?.nilIfEmpty ?? transaction.category?.name ?? AppString.noCategory
+        let sign = transaction.type == .income ? Constants.plus : Constants.minus
+        return AppString.deleteTransactionMessage(title: title, amount: sign + MoneyFormat.money(transaction.amount))
     }
 }
 
 // MARK: - Actions
+
 private extension AddTransactionView {
 
     func handleSave() {
+        isNoteFocused = false
         guard viewModel.save(using: repositories.transactions) else { return }
 
-        isNoteFocused = false
-
-        withAnimation(.spring(response: 0.3, dampingFraction: 0.8)) {
-            viewModel.showSuccessAndDismiss {
-                dismiss()
-            }
-        }
+        dismiss()
     }
 
     func handleClose() {
@@ -124,133 +309,95 @@ private extension AddTransactionView {
             return
         }
 
-        showingDiscardConfirmation = true
+        showingDiscardAlert = true
+    }
+
+    func openAccountSheet() {
+        isNoteFocused = false
+        showingAccountSheet = true
+    }
+
+    func openCategorySheet(_ mode: CategoryListSheetMode) {
+        isNoteFocused = false
+        categorySheet = mode
+    }
+
+    func deleteIfConfirmed() {
+        guard isDeletionConfirmed, let transaction = viewModel.editingTransaction else { return }
+
+        isDeletionConfirmed = false
+        onDelete?(transaction)
     }
 }
 
-// MARK: - Subviews
-private extension AddTransactionView {
+// MARK: - Metrics
 
-    var header: some View {
-        ZStack {
-            HStack {
-                Spacer()
+private enum Metrics {
+    /// Размеры из `Design/html/AddTransaction.html` (.sheet, .seg, .note, .cta)
+    static let topPadding: CGFloat = 10
+    static let headerSpacing: CGFloat = 10
+    static let noteTop: CGFloat = 10
+    static let saveTop: CGFloat = 10
+    static let pillMinimumScale: CGFloat = 0.8
+    /// Ниже этой высоты листа экран целиком не помещается в обычных размерах
+    static let compactHeight: CGFloat = 700
+}
 
-                TransactionTypePickerView(selectedType: $viewModel.type, style: .layered)
-                    .frame(width: AppSize.typePickerWidth, height: AppSize.typePickerHeight)
+// MARK: - Constants
 
-                Spacer()
-            }
+private enum Constants {
+    static let minus = "−"
+    static let plus = "+"
+}
 
-            HStack {
-                closeButton
+private extension String {
 
-                Spacer()
-            }
-        }
-        .frame(height: AppSize.screenHeader)
-        .frame(maxWidth: .infinity)
-        .padding(.vertical, AppSpacing.small)
-        .padding(.top, AppSpacing.small)
-        .background(AppColor.background)
-        // Контент, уехавший под шапку, отделяется линией — иначе он «прилипает» к переключателю
-        .overlay(alignment: .bottom) {
-            Divider()
-                .opacity(isContentScrolled ? 1 : 0)
-                .animation(.easeOut(duration: 0.15), value: isContentScrolled)
-        }
-        .accessibilityElement(children: .contain)
-        .accessibilityLabel(viewModel.screenTitle)
-    }
-
-    var closeButton: some View {
-        ToolbarIconButton(icon: "xmark", isOutlined: true, action: handleClose)
-            .padding(.leading, AppSpacing.medium)
-            .fixedSize()
-            .accessibilityLabel(AppString.accessibilityClose)
-    }
-
-    @ViewBuilder
-    var form: some View {
-        if #available(iOS 18.0, *) {
-            formContent
-                .onScrollGeometryChange(for: Bool.self) { geometry in
-                    geometry.contentOffset.y > geometry.contentInsets.top
-                } action: { _, isScrolled in
-                    isContentScrolled = isScrolled
-                }
-        } else {
-            formContent
-        }
-    }
-
-    var formContent: some View {
-        ScrollView {
-            VStack(spacing: AppSpacing.large) {
-                TransactionAmountView(
-                    amount: viewModel.amountDisplay,
-                    hasInput: viewModel.hasAmountInput
-                )
-
-                HStack(spacing: AppSpacing.medium) {
-                    AccountPickerView(
-                        account: viewModel.selectedAccount,
-                        predictedBalance: viewModel.predictedBalance
-                    ) {
-                        isNoteFocused = false
-                        showingAccountPicker = true
-                    }
-
-                    DateSelectionView(date: $viewModel.date) {
-                        isNoteFocused = false
-                    }
-                }
-                .frame(height: AppSize.inlineTile)
-
-                CategorySelectionView(
-                    categories: filteredCategories,
-                    type: viewModel.type,
-                    selectedCategory: $viewModel.selectedCategory
-                )
-                .card(cornerRadius: AppRadius.card)
-                .animation(.spring(response: 0.35, dampingFraction: 0.8), value: viewModel.type)
-
-                NoteInputView(note: $viewModel.note, isFocused: $isNoteFocused)
-            }
-            .padding(.horizontal, AppSpacing.large)
-            .padding(.top, AppSpacing.mediumSmall)
-            .padding(.bottom, AppSpacing.small)
-            .frame(maxWidth: .infinity, alignment: .top)
-            // Тап по любому свободному месту формы убирает клавиатуру заметки
-            .contentShape(Rectangle())
-            .onTapGesture { isNoteFocused = false }
-        }
-        .scrollDismissesKeyboard(.interactively)
-        .scrollBounceBehavior(.basedOnSize)
-    }
-
-    var keypad: some View {
-        NumericKeypadView(
-            isEnterEnabled: viewModel.isSaveEnabled,
-            enterTitle: viewModel.saveButtonTitle,
-            disabledHint: viewModel.validationHint,
-            onKeyTap: viewModel.handleKeyTap,
-            onClearTap: viewModel.clearAmount,
-            onEnterTap: handleSave
-        )
-        .padding(.horizontal, AppSpacing.large)
-        .padding(.bottom, AppSpacing.small)
-        .transition(.move(edge: .bottom).combined(with: .opacity))
-    }
-
-    var accountSelectionSheet: some View {
-        AccountSelectionSheet(
-            selectedAccount: viewModel.selectedAccount,
-            onSelect: { account in
-                viewModel.selectedAccount = account
-                showingAccountPicker = false
-            },
-            allowsAllAccounts: false
-        )
+    var nilIfEmpty: String? {
+        isEmpty ? nil : self
     }
 }
+
+// MARK: - Previews
+
+#if DEBUG
+private struct AddTransactionPreview: View {
+
+    let fixture: Fixture
+    var editsFirstTransaction = false
+
+    var body: some View {
+        let environment = FixtureEnvironment(fixture)
+        let transaction = editsFirstTransaction
+            ? (try? environment.context.fetch(FetchDescriptor<Transaction>()))?.first { $0.type == .expense }
+            : nil
+
+        Color.clear
+            .sheet(isPresented: .constant(true)) {
+                AddTransactionView(transaction: transaction, accountSelection: AccountSelectionStore()) { _ in }
+            }
+            .fixture(environment)
+    }
+}
+
+#Preview("Новый расход · светлая") {
+    AddTransactionPreview(fixture: .sample)
+}
+
+#Preview("Новый расход · темная") {
+    AddTransactionPreview(fixture: .sample)
+        .preferredColorScheme(.dark)
+}
+
+#Preview("Редактирование · светлая") {
+    AddTransactionPreview(fixture: .sample, editsFirstTransaction: true)
+}
+
+#Preview("Редактирование · темная") {
+    AddTransactionPreview(fixture: .sample, editsFirstTransaction: true)
+        .preferredColorScheme(.dark)
+}
+
+#Preview("Пусто: нет счетов и категорий") {
+    AddTransactionPreview(fixture: .empty)
+}
+#endif

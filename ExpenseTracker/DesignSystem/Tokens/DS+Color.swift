@@ -44,6 +44,10 @@ extension DS {
         static let grabber = SwiftUI.Color(Name.grabber)
         /// Плитка «Без категории»
         static let noCategory = SwiftUI.Color(Name.noCategory)
+        /// Недоступный день в календаре — будущее
+        static let inkDisabled = SwiftUI.Color(Name.inkDisabled)
+        /// Иконка на цветной плашке счета: белая в обеих темах
+        static let onColorFill = SwiftUI.Color(Name.onColorFill)
     }
 
     /// Плоские заливки плиток категорий
@@ -63,6 +67,62 @@ extension DS {
         var assetName: String {
             "DS/category\(rawValue.prefix(1).uppercased())\(rawValue.dropFirst())"
         }
+    }
+}
+
+// MARK: - Legacy Hex
+
+extension DS.CategoryColor {
+
+    /// Цвет плитки для категории, у которой в данных записан hex старой палитры
+    /// (#34C759, #007AFF…): ближайший по оттенку токен. Серый и нераспознанный — `.blue`
+    init(legacyHex: String) {
+        guard let hue = Self.hue(ofHex: legacyHex) else {
+            self = .blue
+            return
+        }
+
+        self = Self.allCases.min { lhs, rhs in
+            Self.distance(hue, lhs.anchorHue) < Self.distance(hue, rhs.anchorHue)
+        } ?? .blue
+    }
+
+    /// Оттенок токена на круге 0…360
+    private var anchorHue: Double {
+        switch self {
+        case .green: return 135
+        case .blue: return 211
+        case .purple: return 280
+        case .orange: return 35
+        case .pink: return 345
+        }
+    }
+
+    private static func distance(_ lhs: Double, _ rhs: Double) -> Double {
+        let delta = abs(lhs - rhs)
+        return min(delta, 360 - delta)
+    }
+
+    /// nil — не hex или цвет без оттенка
+    private static func hue(ofHex hex: String) -> Double? {
+        let digits = hex.trimmingCharacters(in: CharacterSet(charactersIn: "#"))
+        guard digits.count == 6, let value = Int(digits, radix: 16) else { return nil }
+
+        let red = Double((value >> 16) & 0xFF) / 255
+        let green = Double((value >> 8) & 0xFF) / 255
+        let blue = Double(value & 0xFF) / 255
+
+        let maxValue = max(red, green, blue)
+        let delta = maxValue - min(red, green, blue)
+        guard delta > 0.1 else { return nil }
+
+        let hue: Double
+        switch maxValue {
+        case red: hue = ((green - blue) / delta).truncatingRemainder(dividingBy: 6)
+        case green: hue = (blue - red) / delta + 2
+        default: hue = (red - green) / delta + 4
+        }
+        return (hue * 60 + 360).truncatingRemainder(dividingBy: 360)
     }
 }
 
@@ -87,10 +147,13 @@ extension DS.Color {
         static let onDanger = "DS/onDanger"
         static let grabber = "DS/grabber"
         static let noCategory = "DS/noCategory"
+        static let inkDisabled = "DS/inkDisabled"
+        static let onColorFill = "DS/onColorFill"
 
         static let all = [
             bg, surface, ink, ink2, line, accent, income, danger, onAccent,
-            overStripeStrong, overStripeSoft, scrim, dangerFill, onDanger, grabber, noCategory
+            overStripeStrong, overStripeSoft, scrim, dangerFill, onDanger, grabber, noCategory,
+            inkDisabled, onColorFill
         ]
     }
 }

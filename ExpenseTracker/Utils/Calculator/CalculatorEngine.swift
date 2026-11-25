@@ -144,6 +144,22 @@ struct CalculatorEngine: Equatable {
 
     init() {}
 
+    /// Сохраненная сумма как уже набранное число — для редактирования операции.
+    /// Ноль и отрицательная сумма дают пустой ввод
+    init(amount: Decimal) {
+        guard amount > 0 else { return }
+
+        let plain = NSDecimalNumber(decimal: Self.rounded(amount)).description(withLocale: Limits.posix)
+        let parts = plain.split(separator: ".", maxSplits: 1, omittingEmptySubsequences: false)
+        let integer = String((parts.first ?? "").suffix(Limits.integerDigits))
+
+        guard parts.count > 1 else {
+            tokens = [.number(integer)]
+            return
+        }
+        tokens = [.number(integer + String(Limits.comma) + parts[1].prefix(Limits.fractionDigits))]
+    }
+
     // MARK: - Methods
 
     mutating func input(_ key: CalculatorKey) {

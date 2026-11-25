@@ -10,16 +10,17 @@ import SwiftUI
 extension View {
 
     /// Лист: фон bg, радиус 22, серый граббер, без темной обводки.
-    /// Заголовок sheetTitle и кнопка «Готово», которая закрывает лист
+    /// Заголовок sheetTitle и кнопка справа («Готово» или «Отмена»), которая закрывает лист
     func brutalSheet<SheetContent: View>(
         isPresented: Binding<Bool>,
         title: String,
+        actionTitle: String = AppString.done,
         detents: Set<PresentationDetent> = [.medium, .large],
         onDone: @escaping () -> Void = {},
         @ViewBuilder content: @escaping () -> SheetContent
     ) -> some View {
         sheet(isPresented: isPresented) {
-            BrutalSheetLayout(title: title, onDone: onDone, content: content)
+            BrutalSheetLayout(title: title, actionTitle: actionTitle, onDone: onDone, content: content)
                 .brutalSheetPresentation(detents: detents)
         }
     }
@@ -27,12 +28,13 @@ extension View {
     func brutalSheet<Item: Identifiable, SheetContent: View>(
         item: Binding<Item?>,
         title: @escaping (Item) -> String,
+        actionTitle: String = AppString.done,
         detents: Set<PresentationDetent> = [.medium, .large],
         onDone: @escaping () -> Void = {},
         @ViewBuilder content: @escaping (Item) -> SheetContent
     ) -> some View {
         sheet(item: item) { item in
-            BrutalSheetLayout(title: title(item), onDone: onDone) { content(item) }
+            BrutalSheetLayout(title: title(item), actionTitle: actionTitle, onDone: onDone) { content(item) }
                 .brutalSheetPresentation(detents: detents)
         }
     }
@@ -46,13 +48,15 @@ extension View {
     }
 }
 
-/// Раскладка листа: граббер, заголовок с «Готово», контент.
+/// Раскладка листа: граббер, заголовок с кнопкой закрытия, контент.
 /// Отдельно от модификатора — для превью и снапшотов
 struct BrutalSheetLayout<Content: View>: View {
 
     // MARK: - Properties
 
     let title: String
+    /// Кнопка справа от заголовка: «Готово» или «Отмена» — закрывает лист
+    var actionTitle: String = AppString.done
     var onDone: () -> Void = {}
     @ViewBuilder let content: Content
 
@@ -60,8 +64,14 @@ struct BrutalSheetLayout<Content: View>: View {
 
     // MARK: - Init
 
-    init(title: String, onDone: @escaping () -> Void = {}, @ViewBuilder content: () -> Content) {
+    init(
+        title: String,
+        actionTitle: String = AppString.done,
+        onDone: @escaping () -> Void = {},
+        @ViewBuilder content: () -> Content
+    ) {
         self.title = title
+        self.actionTitle = actionTitle
         self.onDone = onDone
         self.content = content()
     }
@@ -99,7 +109,7 @@ struct BrutalSheetLayout<Content: View>: View {
                 onDone()
                 dismiss()
             } label: {
-                Text(AppString.done)
+                Text(actionTitle)
                     .font(DS.Font.control)
                     .padding(.horizontal, DS.Spacing.md)
                     .frame(minHeight: Metrics.doneHeight)

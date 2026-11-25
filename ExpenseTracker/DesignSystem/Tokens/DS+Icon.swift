@@ -20,5 +20,10 @@ extension DS {
         static let search = Image(systemName: "magnifyingglass")
         static let allCategories = Image(systemName: "square.grid.2x2")
         static let noCategory = Image(systemName: "nosign")
+        static let close = Image(systemName: "xmark")
+        static let trash = Image(systemName: "trash")
+        static let calendar = Image(systemName: "calendar")
+        static let minus = Image(systemName: "minus")
+        static let equal = Image(systemName: "equal")
     }
 }

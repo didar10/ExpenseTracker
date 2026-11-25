@@ -8,8 +8,8 @@
 import Foundation
 
 /// Ввод суммы: хранит набранную строку («1350000.5») и показывает ее
-/// с разделителями разрядов («1 350 000.5»). Общий для всех экранов с вводом суммы —
-/// и с цифровой клавиатурой NumericKeypadView, и с обычным полем ввода
+/// с разделителями разрядов («1 350 000.5»). Для обычного поля ввода суммы;
+/// экран операции считает сумму калькулятором `CalculatorEngine`
 struct AmountInput: Equatable {
 
     // MARK: - Properties
@@ -75,70 +75,7 @@ struct AmountInput: Equatable {
         return value > 0
     }
 
-    // MARK: - Methods
-
-    /// - Returns: false — нажатие отклонено (предел длины, пустое поле)
-    @discardableResult
-    mutating func apply(_ key: NumericKeypadView.Key) -> Bool {
-        switch key {
-        case .number(let digit):
-            return appendNumber(digit)
-        case .decimal:
-            return appendDecimal()
-        case .delete:
-            return deleteLast()
-        }
-    }
-
-    /// - Returns: false — поле уже пустое
-    @discardableResult
-    mutating func clear() -> Bool {
-        guard !raw.isEmpty else { return false }
-
-        raw = ""
-        return true
-    }
-
     // MARK: - Private Methods
-
-    private mutating func appendNumber(_ digit: String) -> Bool {
-        guard canAppendDigit else { return false }
-
-        if raw == "0" {
-            raw = digit
-        } else {
-            raw.append(digit)
-        }
-
-        return true
-    }
-
-    private mutating func appendDecimal() -> Bool {
-        guard !raw.contains(AppString.amountDecimalSeparator) else { return false }
-
-        raw = raw.isEmpty ? "0." : raw + AppString.amountDecimalSeparator
-
-        return true
-    }
-
-    private mutating func deleteLast() -> Bool {
-        guard !raw.isEmpty else { return false }
-
-        raw.removeLast()
-
-        return true
-    }
-
-    /// Целая часть ограничена длиной поля, дробная — копейками
-    private var canAppendDigit: Bool {
-        let parts = raw.split(separator: ".", maxSplits: 1, omittingEmptySubsequences: false)
-
-        guard parts.count > 1 else {
-            return raw.count < Limit.integerDigits
-        }
-
-        return parts[1].count < Limit.fractionDigits
-    }
 
     private static func sanitized(_ text: String) -> String {
         var integer = ""

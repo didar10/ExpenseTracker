@@ -131,6 +131,40 @@ enum AppString {
     static let discardCategoryTitle = String(localized: "discard_category_title")
     static let keepEditing = String(localized: "keep_editing")
     static let noCategoriesForType = String(localized: "no_categories_for_type")
+    static let dayBeforeYesterday = String(localized: "day_before_yesterday")
+    static let transactionType = String(localized: "transaction_type")
+    static let accountSheetTitle = String(localized: "account_sheet_title")
+    static let newAccountButton = String(localized: "new_account_button")
+    static let notePlaceholder = String(localized: "note_placeholder")
+    static let findCategory = String(localized: "find_category")
+    static let nothingFound = String(localized: "nothing_found")
+    static let saveExpense = String(localized: "save_expense")
+    static let saveIncome = String(localized: "save_income")
+    static let checkAmount = String(localized: "check_amount")
+    static let deleteTransactionTitle = String(localized: "delete_transaction_title")
+    static let deleteTransactionLabel = String(localized: "delete_transaction_label")
+    static let time = String(localized: "time")
+    static let timeEarlier = String(localized: "time_earlier")
+    static let timeLater = String(localized: "time_later")
+    static let previousMonth = String(localized: "previous_month")
+    static let nextMonth = String(localized: "next_month")
+
+    /// «= Сохранить 2 000 ₸»: знак «=» рисует кнопка
+    static func saveAmount(_ amount: String) -> String {
+        String(format: String(localized: "save_amount"), amount)
+    }
+
+    /// «Продукты на неделю −4 850 ₸. Баланс счёта пересчитается.»
+    static func deleteTransactionMessage(title: String, amount: String) -> String {
+        String(format: String(localized: "delete_transaction_message"), title, amount)
+    }
+
+    /// «18 400 ₸ в ноябре»; month — 1…12
+    static func spentInMonth(_ amount: String, month: Int) -> String {
+        // Ключ собирается в рантайме: интерполяция в LocalizationValue дала бы ключ «month_in_%lld»
+        let monthName = Bundle.main.localizedString(forKey: "month_in_\(month)", value: nil, table: nil)
+        return String(format: String(localized: "spent_in_month"), amount, monthName)
+    }
 
     // MARK: - Accessibility
 

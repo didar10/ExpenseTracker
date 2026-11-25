@@ -14,17 +14,14 @@ struct AmountInputTests {
 
     // MARK: - Helpers
 
-    private func type(_ keys: String, into input: inout AmountInput) {
-        for character in keys {
-            input.apply(character == "." ? .decimal : .number(String(character)))
-        }
+    private func typed(_ text: String) -> AmountInput {
+        AmountInput(typedText: text, previous: AmountInput())
     }
 
     // MARK: - Tests
 
     @Test func groupsThousandsWhileTyping() {
-        var input = AmountInput()
-        type("1350000", into: &input)
+        let input = typed("1350000")
 
         #expect(input.display == "1\u{00A0}350\u{00A0}000")
         #expect(input.value == 1_350_000)
@@ -39,13 +36,8 @@ struct AmountInputTests {
     }
 
     @Test func limitsFractionToTwoDigitsAndIntegerToTwelve() {
-        var input = AmountInput()
-        type("12.345", into: &input)
-        #expect(input.raw == "12.34")
-
-        var long = AmountInput()
-        type("1234567890123", into: &long)
-        #expect(long.raw == "123456789012")
+        #expect(typed("12.345").raw == "12.34")
+        #expect(typed("1234567890123").raw == "123456789012")
     }
 
     @Test func startsFromSavedValue() {

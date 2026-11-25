@@ -44,7 +44,9 @@ struct SaveErrorHandlingTests {
     @Test func failedTransactionSaveKeepsFormOpenAndShowsError() {
         let viewModel = AddTransactionViewModel(accountSelection: AccountSelectionStore())
         viewModel.selectedAccount = Account(name: "Основной")
-        viewModel.amount = "250"
+        for key in "250".compactMap(CalculatorKey.init) {
+            viewModel.input(key)
+        }
 
         #expect(viewModel.save(using: FailingTransactionRepository()) == false)
         #expect(viewModel.showingSaveError)

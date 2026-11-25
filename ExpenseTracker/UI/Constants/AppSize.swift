@@ -48,11 +48,6 @@ enum AppSize {
     static let dateTile: CGFloat = 92
     /// Квадратная плитка иконки внутри карточки
     static let tileIcon: CGFloat = 36
-    /// Переключатель «Расход / Доход» в шапке
-    static let typePickerWidth: CGFloat = 220
-    static let typePickerHeight: CGFloat = 34
-    /// Высота шапки экрана
-    static let screenHeader: CGFloat = 50
     /// Размер цифры на клавиатуре ввода суммы
     static let keypadDigit: CGFloat = 28
     /// Иконка операции в строке списка

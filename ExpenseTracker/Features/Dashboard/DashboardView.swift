@@ -66,7 +66,9 @@ struct DashboardView: View {
                 viewModel.syncSelectedAccount(with: newAccounts)
             }
             .sheet(item: $viewModel.selectedTransaction) { transaction in
-                AddTransactionView(transaction: transaction, accountSelection: accountSelection)
+                AddTransactionView(transaction: transaction, accountSelection: accountSelection) { transaction in
+                    viewModel.deleteTransaction(transaction, using: repositories.transactions)
+                }
             }
             .sheet(isPresented: $viewModel.showingAccountsView) {
                 accountSelectionSheet

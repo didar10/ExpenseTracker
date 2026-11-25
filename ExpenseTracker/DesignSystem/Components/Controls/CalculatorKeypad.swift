@@ -8,7 +8,8 @@
 import SwiftUI
 
 /// Клавиатура калькулятора 4×4: цифры, «,», «⌫» и операторы.
-/// Операторы — черные, «,» и «⌫» — на фоне bg; нажатие — `OutlineClickStyle`
+/// Операторы — черные, «,» и «⌫» — на фоне bg; нажатие — `OutlineClickStyle`.
+/// Клавиши 50 pt, при нехватке места — до 40 pt
 struct CalculatorKeypad: View {
 
     // MARK: - Properties
@@ -49,7 +50,8 @@ private extension CalculatorKeypad {
         } label: {
             label(for: key)
                 .font(style.font)
-                .frame(maxWidth: .infinity, minHeight: Metrics.keyHeight)
+                // На низком экране (iPhone SE) клавиши ужимаются, чтобы экран обошелся без прокрутки
+                .frame(maxWidth: .infinity, minHeight: Metrics.minimumKeyHeight, maxHeight: Metrics.keyHeight)
         }
         .buttonStyle(OutlineClickStyle(
             shape: .bordered(radius: DS.Radius.control),
@@ -121,6 +123,7 @@ private struct KeyAppearance {
 private enum Metrics {
     /// Размеры из `Design/html/AddTransaction.html` (.keys, .key)
     static let keyHeight: CGFloat = 50
+    static let minimumKeyHeight: CGFloat = 40
 }
 
 // MARK: - Previews

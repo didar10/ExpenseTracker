@@ -7,17 +7,52 @@
 
 import Foundation
 import SwiftData
-import UIKit
 
 @MainActor
 final class AddTransactionViewModel: ObservableObject {
 
     // MARK: - Types
 
-    /// Ограничения ввода суммы: длиннее уже не помещается в поле и не имеет смысла для денег
+    /// Состояние кнопки сохранения под клавиатурой
+    enum SaveButtonState: Equatable {
+        /// Суммы нет — «Введите сумму», кнопка неактивна
+        case enterAmount
+        /// Выражение с ошибкой — «Проверьте сумму», кнопка неактивна
+        case checkAmount
+        /// Счета нет — «Выберите счет», кнопка неактивна
+        case chooseAccount
+        /// Есть выражение — «= Сохранить 2 000 ₸»
+        case saveResult(String)
+        /// «Сохранить расход / доход», в редактировании — «Сохранить изменения»
+        case save(String)
+
+        var title: String {
+            switch self {
+            case .enterAmount: return AppString.enterAmount
+            case .checkAmount: return AppString.checkAmount
+            case .chooseAccount: return AppString.chooseAccount
+            case .saveResult(let amount): return AppString.saveAmount(amount)
+            case .save(let title): return title
+            }
+        }
+
+        var isEnabled: Bool {
+            switch self {
+            case .saveResult, .save: return true
+            case .enterAmount, .checkAmount, .chooseAccount: return false
+            }
+        }
+
+        /// Перед суммой выражения кнопка показывает «=»
+        var showsEqualsSign: Bool {
+            if case .saveResult = self { return true }
+            return false
+        }
+    }
+
     /// Снимок полей формы для сравнения «есть ли несохраненные изменения»
     private struct InputSnapshot: Equatable {
-        let amount: String
+        let calculator: CalculatorEngine
         let categoryID: PersistentIdentifier?
         let accountID: PersistentIdentifier?
         let note: String
@@ -27,7 +62,7 @@ final class AddTransactionViewModel: ObservableObject {
 
     // MARK: - Input Data
 
-    @Published var amount: String = ""
+    @Published private(set) var calculator = CalculatorEngine()
     @Published var selectedCategory: Category?
     @Published var selectedAccount: Account?
     @Published var note: String = ""
@@ -36,8 +71,6 @@ final class AddTransactionViewModel: ObservableObject {
 
     // MARK: - UI State
 
-    @Published var showSuccessAnimation = false
-    @Published var showAllCategories = false
     /// Транзакция уже записана в контекст: защищает от повторного сохранения
     @Published private(set) var isSaved = false
     /// Запись на диск не удалась: экран остается открытым с введенными данными
@@ -46,14 +79,7 @@ final class AddTransactionViewModel: ObservableObject {
     private(set) var editingTransaction: Transaction?
 
     private let accountSelection: AccountSelectionStore
-    private var initialSnapshot = InputSnapshot(
-        amount: "",
-        categoryID: nil,
-        accountID: nil,
-        note: "",
-        date: .now,
-        type: .expense
-    )
+    private var initialSnapshot: InputSnapshot?
 
     // MARK: - Init
 
@@ -69,7 +95,7 @@ final class AddTransactionViewModel: ObservableObject {
             return
         }
 
-        amount = transaction.amount.description
+        calculator = CalculatorEngine(amount: transaction.amount)
         selectedCategory = transaction.category
         selectedAccount = transaction.account
         note = transaction.note ?? ""
@@ -87,22 +113,49 @@ final class AddTransactionViewModel: ObservableObject {
         isEditing ? AppString.editTransaction : AppString.newTransaction
     }
 
-    var saveButtonTitle: String {
-        isEditing ? AppString.saveChanges : AppString.save
+    /// Строка над суммой — только когда в выражении есть оператор: «1 200 + 800»
+    var expressionText: String? {
+        calculator.hasOperator ? calculator.expressionText : nil
+    }
+
+    /// Крупная сумма: набранное число, итог выражения или «—» при делении на ноль
+    var amountText: String {
+        guard calculator.hasOperator else {
+            let typed = calculator.expressionText
+            return typed.isEmpty ? Constants.zero : typed
+        }
+
+        if calculator.error == .divisionByZero {
+            return Constants.dash
+        }
+        return calculator.result.map(MoneyFormat.number) ?? Constants.zero
+    }
+
+    /// Ноль — еще не введенная сумма: показывается серым
+    var isAmountPlaceholder: Bool {
+        calculator.error == nil && (calculator.result ?? .zero) == .zero
+    }
+
+    var errorMessage: String? {
+        calculator.error?.message
+    }
+
+    var saveButtonState: SaveButtonState {
+        if calculator.error != nil { return .checkAmount }
+        guard let amount, !isSaved else { return .enterAmount }
+        guard selectedAccount != nil else { return .chooseAccount }
+
+        if calculator.hasOperator {
+            return .saveResult(MoneyFormat.money(amount))
+        }
+        if isEditing {
+            return .save(AppString.saveChanges)
+        }
+        return .save(type == .income ? AppString.saveIncome : AppString.saveExpense)
     }
 
     var isSaveEnabled: Bool {
-        !isSaved && hasPositiveAmount && selectedAccount != nil
-    }
-
-    /// Чего не хватает для сохранения — показывается под кнопкой вместо молчаливой блокировки
-    var validationHint: String? {
-        guard !isSaved else { return nil }
-
-        if selectedAccount == nil { return AppString.chooseAccount }
-        if !hasPositiveAmount { return AppString.enterAmount }
-
-        return nil
+        saveButtonState.isEnabled
     }
 
     /// Пользователь что-то ввел и уйти по свайпу/крестику без подтверждения нельзя
@@ -110,42 +163,14 @@ final class AddTransactionViewModel: ObservableObject {
         !isSaved && currentSnapshot != initialSnapshot
     }
 
-    /// Сумма для предпросмотра баланса счёта: после сохранения транзакция
-    /// уже учтена в `currentBalance`, поэтому вычитать её повторно нельзя
-    var pendingAmount: String {
-        isSaved ? "" : amount
-    }
-
-    /// Баланс счета после этой операции: показывается в плитке счета во время ввода
-    var predictedBalance: Decimal? {
-        guard let selectedAccount, !isSaved, let value = amountDecimal, value > 0 else { return nil }
-
-        return type == .income
-            ? selectedAccount.currentBalance + value
-            : selectedAccount.currentBalance - value
-    }
-
-    /// Сумма с разделителями разрядов для отображения: 1350000 → 1 350 000
-    var amountDisplay: String {
-        AmountInput(amount).display
-    }
-
-    /// Введена ли сумма — влияет на цвет «0» на экране: набранный ноль не плейсхолдер
-    var hasAmountInput: Bool {
-        !amount.isEmpty
-    }
-
-    private var hasPositiveAmount: Bool {
-        AmountInput(amount).isPositive
-    }
-
-    private var amountDecimal: Decimal? {
-        AmountInput(amount).value
+    /// Сумма к сохранению: итог выражения больше нуля и без ошибок
+    private var amount: Decimal? {
+        calculator.isValid ? calculator.result : nil
     }
 
     private var currentSnapshot: InputSnapshot {
         InputSnapshot(
-            amount: amount,
+            calculator: calculator,
             categoryID: selectedCategory?.persistentModelID,
             accountID: selectedAccount?.persistentModelID,
             note: note,
@@ -156,26 +181,15 @@ final class AddTransactionViewModel: ObservableObject {
 
     // MARK: - Actions
 
-    func selectCategory(_ category: Category) {
-        selectedCategory = category
-        provideFeedback(.medium)
-    }
-    
-    func toggleShowAllCategories() {
-        showAllCategories.toggle()
-        provideFeedback(.light)
-    }
-    
-    func changeType(to type: TransactionType) {
-        self.type = type
-        provideFeedback(.medium)
+    func input(_ key: CalculatorKey) {
+        calculator.input(key)
     }
 
     /// Категория другого типа не должна оставаться выбранной после смены «Расход/Доход»
     func resetCategoryIfTypeMismatched() {
-        guard selectedCategory?.type != type else { return }
+        guard let selectedCategory, selectedCategory.type != type else { return }
 
-        selectedCategory = nil
+        self.selectedCategory = nil
     }
 
     /// Счет по умолчанию подставляется один раз, когда экран открыли без общего выбора
@@ -189,12 +203,10 @@ final class AddTransactionViewModel: ObservableObject {
     // MARK: - Save
 
     func save(using repository: TransactionRepository) -> Bool {
-        guard !isSaved, let value = amountDecimal, value > 0 else { return false }
-        
-        provideFeedback(.medium)
+        guard isSaveEnabled, let amount else { return false }
 
         let draft = TransactionDraft(
-            amount: value,
+            amount: amount,
             date: date,
             note: note.isEmpty ? nil : note,
             type: type,
@@ -228,39 +240,31 @@ final class AddTransactionViewModel: ObservableObject {
 
         accountSelection.selectedAccount = selectedAccount
     }
-    
-    func showSuccessAndDismiss(onDismiss: @escaping () -> Void) {
-        showSuccessAnimation = true
-        
-        Task {
-            try? await Task.sleep(nanoseconds: 600_000_000) // 0.6 seconds
-            onDismiss()
+
+    // MARK: - Category Spending
+
+    /// Траты (или доходы) каждой категории за месяц `now` — для порядка ленты и подписей.
+    /// Ключ — `Category.id`
+    static func monthlySpending(
+        of categories: [Category],
+        calendar: Calendar = .current,
+        now: Date = .now
+    ) -> [UUID: Decimal] {
+        guard let month = calendar.dateInterval(of: .month, for: now) else { return [:] }
+
+        var result: [UUID: Decimal] = [:]
+        for category in categories {
+            result[category.id] = category.transactions
+                .filter { $0.type == category.type && month.contains($0.date) }
+                .reduce(Decimal.zero) { $0 + $1.amount }
         }
+        return result
     }
+}
 
-    // MARK: - Keypad Logic
+// MARK: - Constants
 
-    func handleKeyTap(_ key: NumericKeypadView.Key) {
-        var input = AmountInput(amount)
-        // Отклоненный ввод (предел длины, пустое поле) не должен ощущаться как принятый
-        guard input.apply(key) else { return }
-
-        amount = input.raw
-        provideFeedback(.light)
-    }
-
-    /// Долгое нажатие на удаление стирает всю сумму
-    func clearAmount() {
-        var input = AmountInput(amount)
-        guard input.clear() else { return }
-
-        amount = input.raw
-        provideFeedback(.medium)
-    }
-
-    // MARK: - Haptic Feedback
-
-    private func provideFeedback(_ style: UIImpactFeedbackGenerator.FeedbackStyle) {
-        UIImpactFeedbackGenerator(style: style).impactOccurred()
-    }
+private enum Constants {
+    static let zero = "0"
+    static let dash = "—"
 }

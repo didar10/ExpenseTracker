@@ -26,6 +26,12 @@ extension DS {
         static let dialogTitle = SwiftUI.Font.custom(FontName.unboundedBold.rawValue, size: Size.dialogTitle, relativeTo: .title3)
         /// Сумма при вводе — Unbounded Bold 48
         static let amountXL = SwiftUI.Font.custom(FontName.unboundedBold.rawValue, size: Size.amountXL, relativeTo: .largeTitle)
+        /// Знак ₸ после суммы при вводе — Unbounded Medium 48
+        static let amountXLSign = SwiftUI.Font.custom(FontName.unboundedMedium.rawValue, size: Size.amountXL, relativeTo: .largeTitle)
+        /// Знак ₸ после суммы на низком экране — Unbounded Medium 40
+        static let amountLSign = SwiftUI.Font.custom(FontName.unboundedMedium.rawValue, size: Size.amountL, relativeTo: .largeTitle)
+        /// Месяц в календаре — Unbounded Bold 16
+        static let monthTitle = SwiftUI.Font.custom(FontName.unboundedBold.rawValue, size: Size.monthTitle, relativeTo: .headline)
         /// Баланс, итоги — Unbounded Bold 40
         static let amountL = SwiftUI.Font.custom(FontName.unboundedBold.rawValue, size: Size.amountL, relativeTo: .largeTitle)
 
@@ -64,6 +70,10 @@ extension DS {
         static let expression = SwiftUI.Font.custom(FontName.jetBrainsMonoMedium.rawValue, size: Size.expression, relativeTo: .subheadline)
         /// Сумма под категорией в компактной ленте — JetBrains Mono Medium 11
         static let moneyTiny = SwiftUI.Font.custom(FontName.jetBrainsMonoMedium.rawValue, size: Size.moneyTiny, relativeTo: .caption2)
+        /// Число дня в календаре — JetBrains Mono Medium 15
+        static let calendarDay = SwiftUI.Font.custom(FontName.jetBrainsMonoMedium.rawValue, size: Size.calendarDay, relativeTo: .subheadline)
+        /// Время на листе даты — JetBrains Mono Bold 16
+        static let time = SwiftUI.Font.custom(FontName.jetBrainsMonoBold.rawValue, size: Size.time, relativeTo: .callout)
         /// Мелкие суммы и даты — JetBrains Mono Medium 12
         static let moneySmall = SwiftUI.Font.custom(FontName.jetBrainsMonoMedium.rawValue, size: Size.moneySmall, relativeTo: .caption)
     }
@@ -87,6 +97,9 @@ extension DS.Font {
         static let expression: CGFloat = 15
         static let moneyTiny: CGFloat = 11
         static let moneySmall: CGFloat = 12
+        static let monthTitle: CGFloat = 16
+        static let calendarDay: CGFloat = 15
+        static let time: CGFloat = 16
     }
 
     /// Разрядка метки: 0.06em от 12 pt
