@@ -27,6 +27,8 @@ struct PeriodSelector: View {
     /// false на текущем периоде: в будущее листать нельзя
     var isNextEnabled = true
     var isPreviousEnabled = true
+    /// false — только название: компактная шапка главной и «Все время», которое не листается
+    var showsArrows = true
     let onPrevious: () -> Void
     let onNext: () -> Void
     let onTitleTap: () -> Void
@@ -35,17 +37,21 @@ struct PeriodSelector: View {
 
     var body: some View {
         HStack(spacing: .zero) {
-            arrow(DS.Icon.chevronLeft, label: AppString.dsPreviousPeriod, action: onPrevious)
-                .disabled(!isPreviousEnabled)
+            if showsArrows {
+                arrow(DS.Icon.chevronLeft, label: AppString.dsPreviousPeriod, action: onPrevious)
+                    .disabled(!isPreviousEnabled)
 
-            separator
+                separator
+            }
 
             titleButton
 
-            separator
+            if showsArrows {
+                separator
 
-            arrow(DS.Icon.chevronRight, label: AppString.dsNextPeriod, action: onNext)
-                .disabled(!isNextEnabled)
+                arrow(DS.Icon.chevronRight, label: AppString.dsNextPeriod, action: onNext)
+                    .disabled(!isNextEnabled)
+            }
         }
         .frame(height: DS.Size.control)
         .frame(maxWidth: layout == .fullWidth ? .infinity : nil)
@@ -71,7 +77,7 @@ private extension PeriodSelector {
                     .font(.system(size: DS.Size.iconXS, weight: .bold))
                     .accessibilityHidden(true)
             }
-            .padding(.horizontal, Metrics.titlePadding)
+            .padding(.horizontal, showsArrows ? Metrics.titlePadding : Metrics.titleOnlyPadding)
             .frame(maxWidth: layout == .fullWidth ? .infinity : nil, maxHeight: .infinity)
         }
         .buttonStyle(.outlineClickSegment)
@@ -112,6 +118,8 @@ private extension PeriodSelector {
         /// Иконка 18 и отступы по 10
         static let compactArrowWidth: CGFloat = 38
         static let titlePadding: CGFloat = 6
+        /// Без стрелок — `Design/html/MainScrolled.html` и `MainAllTime.html`
+        static let titleOnlyPadding: CGFloat = 12
     }
 }
 
@@ -133,6 +141,12 @@ private struct PeriodSelectorGallery: View {
             }
             DSPreviewCase("FullWidth · прошлый") {
                 PeriodSelector(title: "Октябрь 2026", layout: .fullWidth, onPrevious: {}, onNext: {}, onTitleTap: {})
+            }
+            DSPreviewCase("Без стрелок · компактная шапка, «Все время»") {
+                HStack {
+                    PeriodSelector(title: "Ноябрь", showsArrows: false, onPrevious: {}, onNext: {}, onTitleTap: {})
+                    PeriodSelector(title: "Все время", showsArrows: false, onPrevious: {}, onNext: {}, onTitleTap: {})
+                }
             }
             DSPreviewCase("Нажатый сегмент") {
                 OutlineClickBody(shape: .segment, fill: .clear, isPressed: true) {

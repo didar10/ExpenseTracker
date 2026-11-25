@@ -74,11 +74,6 @@ enum AppSize {
     /// Ширина активной точки индикатора страниц
     static let pageIndicatorActiveDot: CGFloat = 22
 
-    // MARK: - Elevation
-
-    static let shadowRadius: CGFloat = 10
-    static let shadowOffsetY: CGFloat = 4
-
     // MARK: - Display typography
 
     /// Размер вводимой суммы на экране операции

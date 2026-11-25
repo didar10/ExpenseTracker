@@ -42,6 +42,14 @@ enum AppString {
     static let transactionDeleted = String(localized: "transaction_deleted")
     static let transactionRepeated = String(localized: "transaction_repeated")
     static let undo = String(localized: "undo")
+    static let onAccounts = String(localized: "on_accounts")
+    static let balanceAllTime = String(localized: "balance_all_time")
+    static let noTransactionsYet = String(localized: "no_transactions_yet")
+    static let duplicateTransaction = String(localized: "duplicate_transaction")
+    static let openStatisticsHint = String(localized: "open_statistics_hint")
+    static let editTransactionHint = String(localized: "edit_transaction_hint")
+    /// Разделитель «Все счета · Ноябрь» в компактной шапке
+    static let titleSeparator = " · "
 
     // MARK: - Persistence
 
@@ -65,7 +73,8 @@ enum AppString {
     static let toggleOn = String(localized: "toggle_on")
     static let toggleOff = String(localized: "toggle_off")
     private static let ofAmount = String(localized: "of_amount")
-    private static let monthRemainingFooter = String(localized: "month_remaining_footer")
+    private static let spentPercent = String(localized: "spent_percent")
+    private static let monthRemainingDays = String(localized: "month_remaining_days")
     private static let monthlyLimitFooter = String(localized: "monthly_limit_footer")
     private static let monthlyLimitPerDayHint = String(localized: "monthly_limit_per_day_hint")
 
@@ -73,8 +82,14 @@ enum AppString {
         String(format: ofAmount, amount)
     }
 
-    static func monthRemainingFooter(_ amount: String, _ days: Int) -> String {
-        String(format: monthRemainingFooter, amount, days)
+    /// «Потрачено 61%»
+    static func spentPercent(_ percent: Int) -> String {
+        String(format: spentPercent, percent)
+    }
+
+    /// «Осталось 118 050 ₸ · 11 дн.»
+    static func monthRemainingDays(_ amount: String, _ days: Int) -> String {
+        String(format: monthRemainingDays, amount, days)
     }
 
     static func monthlyLimitFooter(_ amount: String) -> String {
@@ -92,7 +107,6 @@ enum AppString {
     // MARK: - Accounts
 
     static let selectAccount = String(localized: "select_account")
-    static let selectPeriod = String(localized: "select_period")
     static let allAccounts = String(localized: "all_accounts")
     static let allAccountsHint = String(localized: "all_accounts_hint")
     static let noAccounts = String(localized: "no_accounts")

@@ -29,9 +29,10 @@ extension View {
             .shadow(color: color, radius: shadow.radius, x: shadow.x, y: shadow.y)
     }
 
-    /// Метка раздела: SF Semibold 12, верхний регистр, разрядка 0.06em, цвет ink2
-    func dsLabel(color: Color = DS.Color.ink2) -> some View {
-        modifier(DSLabelModifier(color: color))
+    /// Метка раздела: SF Semibold 12, верхний регистр, разрядка 0.06em, цвет ink2.
+    /// `font: DS.Font.labelSmall` — мелкая метка 11 pt
+    func dsLabel(color: Color = DS.Color.ink2, font: Font = DS.Font.label) -> some View {
+        modifier(DSLabelModifier(color: color, font: font))
     }
 }
 
@@ -42,6 +43,7 @@ private struct DSLabelModifier: ViewModifier {
     // MARK: - Properties
 
     let color: Color
+    let font: Font
 
     /// Разрядка растет вместе со шрифтом при Dynamic Type
     @ScaledMetric(relativeTo: .caption) private var tracking = DS.Font.labelTracking
@@ -50,7 +52,7 @@ private struct DSLabelModifier: ViewModifier {
 
     func body(content: Content) -> some View {
         content
-            .font(DS.Font.label)
+            .font(font)
             .textCase(.uppercase)
             .tracking(tracking)
             .foregroundStyle(color)

@@ -34,6 +34,10 @@ extension DS {
         static let monthTitle = SwiftUI.Font.custom(FontName.unboundedBold.rawValue, size: Size.monthTitle, relativeTo: .headline)
         /// Баланс, итоги — Unbounded Bold 40
         static let amountL = SwiftUI.Font.custom(FontName.unboundedBold.rawValue, size: Size.amountL, relativeTo: .largeTitle)
+        /// Сумма в карточке «Можно потратить сегодня» — Unbounded Bold 28
+        static let amountM = SwiftUI.Font.custom(FontName.unboundedBold.rawValue, size: Size.amountM, relativeTo: .title)
+        /// Баланс в компактной шапке при прокрутке — Unbounded Bold 22
+        static let amountS = SwiftUI.Font.custom(FontName.unboundedBold.rawValue, size: Size.amountS, relativeTo: .title2)
 
         // MARK: - SF Pro
 
@@ -55,6 +59,8 @@ extension DS {
         static let buttonSmall = SwiftUI.Font.callout.weight(.bold)
         /// Метки разделов — SF Semibold 12; регистр и разрядку добавляет `.dsLabel()`
         static let label = SwiftUI.Font.caption.weight(.semibold)
+        /// Мелкие метки: «Доходы» в карточке, подпись компактной шапки — SF Semibold 11
+        static let labelSmall = SwiftUI.Font.caption2.weight(.semibold)
 
         // MARK: - JetBrains Mono
 
@@ -89,6 +95,8 @@ extension DS.Font {
         static let dialogTitle: CGFloat = 20
         static let amountXL: CGFloat = 48
         static let amountL: CGFloat = 40
+        static let amountM: CGFloat = 28
+        static let amountS: CGFloat = 22
         static let label: CGFloat = 12
         static let money: CGFloat = 15
         static let moneyField: CGFloat = 16

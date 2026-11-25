@@ -85,8 +85,9 @@ final class DashboardViewModel: ObservableObject {
     }
 
     /// Карточку можно скрыть в Настройках. И она не к месту, когда листаются прошлые периоды
+    /// или выбрано «Все время»: лимит дневной, а не за всю историю
     var showsDailyAllowance: Bool {
-        limitStore.isShownOnDashboard && periodFilter.offset == 0
+        limitStore.isShownOnDashboard && periodFilter.offset == 0 && periodFilter.period != .allTime
     }
 
     /// За «Все время» баланс берется со счетов (учитывает начальный остаток),
@@ -143,7 +144,7 @@ final class DashboardViewModel: ObservableObject {
     }
 
     func selectAccount(_ account: Account?) {
-        withAnimation(.spring(response: 0.3, dampingFraction: 0.7)) {
+        withAnimation(Self.animation(DS.Motion.toggle)) {
             selectedAccount = account
         }
         showingAccountsView = false
@@ -167,19 +168,19 @@ final class DashboardViewModel: ObservableObject {
     }
 
     func changePeriod(_ period: StatisticsPeriod) {
-        withAnimation(.spring(response: 0.3, dampingFraction: 0.7)) {
+        withAnimation(Self.animation(DS.Motion.toggle)) {
             periodStore.select(period)
         }
     }
 
     func goToPreviousPeriod() {
-        withAnimation(.spring(response: 0.3, dampingFraction: 0.7)) {
+        withAnimation(Self.animation(DS.Motion.toggle)) {
             periodStore.goToPreviousPeriod()
         }
     }
 
     func goToNextPeriod() {
-        withAnimation(.spring(response: 0.3, dampingFraction: 0.7)) {
+        withAnimation(Self.animation(DS.Motion.toggle)) {
             periodStore.goToNextPeriod()
         }
     }
@@ -230,7 +231,7 @@ final class DashboardViewModel: ObservableObject {
         undoDismissTask?.cancel()
         undoDismissTask = nil
 
-        withAnimation(.snappy(duration: 0.25)) {
+        withAnimation(Self.animation(DS.Motion.overlay)) {
             undoAction = nil
         }
     }
@@ -241,7 +242,7 @@ final class DashboardViewModel: ObservableObject {
     private func showUndo(_ action: TransactionUndoAction) {
         undoDismissTask?.cancel()
 
-        withAnimation(.snappy(duration: 0.25)) {
+        withAnimation(Self.animation(DS.Motion.overlay)) {
             undoAction = action
         }
 
@@ -255,13 +256,18 @@ final class DashboardViewModel: ObservableObject {
     /// Изменение списка анимируется; при ошибке тост не показывается, а экран сообщает о ней
     private func perform(_ change: () throws -> Void, onSuccess: () -> Void) {
         do {
-            try withAnimation(.snappy(duration: 0.25)) {
+            try withAnimation(Self.animation(DS.Motion.overlay)) {
                 try change()
             }
             onSuccess()
         } catch {
             showingSaveError = true
         }
+    }
+
+    /// «Уменьшить движение» — изменения без анимации
+    private static func animation(_ animation: Animation) -> Animation? {
+        UIAccessibility.isReduceMotionEnabled ? nil : animation
     }
 
     /// Операции выбранного счета за выбранный период.

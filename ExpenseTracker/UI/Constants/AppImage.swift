@@ -39,8 +39,11 @@ enum AppImage {
     static let emptyState = Image(systemName: "tray")
     static let noteBubble = Image(systemName: "text.bubble")
     static let incomeArrow = Image(systemName: "arrow.down.circle.fill")
-    static let expenseArrow = Image(systemName: "arrow.up.circle.fill")
     static let repeatAction = Image(systemName: "arrow.clockwise")
+    static let duplicate = Image(systemName: "plus.square.on.square")
+    static let limitTarget = Image(systemName: "target")
+    /// Операция дохода без категории
+    static let incomeFallback = Image(systemName: "banknote")
     static let undo = Image(systemName: "arrow.uturn.backward")
     static let dailyLimit = Image(systemName: "gauge.with.needle")
     static let warningTriangle = Image(systemName: "exclamationmark.triangle.fill")

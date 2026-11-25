@@ -26,6 +26,11 @@ enum MoneyFormat {
         return sign + integer + Constants.decimalSeparator + parts[1]
     }
 
+    /// Со знаком для лент и итогов: 540000 → «+540 000», -2100 → «−2 100», 0 → «0»
+    static func signed(_ value: Decimal) -> String {
+        rounded(value) > 0 ? Constants.plus + number(value) : number(value)
+    }
+
     /// 49300 → «49 300 ₸»
     static func money(_ value: Decimal) -> String {
         number(value) + Constants.groupSeparator + AppString.currencySymbol
@@ -63,5 +68,6 @@ private enum Constants {
     static let groupSeparator = AppString.amountGroupingSeparator
     static let decimalSeparator = ","
     static let minus = "−"
+    static let plus = "+"
     static let posix = Locale(identifier: "en_US_POSIX")
 }
