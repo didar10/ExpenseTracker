@@ -63,9 +63,7 @@ final class AccountFormViewModel: ObservableObject {
     }
 
     var saveButtonTitle: String {
-        guard isValid else { return AppString.enterName }
-
-        return isEditMode ? AppString.saveChanges : AppString.createAccount
+        isEditMode ? AppString.save : AppString.createAccount
     }
 
     /// Закрытие формы с правками проходит через подтверждение
@@ -84,28 +82,57 @@ final class AccountFormViewModel: ObservableObject {
     }
 
     private var balanceDecimal: Decimal? {
-        Decimal(string: initialBalance.replacingOccurrences(of: ",", with: "."))
+        let normalized = initialBalance
+            .replacingOccurrences(of: AppString.amountGroupingSeparator, with: "")
+            .replacingOccurrences(of: " ", with: "")
+            .replacingOccurrences(of: "−", with: "-")
+            .replacingOccurrences(of: ",", with: ".")
+        return Decimal(string: normalized)
+    }
+
+    var selectedKind: AccountKind {
+        get { AccountKind(icon: selectedIcon) }
+        set {
+            guard newValue != selectedKind else { return }
+            selectedIcon = newValue.icon
+        }
+    }
+
+    var deletionTitle: String { AppString.deleteNamedAccount(initialSnapshot.name) }
+
+    var previewBalance: Decimal { balanceDecimal ?? 0 }
+
+    /// Разряды форматируются при вводе; запятая и конечные нули сохраняются,
+    /// чтобы «1 500,0» можно было дописать до «1 500,05».
+    var balanceInput: String {
+        get { initialBalance }
+        set {
+            initialBalance = newValue
+            sanitizeBalanceInput()
+        }
+    }
+
+    /// Форматирует только целую часть: дробные цифры еще могут дописываться.
+    nonisolated private static func formattedBalanceInput(_ source: String) -> String {
+        guard !source.isEmpty, source != "-" else { return source }
+        let normalized = source.replacingOccurrences(of: ",", with: ".")
+        let parts = normalized.split(separator: ".", maxSplits: 1, omittingEmptySubsequences: false)
+        let integer = String(parts[0])
+        let negativeZero = integer.hasPrefix("-") && (Decimal(string: integer) ?? 0) == 0
+        let grouped = (negativeZero ? "−" : "") + MoneyFormat.number(Decimal(string: integer) ?? 0)
+        return parts.count > 1 ? grouped + "," + parts[1] : grouped
     }
 
     // MARK: - Actions
 
-    func selectIcon(_ icon: String) {
-        selectedIcon = icon
-        provideFeedback(.light)
-    }
-
-    func selectColor(_ colorName: String) {
-        selectedColor = colorName
-        provideFeedback(.light)
-    }
-
     /// Оставляет в поле баланса только то, что можно превратить в число:
     /// один минус в начале, цифры и один разделитель дробной части
     func sanitizeBalanceInput() {
-        let isNegative = initialBalance.hasPrefix("-")
+        let source = initialBalance.replacingOccurrences(of: "−", with: "-")
+        let isNegative = source.hasPrefix("-")
         var separatorUsed = false
 
-        let digits = initialBalance.filter { character in
+        let digits = source.filter { character in
             if character.isNumber { return true }
 
             guard character == "." || character == "," else { return false }
@@ -115,7 +142,7 @@ final class AccountFormViewModel: ObservableObject {
             return true
         }
 
-        let sanitized = (isNegative ? "-" : "") + digits
+        let sanitized = Self.formattedBalanceInput((isNegative ? "-" : "") + digits)
 
         if sanitized != initialBalance {
             initialBalance = sanitized
@@ -174,8 +201,8 @@ extension AccountFormViewModel {
     /// Слепок полей формы для сравнения «было / стало»
     struct Snapshot: Equatable {
 
-        static let defaultIcon = "creditcard.fill"
-        static let defaultColor = AppColorPalette.fallback.rawValue
+        static let defaultIcon = AccountKind.card.icon
+        static let defaultColor = DS.AccountColor.yellow.rawValue
 
         let name: String
         let icon: String
@@ -188,7 +215,7 @@ extension AccountFormViewModel {
             icon = account?.icon ?? Self.defaultIcon
             color = account?.color ?? Self.defaultColor
             balance = Self.balanceText(for: account?.initialBalance)
-            isDefault = account?.isDefault ?? false
+            isDefault = account?.isDefault ?? true
         }
 
         init(name: String, icon: String, color: String, balance: String, isDefault: Bool) {
@@ -203,7 +230,7 @@ extension AccountFormViewModel {
         private static func balanceText(for balance: Decimal?) -> String {
             guard let balance, balance != 0 else { return "" }
 
-            return "\(balance)"
+            return AccountFormViewModel.formattedBalanceInput("\(balance)")
         }
     }
 }

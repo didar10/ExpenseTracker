@@ -231,7 +231,7 @@ private extension AddTransactionView {
         return HStack(spacing: DS.Spacing.sm) {
             if let account = viewModel.selectedAccount, account.isAvailable {
                 MetaPill(
-                    leading: .badge(Image(systemName: account.icon), account.swiftUIColor),
+                    leading: .badge(Image(systemName: account.icon), DS.accountColor(named: account.color)),
                     title: account.name,
                     value: MoneyFormat.money(account.currentBalance),
                     accessibilityHint: AppString.dsChooseAccountHint,

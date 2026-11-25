@@ -9,6 +9,7 @@ import Foundation
 
 /// Экраны, которые открываются из настроек
 enum SettingsRoute: Identifiable, Hashable {
+    case accounts
     case categories
     case privacyPolicy
     case helpSupport

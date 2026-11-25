@@ -47,6 +47,7 @@ protocol AccountRepository {
     func update(_ account: Account, with draft: AccountDraft) throws
     /// Удаляет счет вместе с его операциями
     func delete(_ account: Account) throws
+    func reorder(_ accounts: [Account]) throws
 }
 
 @MainActor
@@ -71,6 +72,7 @@ struct SwiftDataAccountRepository: AccountRepository {
             initialBalance: draft.initialBalance,
             isDefault: becomesDefault
         )
+        account.sortOrder = (existing.map(\.sortOrder).max() ?? -1) + 1
 
         if becomesDefault {
             existing.forEach { $0.isDefault = false }
@@ -105,5 +107,19 @@ struct SwiftDataAccountRepository: AccountRepository {
     func delete(_ account: Account) throws {
         context.delete(account)
         try context.saveOrRollback()
+    }
+
+    /// Сохраняет перестановку одной записью; при ошибке возвращает прежний порядок
+    func reorder(_ accounts: [Account]) throws {
+        let previous = accounts.map(\.sortOrder)
+        for (index, account) in accounts.enumerated() {
+            account.sortOrder = index
+        }
+        do {
+            try context.saveOrRollback()
+        } catch {
+            zip(accounts, previous).forEach { $0.sortOrder = $1 }
+            throw error
+        }
     }
 }

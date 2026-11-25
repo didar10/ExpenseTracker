@@ -28,6 +28,7 @@ struct BrutalTextField: View {
     var kind: Kind = .text
     /// nil — ошибки нет
     var errorMessage: String?
+    var onFocusChange: (Bool) -> Void = { _ in }
 
     @FocusState private var isFocused: Bool
 
@@ -38,13 +39,15 @@ struct BrutalTextField: View {
         text: Binding<String>,
         placeholder: String = "",
         kind: Kind = .text,
-        errorMessage: String? = nil
+        errorMessage: String? = nil,
+        onFocusChange: @escaping (Bool) -> Void = { _ in }
     ) {
         self.label = label
         self._text = text
         self.placeholder = placeholder
         self.kind = kind
         self.errorMessage = errorMessage
+        self.onFocusChange = onFocusChange
     }
 
     // MARK: - Computed Properties
@@ -74,6 +77,7 @@ struct BrutalTextField: View {
                     .padding(.horizontal, DS.Spacing.xs)
             }
         }
+        .onChange(of: isFocused) { _, focused in onFocusChange(focused) }
     }
 }
 
@@ -108,6 +112,7 @@ private extension BrutalTextField {
                 .foregroundStyle(DS.Color.ink)
                 .multilineTextAlignment(.trailing)
                 .focused($isFocused)
+                .accessibilityLabel(label)
 
         case .amount:
             HStack(spacing: DS.Spacing.xs) {
@@ -117,6 +122,7 @@ private extension BrutalTextField {
                     .multilineTextAlignment(.trailing)
                     .keyboardType(.decimalPad)
                     .focused($isFocused)
+                    .accessibilityLabel(label)
 
                 Text(AppString.dsCurrencySign)
                     .font(DS.Font.moneyField)

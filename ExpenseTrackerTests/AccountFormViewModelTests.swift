@@ -32,7 +32,7 @@ struct AccountFormViewModelTests {
         viewModel.name = "   "
 
         #expect(!viewModel.isValid)
-        #expect(viewModel.saveButtonTitle == AppString.enterName)
+        #expect(viewModel.saveButtonTitle == AppString.createAccount)
     }
 
     @Test func savedNameIsTrimmed() throws {
@@ -69,7 +69,7 @@ struct AccountFormViewModelTests {
         viewModel.initialBalance = "-15 000"
         viewModel.sanitizeBalanceInput()
 
-        #expect(viewModel.initialBalance == "-15000")
+        #expect(viewModel.initialBalance == "−15\u{00A0}000")
     }
 
     @Test func commaBalanceIsSavedAsDecimal() throws {
@@ -128,7 +128,7 @@ struct AccountFormViewModelTests {
         viewModel.name = "Kaspi Red"
 
         #expect(viewModel.hasUnsavedChanges)
-        #expect(viewModel.saveButtonTitle == AppString.saveChanges)
+        #expect(viewModel.saveButtonTitle == AppString.save)
     }
 
     @Test func editingUpdatesAccountInsteadOfCreatingNew() throws {
@@ -147,4 +147,68 @@ struct AccountFormViewModelTests {
         #expect(saved.first?.name == "Kaspi Red")
         #expect(saved.first?.initialBalance == 2000)
     }
+    // MARK: - Redesigned form
+
+    @Test func newFormMatchesDefaultPreview() {
+        let viewModel = AccountFormViewModel()
+        #expect(viewModel.selectedKind == .card)
+        #expect(viewModel.selectedColor == "yellow")
+        #expect(viewModel.previewBalance == 0)
+        #expect(viewModel.isDefault)
+        #expect(!viewModel.hasUnsavedChanges)
+    }
+
+    @Test func moneyInputGroupsDigitsAndPreservesFractionBeingTyped() {
+        let viewModel = AccountFormViewModel()
+        viewModel.balanceInput = "1234,"
+        #expect(viewModel.balanceInput == "1\u{00A0}234,")
+        viewModel.balanceInput = "1 234,50"
+        #expect(viewModel.balanceInput == "1\u{00A0}234,50")
+        #expect(viewModel.previewBalance == Decimal(string: "1234.5"))
+        viewModel.balanceInput = "−0,50"
+        #expect(viewModel.balanceInput == "−0,50")
+        #expect(viewModel.previewBalance == Decimal(string: "-0.5"))
+    }
+
+    @Test func changingKindUpdatesIconAndPersistsIt() throws {
+        let context = try makeContext()
+        let viewModel = AccountFormViewModel()
+        viewModel.name = "Вклад"
+        viewModel.selectedKind = .deposit
+        viewModel.selectedColor = "teal"
+        viewModel.balanceInput = "1 000,50"
+        #expect(viewModel.selectedIcon == AccountKind.deposit.icon)
+        #expect(viewModel.save(using: Repositories(context: context).accounts))
+        let account = try #require(try accounts(in: context).first)
+        #expect(account.icon == AccountKind.deposit.icon)
+        #expect(account.color == "teal")
+        #expect(account.initialBalance == Decimal(string: "1000.5"))
+    }
+
+    @Test func legacyIconAndColorArePreservedWhenEditingName() throws {
+        let context = try makeContext()
+        let account = Account(name: "Старый", icon: "banknote.fill", color: "mint")
+        context.insert(account)
+        let viewModel = AccountFormViewModel(account: account)
+        #expect(viewModel.selectedKind == .cash)
+        viewModel.selectedKind = .cash
+        viewModel.name = "Новый"
+        #expect(viewModel.save(using: Repositories(context: context).accounts))
+        #expect(account.icon == "banknote.fill")
+        #expect(account.color == "mint")
+    }
+
+    @Test func previewBalanceUsesInitialBalanceRatherThanTransactionTotal() throws {
+        let context = try makeContext()
+        let account = Account(name: "Карта", initialBalance: 32_000)
+        context.insert(account)
+        context.insert(Transaction(amount: 1_000, date: .now, type: .expense, account: account))
+        try context.save()
+        let viewModel = AccountFormViewModel(account: account)
+        #expect(viewModel.previewBalance == 32_000)
+        viewModel.balanceInput = "45 000"
+        #expect(viewModel.previewBalance == 45_000)
+        #expect(account.currentBalance == 31_000)
+    }
+
 }

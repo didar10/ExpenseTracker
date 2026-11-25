@@ -1,258 +1,188 @@
-//
-//  AccountSelectionSheet.swift
-//  ExpenseTracker
-//
-//  Created by Didar on 25.01.2026.
-//
-
-import SwiftUI
 import SwiftData
+import SwiftUI
 
+/// Общий лист выбора на главной и в статистике; в настройках — управление счетами.
 struct AccountSelectionSheet: View {
+    var selectedAccount: Account?
+    var onSelect: (Account?) -> Void = { _ in }
+    var managesAccounts = false
 
-    // MARK: - Properties
-
-    let selectedAccount: Account?
-    let onSelect: (Account?) -> Void
-    /// Разрешён ли вариант «Все счета»: при вводе операции счет обязателен
-    var allowsAllAccounts: Bool = true
-
-    /// Список счетов читается своим запросом, а не приходит снимком от экрана-родителя:
-    /// после удаления родитель может отдать массив с уже невалидной моделью, обращение
-    /// к её свойствам роняет SwiftData
-    @Query(sort: \Account.createdAt, order: .forward)
+    @Query(sort: [SortDescriptor(\Account.sortOrder), SortDescriptor(\Account.createdAt)])
     private var accounts: [Account]
 
-    @Environment(\.dismiss) private var dismiss
-    @Environment(\.repositories) private var repositories
-
+    @State private var viewModel: AccountSelectionViewModel
     @State private var showingAddAccount = false
     @State private var editingAccount: Account?
-    @State private var isEditing = false
-    @State private var accountToDelete: Account?
-    @State private var showDeleteAlert = false
-    @State private var showingSaveError = false
+    @State private var contentHeight = DS.AccountList.initialSheetHeight
+    @State private var headerHeight = DS.Size.control
 
-    // MARK: - Computed Properties
+    @Environment(\.repositories) private var repositories
+    @Environment(\.dismiss) private var dismiss
+    @Environment(\.accessibilityReduceMotion) private var reduceMotion
 
-    private var totalBalance: Decimal {
-        accounts.reduce(Decimal.zero) { $0 + $1.currentBalance }
+    init(
+        selectedAccount: Account? = nil,
+        onSelect: @escaping (Account?) -> Void = { _ in },
+        managesAccounts: Bool = false,
+        viewModel: AccountSelectionViewModel? = nil
+    ) {
+        self.selectedAccount = selectedAccount
+        self.onSelect = onSelect
+        self.managesAccounts = managesAccounts
+        _viewModel = State(initialValue: viewModel ?? AccountSelectionViewModel())
     }
 
-    private var isAllAccountsSelected: Bool {
-        selectedAccount == nil
-    }
+    private var availableAccounts: [Account] { accounts.filter(\.isAvailable) }
 
-    // MARK: - Body
+    private var items: [AccountListItem] {
+        let available = availableAccounts
+        let all = AccountListItem(totalBalance: available.reduce(0) { $0 + $1.currentBalance })
+        return (managesAccounts ? [] : [all]) + available.map(AccountListItem.init)
+    }
 
     var body: some View {
-        ZStack(alignment: .bottomTrailing) {
-            AppColor.background
-                .ignoresSafeArea()
+        VStack(spacing: .zero) {
+            SheetGrabber()
+            header
+                .onGeometryChange(for: CGFloat.self) { $0.size.height } action: { headerHeight = $0 }
+                .padding(.bottom, DS.AccountList.headerBottom)
 
-            VStack(spacing: 0) {
-                header
-
-                content
-            }
-
-            if !isEditing && !accounts.isEmpty {
-                AddFloatingButton(title: AppString.newAccountShort) {
-                    showingAddAccount = true
+            ScrollView {
+                VStack(spacing: DS.Spacing.md) {
+                    if availableAccounts.isEmpty {
+                        EmptyAccountsView { showingAddAccount = true }
+                    } else {
+                        AccountList(
+                            items: items,
+                            selectedID: availableAccounts.first(where: { $0 === selectedAccount })?.persistentModelID,
+                            isEditing: viewModel.isEditing,
+                            showsSelection: !managesAccounts,
+                            onSelect: select,
+                            onDelete: requestDeletion,
+                            onMove: move
+                        )
+                        newAccountButton
+                    }
                 }
-                .padding(.trailing, AppSpacing.large)
-                .padding(.bottom, AppSpacing.xxxLarge)
-                .transition(.scale(scale: 0.9).combined(with: .opacity))
+                .padding(.bottom, DS.Spacing.sm)
+                .onGeometryChange(for: CGFloat.self) { $0.size.height } action: { contentHeight = $0 }
             }
+            .scrollBounceBehavior(.basedOnSize)
+            .scrollIndicators(.hidden)
         }
-        // Список опустел — редактировать больше нечего
-        .onChange(of: accounts.isEmpty) { _, isEmpty in
-            if isEmpty {
-                isEditing = false
-            }
+        .padding(.top, SheetGrabber.topPadding)
+        .padding(.horizontal, DS.Spacing.xl)
+        .background(DS.Color.bg)
+        .brutalSheetPresentation(detents: [.height(sheetHeight), .large])
+        .onChange(of: accounts.isEmpty) { _, empty in
+            if empty { viewModel.isEditing = false }
         }
-        .sheet(isPresented: $showingAddAccount) {
-            AccountFormView()
-        }
-        .sheet(item: $editingAccount) { account in
-            AccountFormView(account: account)
-        }
-        .saveErrorAlert(isPresented: $showingSaveError)
-        .alert(AppString.deleteAccountConfirm, isPresented: $showDeleteAlert) {
-            Button(AppString.cancel, role: .cancel) {
-                accountToDelete = nil
-            }
-            Button(AppString.delete, role: .destructive, action: deleteAccount)
-        } message: {
-            // Вместе со счетом каскадом удаляются его операции — предупреждаем об этом явно
-            Text(AppString.deleteAccountMessage)
-        }
+        .sheet(isPresented: $showingAddAccount) { AccountFormView() }
+        .sheet(item: $editingAccount) { AccountFormView(account: $0) }
+        .brutalAlert(
+            isPresented: $viewModel.showingDeleteConfirmation,
+            title: viewModel.deletionTitle,
+            message: AppString.deleteAccountMessage,
+            confirmTitle: AppString.delete,
+            onConfirm: { viewModel.confirmDeletion(using: repositories.accounts) },
+            onCancel: viewModel.cancelDeletion
+        )
+        .saveErrorAlert(isPresented: $viewModel.showingSaveError)
     }
-}
 
-// MARK: - Subviews
-private extension AccountSelectionSheet {
+    private var sheetHeight: CGFloat {
+        max(DS.AccountList.minimumSheetHeight,
+            SheetGrabber.topPadding + SheetGrabber.height + DS.AccountList.headerBottom + headerHeight + contentHeight)
+    }
 
-    var header: some View {
-        SheetHeaderView(title: AppString.selectAccount) {
-            dismiss()
-        } trailing: {
+    private var header: some View {
+        HStack(spacing: DS.Spacing.md) {
+            Text(managesAccounts || accounts.isEmpty ? AppString.accounts : AppString.selectAccount)
+                .font(DS.Font.sheetTitle)
+                .foregroundStyle(DS.Color.ink)
+                .frame(maxWidth: .infinity, alignment: .leading)
+                .accessibilityAddTraits(.isHeader)
+
             if !accounts.isEmpty {
-                EditToggleButton(isEditing: isEditing) {
-                    withAnimation(.easeInOut(duration: 0.2)) {
-                        isEditing.toggle()
-                    }
+                Button {
+                    withAnimation(reduceMotion ? nil : DS.Motion.toggle) { viewModel.isEditing.toggle() }
+                } label: {
+                    Text(viewModel.isEditing ? AppString.done : AppString.edit)
+                        .font(DS.Font.control)
+                        .padding(.horizontal, DS.Spacing.md)
+                        .frame(minHeight: DS.AccountList.headerButtonHeight)
                 }
-                .accessibilityLabel(isEditing ? AppString.done : AppString.edit)
+                .buttonStyle(.outlineClick)
             }
         }
     }
 
-    @ViewBuilder
-    var content: some View {
-        ScrollView {
-            VStack(spacing: AppSpacing.large) {
-                if accounts.isEmpty {
-                    EmptyAccountsView {
-                        showingAddAccount = true
-                    }
-                } else {
-                    if allowsAllAccounts {
-                        allAccountsRow
-                    }
-
-                    accountsList
-                }
+    private var newAccountButton: some View {
+        Button { showingAddAccount = true } label: {
+            HStack(spacing: DS.Spacing.sm) {
+                DS.Icon.plus
+                Text(AppString.newAccount)
             }
-            .padding(AppSpacing.large)
-            // Плавающая кнопка не должна перекрывать последнюю строку списка
-            .padding(.bottom, AppSpacing.huge + AppSpacing.xxxLarge)
+            .font(DS.Font.buttonSmall)
+            .foregroundStyle(DS.Color.ink)
+            .frame(maxWidth: .infinity, minHeight: DS.Size.menuRow)
+            .contentShape(RoundedRectangle(cornerRadius: DS.Radius.control))
+            .overlay {
+                RoundedRectangle(cornerRadius: DS.Radius.control)
+                    .strokeBorder(DS.Color.ink, style: StrokeStyle(lineWidth: DS.Stroke.regular, dash: DS.Stroke.dash))
+            }
         }
-        .scrollBounceBehavior(.basedOnSize)
+        .buttonStyle(.outlineClickSegment)
+        .accessibilityIdentifier(AccessibilityID.accountSelectionAdd)
     }
 
-    @ViewBuilder
-    var allAccountsRow: some View {
-        if isEditing {
-            allAccountsRowContent
+    private func select(_ id: PersistentIdentifier?) {
+        let account = availableAccounts.first(where: { $0.persistentModelID == id })
+        if viewModel.isEditing || managesAccounts {
+            editingAccount = account
         } else {
-            Button {
-                UIImpactFeedbackGenerator(style: .light).impactOccurred()
-                onSelect(nil)
-            } label: {
-                allAccountsRowContent
-            }
-            .buttonStyle(HighlightRowButtonStyle(cornerRadius: AppRadius.xLarge))
-            .accessibilityAddTraits(isAllAccountsSelected ? .isSelected : [])
+            onSelect(account)
+            dismiss()
         }
     }
 
-    var allAccountsRowContent: some View {
-        HStack(spacing: AppSpacing.medium) {
-            ZStack {
-                RoundedRectangle(cornerRadius: AppRadius.medium, style: .continuous)
-                    .fill(AppColor.accent.opacity(0.2))
-                    .frame(width: AppSize.iconMedium, height: AppSize.iconMedium)
-
-                AppImage.allAccounts
-                    .font(.system(size: AppSize.glyphLarge, weight: .semibold))
-                    .foregroundStyle(AppColor.accent)
-            }
-            .accessibilityHidden(true)
-
-            AppText(AppString.allAccounts, style: .bodySmall)
-
-            Spacer(minLength: AppSpacing.small)
-
-            Text(totalBalance.formatted(.currency(code: AppString.currencyCode)))
-                .font(.app(.caption))
-                .fontDesign(.rounded)
-                .monospacedDigit()
-                .foregroundStyle(AppColor.textSecondary)
-                .lineLimit(1)
-
-            AppImage.checkmark
-                .font(.system(size: AppSize.glyphMedium, weight: .semibold))
-                .foregroundStyle(AppColor.accent)
-                .opacity(isAllAccountsSelected ? 1 : 0)
-                .accessibilityHidden(true)
-        }
-        .padding(.vertical, AppSpacing.small)
-        .padding(.horizontal, AppSpacing.large)
-        .frame(minHeight: AppSize.iconLarge)
-        .card(cornerRadius: AppRadius.xLarge)
-        .contentShape(Rectangle())
-        .accessibilityElement(children: .combine)
+    private func requestDeletion(_ id: PersistentIdentifier) {
+        guard let account = availableAccounts.first(where: { $0.persistentModelID == id }) else { return }
+        viewModel.requestDeletion(of: account)
     }
 
-    var accountsList: some View {
-        // Отступы совпадают со строкой «Все счета»: одинаковая высота строк в обеих карточках
-        VStack(spacing: 0) {
-            ForEach(Array(accounts.enumerated()), id: \.element.id) { index, account in
-                accountRowContent(for: account)
-
-                if index < accounts.count - 1 {
-                    Divider()
-                        .padding(.leading, AppSize.iconMedium + AppSpacing.medium)
-                }
-            }
-        }
-        .padding(.vertical, AppSpacing.small)
-        .padding(.horizontal, AppSpacing.large)
-        .card(cornerRadius: AppRadius.xLarge)
-    }
-
-    @ViewBuilder
-    func accountRowContent(for account: Account) -> some View {
-        if isEditing {
-            AccountRowView(
-                account: account,
-                isEditing: true,
-                onEdit: {
-                    UIImpactFeedbackGenerator(style: .light).impactOccurred()
-                    editingAccount = account
-                },
-                onDelete: {
-                    accountToDelete = account
-                    showDeleteAlert = true
-                }
-            )
-        } else {
-            Button {
-                UIImpactFeedbackGenerator(style: .light).impactOccurred()
-                onSelect(account)
-            } label: {
-                AccountRowView(
-                    account: account,
-                    isEditing: false,
-                    isSelected: account === selectedAccount,
-                    onEdit: {},
-                    onDelete: {}
-                )
-            }
-            .buttonStyle(HighlightRowButtonStyle(cornerRadius: AppRadius.medium))
+    private func move(_ source: PersistentIdentifier, to target: PersistentIdentifier) {
+        withAnimation(reduceMotion ? nil : DS.Motion.toggle) {
+            viewModel.move(source, to: target, in: availableAccounts, using: repositories.accounts)
         }
     }
 }
 
-// MARK: - Actions
-private extension AccountSelectionSheet {
-
-    func deleteAccount() {
-        guard let accountToDelete else { return }
-
-        self.accountToDelete = nil
-
-        do {
-            try repositories.accounts.delete(accountToDelete)
-            UINotificationFeedbackGenerator().notificationOccurred(.success)
-        } catch {
-            showingSaveError = true
+#if DEBUG
+private struct AccountSelectionPreview: View {
+    var fixture: Fixture = .sample
+    var isEditing = false
+    var showsDelete = false
+    var showsError = false
+    var body: some View {
+        let environment = FixtureEnvironment(fixture)
+        let viewModel = AccountSelectionViewModel()
+        viewModel.isEditing = isEditing
+        viewModel.showingSaveError = showsError
+        if showsDelete, let account = try? environment.context.fetch(FetchDescriptor<Account>()).first {
+            viewModel.requestDeletion(of: account)
         }
+        return AccountSelectionSheet(viewModel: viewModel).fixture(environment)
     }
 }
-
-#Preview {
-    AccountSelectionSheet(selectedAccount: nil, onSelect: { _ in })
-        .fixture(FixtureEnvironment(.sample))
-}
+#Preview("Данные · светлая") { AccountSelectionPreview() }
+#Preview("Данные · темная") { AccountSelectionPreview().preferredColorScheme(.dark) }
+#Preview("Пусто · светлая") { AccountSelectionPreview(fixture: .empty) }
+#Preview("Пусто · темная") { AccountSelectionPreview(fixture: .empty).preferredColorScheme(.dark) }
+#Preview("Редактирование · светлая") { AccountSelectionPreview(isEditing: true) }
+#Preview("Редактирование · темная") { AccountSelectionPreview(isEditing: true).preferredColorScheme(.dark) }
+#Preview("Удаление · светлая") { AccountSelectionPreview(isEditing: true, showsDelete: true) }
+#Preview("Удаление · темная") { AccountSelectionPreview(isEditing: true, showsDelete: true).preferredColorScheme(.dark) }
+#Preview("Ошибка · светлая") { AccountSelectionPreview(showsError: true) }
+#Preview("Ошибка · темная") { AccountSelectionPreview(showsError: true).preferredColorScheme(.dark) }
+#endif

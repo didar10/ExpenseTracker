@@ -19,7 +19,7 @@ struct AccountPickerSheetContent: View {
 
     /// Список читается своим запросом: после удаления счета родитель мог бы отдать
     /// снимок с невалидной моделью
-    @Query(sort: \Account.createdAt, order: .forward)
+    @Query(sort: [SortDescriptor(\Account.sortOrder), SortDescriptor(\Account.createdAt)])
     private var accounts: [Account]
 
     @State private var showingNewAccount = false
@@ -93,7 +93,7 @@ struct AccountPickerRow: Identifiable {
             title: account.name,
             balance: MoneyFormat.money(account.currentBalance),
             icon: Image(systemName: account.icon),
-            color: account.swiftUIColor
+            color: DS.accountColor(named: account.color)
         )
     }
 }

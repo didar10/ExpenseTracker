@@ -71,6 +71,7 @@ struct SegmentedSwitch<Value: Hashable>: View {
         .clipShape(RoundedRectangle(cornerRadius: DS.Radius.control))
         .brutalBorder(radius: DS.Radius.control)
         .animation(reduceMotion ? nil : DS.Motion.toggle, value: selection)
+        .accessibilityElement(children: .contain)
     }
 }
 

@@ -86,6 +86,12 @@ private extension SettingsView {
 
     var generalSection: some View {
         SettingsSectionView(title: AppString.general) {
+            SettingsRowView(icon: AppImage.allAccounts, iconColor: AppColor.accent, title: AppString.accounts) {
+                coordinator.show(.accounts)
+            }
+
+            SettingsRowDivider()
+
             SettingsRowView(
                 icon: AppImage.categoriesGrid,
                 iconColor: AppColor.accent,

@@ -1,237 +1,188 @@
-//
-//  AccountFormView.swift
-//  ExpenseTracker
-//
-//  Created by Didar on 25.01.2026.
-//
-
-import SwiftUI
 import SwiftData
+import SwiftUI
 
+/// Создание и редактирование счета. Прокрутка и safeAreaInset сохраняют доступ
+/// к активному полю и главной кнопке при появлении клавиатуры.
 struct AccountFormView: View {
-
-    // MARK: - Properties
-
     @Environment(\.repositories) private var repositories
     @Environment(\.dismiss) private var dismiss
-
     @StateObject private var viewModel: AccountFormViewModel
-
-    @FocusState private var isBalanceFocused: Bool
-
+    private enum Field: Hashable { case name, balance }
+    @State private var focusedField: Field?
     @State private var showingDeleteAlert = false
     @State private var showingDiscardConfirmation = false
 
-    // MARK: - Init
-
-    init(account: Account? = nil) {
-        _viewModel = StateObject(wrappedValue: AccountFormViewModel(account: account))
+    @MainActor
+    init(account: Account? = nil, viewModel: AccountFormViewModel? = nil) {
+        _viewModel = StateObject(wrappedValue: viewModel ?? AccountFormViewModel(account: account))
     }
 
-    // MARK: - Body
-
     var body: some View {
-        ZStack(alignment: .bottom) {
-            AppColor.background
-                .ignoresSafeArea()
-
-            VStack(spacing: 0) {
-                header
-
-                form
+        VStack(spacing: .zero) {
+            SheetGrabber()
+            header.padding(.horizontal, DS.Spacing.xl)
+            ScrollViewReader { proxy in
+                ScrollView {
+                    form
+                        .padding(.horizontal, DS.Spacing.xl)
+                        .padding(.vertical, DS.AccountForm.spacing)
+                }
+                .scrollDismissesKeyboard(.interactively)
+                .scrollBounceBehavior(.basedOnSize)
+                .scrollIndicators(.hidden)
+                .onChange(of: focusedField) { _, field in
+                    if let field { proxy.scrollTo(field, anchor: .center) }
+                }
+                .onGeometryChange(for: CGFloat.self) { $0.size.height } action: { _ in
+                    if let focusedField { proxy.scrollTo(focusedField, anchor: .center) }
+                }
             }
-
-            saveBar
         }
-        // Введенные данные не теряются молча: закрытие проходит через подтверждение
+        .padding(.top, SheetGrabber.topPadding)
+        .background(DS.Color.bg)
+        .safeAreaInset(edge: .bottom, spacing: .zero) { saveBar }
+        .brutalSheetPresentation(detents: [.large])
         .interactiveDismissDisabled(viewModel.hasUnsavedChanges)
         .toolbar {
             ToolbarItemGroup(placement: .keyboard) {
                 Spacer()
-
-                Button(AppString.done) {
-                    isBalanceFocused = false
-                    dismissKeyboard()
-                }
+                Button(AppString.done, action: dismissKeyboard)
             }
         }
+        .sensoryFeedback(.selection, trigger: viewModel.selectedKind)
+        .sensoryFeedback(.selection, trigger: viewModel.selectedColor)
         .saveErrorAlert(isPresented: $viewModel.showingSaveError)
-        .alert(AppString.deleteAccountConfirm, isPresented: $showingDeleteAlert) {
-            Button(AppString.cancel, role: .cancel) { }
-            Button(AppString.delete, role: .destructive) {
-                if viewModel.delete(using: repositories.accounts) {
-                    dismiss()
-                }
+        .brutalAlert(
+            isPresented: $showingDeleteAlert,
+            title: viewModel.deletionTitle,
+            message: AppString.deleteAccountMessage,
+            confirmTitle: AppString.delete,
+            onConfirm: {
+                if viewModel.delete(using: repositories.accounts) { dismiss() }
             }
-        } message: {
-            // Вместе со счетом каскадом удаляются его операции — предупреждаем об этом явно
-            Text(AppString.deleteAccountMessage)
-        }
-        .alert(AppString.discardAccountTitle, isPresented: $showingDiscardConfirmation) {
-            Button(AppString.discardChanges, role: .destructive) { dismiss() }
-            Button(AppString.keepEditing, role: .cancel) { }
-        } message: {
-            Text(AppString.discardChangesMessage)
-        }
-    }
-}
-
-// MARK: - Subviews
-private extension AccountFormView {
-
-    var header: some View {
-        SheetHeaderView(title: viewModel.navigationTitle, onClose: handleClose)
-    }
-
-    var form: some View {
-        ScrollView {
-            VStack(spacing: AppSpacing.xLarge) {
-                NamePreviewCardView(
-                    name: $viewModel.name,
-                    icon: viewModel.selectedIcon,
-                    color: Color(named: viewModel.selectedColor),
-                    placeholder: AppString.accountName
-                )
-
-                colorSection
-                iconSection
-                balanceSection
-                defaultSection
-
-                if viewModel.isEditMode {
-                    deleteSection
-                }
-            }
-            .padding(AppSpacing.large)
-            .padding(.bottom, AppSpacing.huge + AppSpacing.xxxLarge)
-        }
-        .scrollDismissesKeyboard(.interactively)
-    }
-
-    var colorSection: some View {
-        ColorPickerView(selectedColor: $viewModel.selectedColor, onSelect: viewModel.selectColor)
-    }
-
-    var iconSection: some View {
-        AccountIconPickerView(
-            selectedIcon: $viewModel.selectedIcon,
-            color: Color(named: viewModel.selectedColor),
-            onSelect: viewModel.selectIcon
+        )
+        .brutalAlert(
+            isPresented: $showingDiscardConfirmation,
+            title: AppString.discardAccountTitle,
+            message: AppString.discardChangesMessage,
+            confirmTitle: AppString.discardChanges,
+            onConfirm: { dismiss() }
         )
     }
 
-    var balanceSection: some View {
-        HStack(spacing: AppSpacing.medium) {
-            AppText(AppString.initialBalance, style: .bodySmall)
+    private var header: some View {
+        HStack(spacing: DS.Spacing.sm) {
+            IconButton(icon: DS.Icon.close, accessibilityLabel: AppString.accessibilityClose, action: handleClose)
+            Text(viewModel.navigationTitle)
+                .font(viewModel.isEditMode ? DS.Font.accountFormEditTitle : DS.Font.dialogTitle)
+                .foregroundStyle(DS.Color.ink)
                 .lineLimit(1)
-                .fixedSize(horizontal: true, vertical: false)
-
-            TextField("0", text: $viewModel.initialBalance)
-                .keyboardType(.decimalPad)
-                .focused($isBalanceFocused)
-                .font(.app(.body))
-                .fontDesign(.rounded)
-                .monospacedDigit()
-                .multilineTextAlignment(.trailing)
-                .onChange(of: viewModel.initialBalance) {
-                    viewModel.sanitizeBalanceInput()
+                .minimumScaleFactor(DS.AccountForm.minimumScale)
+                .frame(maxWidth: .infinity)
+                .accessibilityAddTraits(.isHeader)
+            if viewModel.isEditMode {
+                Button {
+                    dismissKeyboard()
+                    showingDeleteAlert = true
+                } label: {
+                    DS.Icon.trash
+                        .font(.system(size: DS.Size.iconM, weight: .semibold))
+                        .frame(width: DS.Size.control, height: DS.Size.control)
                 }
-
-            AppText(AppString.currencySymbol, style: .body, color: AppColor.textSecondary)
-        }
-        .padding(AppSpacing.large)
-        .frame(minHeight: AppSize.inlineTile)
-        .card(cornerRadius: AppRadius.card, fillColor: AppColor.fieldFill)
-        .contentShape(Rectangle())
-        .onTapGesture {
-            isBalanceFocused = true
-        }
-    }
-
-    var defaultSection: some View {
-        Toggle(isOn: $viewModel.isDefault) {
-            VStack(alignment: .leading, spacing: AppSpacing.xxSmall) {
-                AppText(AppString.defaultAccount, style: .bodySmall)
-
-                AppText(AppString.defaultAccountHint, style: .caption, color: AppColor.textSecondary)
+                .buttonStyle(PressIntoShadowStyle(variant: .danger))
+                .frame(width: DS.Size.control, height: DS.Size.control)
+                .accessibilityLabel(AppString.deleteAccount)
+            } else {
+                Color.clear.frame(width: DS.Size.control, height: DS.Size.control).accessibilityHidden(true)
             }
         }
-        .tint(AppColor.accent)
-        .padding(AppSpacing.large)
-        .card(cornerRadius: AppRadius.card, fillColor: AppColor.fieldFill)
     }
 
-    var deleteSection: some View {
-        Button {
-            dismissKeyboard()
-            showingDeleteAlert = true
-        } label: {
-            HStack(spacing: AppSpacing.small) {
-                AppImage.trash
-                    .font(.system(size: AppSize.glyphLarge, weight: .semibold))
+    private var form: some View {
+        VStack(spacing: DS.AccountForm.spacing) {
+            AccountPreviewCard(
+                name: viewModel.trimmedName,
+                amount: viewModel.previewBalance,
+                icon: viewModel.selectedIcon,
+                color: DS.AccountColor(name: viewModel.selectedColor)
+            )
+            BrutalTextField(AppString.accountFormName, text: $viewModel.name, placeholder: AppString.accountNamePlaceholder,
+                            onFocusChange: { updateFocus(.name, isFocused: $0) })
+                .id(Field.name)
+                .textInputAutocapitalization(.words)
+                .autocorrectionDisabled()
+                .submitLabel(.done)
+                .onSubmit(dismissKeyboard)
 
-                AppText(AppString.deleteAccount, style: .bodySmall, color: AppColor.expense)
+            BrutalTextField(AppString.initialBalance, text: $viewModel.balanceInput, placeholder: "0", kind: .amount,
+                            onFocusChange: { updateFocus(.balance, isFocused: $0) })
+                .id(Field.balance)
+
+            SegmentedSwitch(selection: $viewModel.selectedKind, options: AccountKind.allCases.map {
+                .init(value: $0, title: $0.title)
+            }, fill: .ink)
+            .accessibilityLabel(AppString.accountKind)
+
+            VStack(alignment: .leading, spacing: DS.Spacing.sm) {
+                Text(AppString.color).dsLabel().padding(.horizontal, DS.Spacing.xs)
+                AccountColorGrid(selection: $viewModel.selectedColor)
             }
-            .foregroundStyle(AppColor.expense)
-            .frame(maxWidth: .infinity)
-            .padding(AppSpacing.large)
-            .card(cornerRadius: AppRadius.card, fillColor: AppColor.expense.opacity(0.1))
+
+            Card(padding: EdgeInsets(top: DS.Spacing.sm, leading: DS.Spacing.md, bottom: DS.Spacing.sm, trailing: DS.AccountList.trailingPadding)) {
+                BrutalToggle(AppString.defaultAccount, subtitle: AppString.defaultAccountHint, isOn: $viewModel.isDefault)
+                    .frame(minHeight: DS.Size.control)
+            }
         }
-        .buttonStyle(PressableScaleButtonStyle())
     }
 
-    var saveBar: some View {
-        PrimaryActionButton(
-            title: viewModel.saveButtonTitle,
-            isEnabled: viewModel.isValid,
-            action: handleSave
-        )
-        .padding(.horizontal, AppSpacing.large)
-        .padding(.top, AppSpacing.medium)
-        .padding(.bottom, AppSpacing.large)
-        .background(
-            AppColor.background
-                .ignoresSafeArea(edges: .bottom)
-        )
+    private var saveBar: some View {
+        PrimaryButton(title: viewModel.saveButtonTitle, icon: DS.Icon.checkmark, action: handleSave)
+            .disabled(!viewModel.isValid)
+            .accessibilityIdentifier(AccessibilityID.accountFormSave)
+            .padding(.horizontal, DS.Spacing.xl)
+            .padding(.top, DS.Spacing.md)
+            .padding(.bottom, DS.Spacing.sm)
+            .background(DS.Color.bg)
     }
-}
 
-// MARK: - Actions
-private extension AccountFormView {
+    private func updateFocus(_ field: Field, isFocused: Bool) {
+        if isFocused { focusedField = field }
+        else if focusedField == field { focusedField = nil }
+    }
 
-    func handleSave() {
-        UIImpactFeedbackGenerator(style: .medium).impactOccurred()
+    private func handleSave() {
         dismissKeyboard()
-
-        if viewModel.save(using: repositories.accounts) {
-            dismiss()
-        }
+        if viewModel.save(using: repositories.accounts) { dismiss() }
     }
 
-    func handleClose() {
+    private func handleClose() {
         dismissKeyboard()
-
-        guard viewModel.hasUnsavedChanges else {
-            dismiss()
-            return
-        }
-
-        showingDiscardConfirmation = true
+        if viewModel.hasUnsavedChanges { showingDiscardConfirmation = true } else { dismiss() }
     }
 
-    func dismissKeyboard() {
-        isBalanceFocused = false
-
-        UIApplication.shared.sendAction(
-            #selector(UIResponder.resignFirstResponder),
-            to: nil,
-            from: nil,
-            for: nil
-        )
+    private func dismissKeyboard() {
+        UIApplication.shared.sendAction(#selector(UIResponder.resignFirstResponder), to: nil, from: nil, for: nil)
     }
 }
 
-#Preview("Новый счет") {
-    AccountFormView()
-        .fixture(FixtureEnvironment(.empty))
+#if DEBUG
+private struct AccountFormPreview: View {
+    var editing = false
+    var showsError = false
+
+    var body: some View {
+        let environment = FixtureEnvironment(.empty)
+        let account = Account(name: "Наличные", icon: AccountKind.cash.icon, color: "green", initialBalance: 32_000)
+        if editing { environment.context.insert(account) }
+        let viewModel = AccountFormViewModel(account: editing ? account : nil)
+        viewModel.showingSaveError = showsError
+        return AccountFormView(viewModel: viewModel).fixture(environment)
+    }
 }
+#Preview("Новый · светлая") { AccountFormPreview() }
+#Preview("Новый · темная") { AccountFormPreview().preferredColorScheme(.dark) }
+#Preview("Редактирование · светлая") { AccountFormPreview(editing: true) }
+#Preview("Редактирование · темная") { AccountFormPreview(editing: true).preferredColorScheme(.dark) }
+#Preview("Ошибка · светлая") { AccountFormPreview(showsError: true) }
+#Preview("Ошибка · темная") { AccountFormPreview(showsError: true).preferredColorScheme(.dark) }
+#endif

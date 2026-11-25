@@ -18,6 +18,8 @@ final class Account {
     var initialBalance: Decimal
     var createdAt: Date
     var isDefault: Bool
+    /// Пользовательский порядок в списках счетов; дата создания разрешает совпадения
+    var sortOrder: Int = 0
     
     @Relationship(deleteRule: .cascade, inverse: \Transaction.account)
     var transactions: [Transaction] = []

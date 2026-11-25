@@ -52,7 +52,7 @@ extension View {
         }
     }
 
-    fileprivate func brutalSheetPresentation(detents: Set<PresentationDetent>) -> some View {
+    func brutalSheetPresentation(detents: Set<PresentationDetent>) -> some View {
         presentationDetents(detents)
             .presentationBackground(DS.Color.bg)
             .presentationCornerRadius(DS.Radius.sheet)
@@ -135,6 +135,7 @@ struct SheetGrabber: View {
 
     /// Отступ листа сверху до граббера
     static let topPadding = Metrics.topPadding
+    static let height = Metrics.grabberHeight + DS.Spacing.md
 
     var body: some View {
         Capsule()

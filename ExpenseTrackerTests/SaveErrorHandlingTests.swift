@@ -26,6 +26,7 @@ struct SaveErrorHandlingTests {
     }
 
     private struct FailingAccountRepository: AccountRepository {
+        func reorder(_ accounts: [Account]) throws { throw SaveFailure() }
         func add(_ draft: AccountDraft) throws -> Account { throw SaveFailure() }
         func update(_ account: Account, with draft: AccountDraft) throws { throw SaveFailure() }
         func delete(_ account: Account) throws { throw SaveFailure() }

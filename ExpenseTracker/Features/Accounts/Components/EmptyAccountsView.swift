@@ -1,52 +1,43 @@
-//
-//  EmptyAccountsView.swift
-//  ExpenseTracker
-//
-//  Created by Didar on 02.09.2026.
-//
-
 import SwiftUI
 
-/// Пустой список счетов: объясняет, зачем нужен счет, и даёт создать его прямо отсюда
 struct EmptyAccountsView: View {
-
-    // MARK: - Properties
-
     let onAddTap: () -> Void
 
-    // MARK: - Body
-
     var body: some View {
-        AppCardView {
-            VStack(spacing: AppSpacing.large) {
-                AppImage.noAccountsIcon
-                    .font(.system(size: AppSize.glyphEmptyState))
-                    .foregroundStyle(.tertiary)
-                    .symbolRenderingMode(.hierarchical)
+        Card(style: .dashed, padding: nil) {
+            VStack(spacing: .zero) {
+                Image(systemName: "wallet.bifold")
+                    .font(.system(size: DS.Size.iconAdd, weight: .semibold))
+                    .foregroundStyle(DS.Color.onAccent)
+                    .frame(width: DS.AccountList.emptyIconSize, height: DS.AccountList.emptyIconSize)
+                    .background(DS.Color.accent, in: RoundedRectangle(cornerRadius: DS.AccountList.emptyIconRadius))
+                    .brutalBorder(radius: DS.AccountList.emptyIconRadius)
+                    .accessibilityHidden(true)
 
-                VStack(spacing: AppSpacing.small) {
-                    AppText(AppString.noAccounts, style: .section)
+                Text(AppString.noAccounts)
+                    .font(DS.Font.dialogTitle)
+                    .foregroundStyle(DS.Color.ink)
+                    .padding(.top, DS.Spacing.lg)
 
-                    AppText(
-                        AppString.addAccountHint,
-                        style: .bodySmaller,
-                        color: AppColor.textSecondary,
-                        alignment: .center
-                    )
-                }
+                Text(AppString.addAccountHint)
+                    .font(DS.Font.bodySmall)
+                    .foregroundStyle(DS.Color.ink2)
+                    .multilineTextAlignment(.center)
+                    .padding(.top, DS.Spacing.sm)
 
-                PillActionButton(title: AppString.addAccount, action: onAddTap)
-                    .padding(.top, AppSpacing.small)
+                PrimaryButton(title: AppString.addAccount, icon: DS.Icon.plus, action: onAddTap)
+                    .padding(.top, DS.Spacing.lg)
             }
-            .padding(.vertical, AppSpacing.xxLarge)
+            .padding(.horizontal, DS.Spacing.lg)
+            .padding(.vertical, DS.AccountList.emptyVerticalPadding)
             .frame(maxWidth: .infinity)
         }
-        .accessibilityElement(children: .contain)
     }
 }
 
-#Preview {
-    EmptyAccountsView(onAddTap: {})
-        .padding(AppSpacing.large)
-        .background(AppColor.background)
+#Preview("Пусто · светлая") {
+    EmptyAccountsView(onAddTap: {}).padding(DS.Spacing.xl).background(DS.Color.bg)
+}
+#Preview("Пусто · темная") {
+    EmptyAccountsView(onAddTap: {}).padding(DS.Spacing.xl).background(DS.Color.bg).preferredColorScheme(.dark)
 }

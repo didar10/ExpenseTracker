@@ -50,6 +50,7 @@ extension DS {
         static let onColorFill = SwiftUI.Color(Name.onColorFill)
         /// Штриховка пустого кольца статистики — `StatisticsEmpty.html`
         static let emptyHatch = SwiftUI.Color(Name.emptyHatch)
+        static let accountRed = SwiftUI.Color(Name.accountRed)
     }
 
     /// Плоские заливки плиток категорий
@@ -152,11 +153,16 @@ extension DS.Color {
         static let inkDisabled = "DS/inkDisabled"
         static let onColorFill = "DS/onColorFill"
         static let emptyHatch = "DS/emptyHatch"
+        static let accountRed = "DS/accountRed"
+        static let accountTeal = "DS/accountTeal"
+        static let accountLime = "DS/accountLime"
+        static let accountCyan = "DS/accountCyan"
+        static let accountIndigo = "DS/accountIndigo"
 
         static let all = [
             bg, surface, ink, ink2, line, accent, income, danger, onAccent,
             overStripeStrong, overStripeSoft, scrim, dangerFill, onDanger, grabber, noCategory,
-            inkDisabled, onColorFill, emptyHatch
+            inkDisabled, onColorFill, emptyHatch, accountRed, accountTeal, accountLime, accountCyan, accountIndigo
         ]
     }
 }

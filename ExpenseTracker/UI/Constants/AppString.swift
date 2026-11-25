@@ -102,11 +102,28 @@ enum AppString {
 
     // MARK: - Accounts
 
+    static let accountFormName = String(localized: "account_form_name")
+    static let accountNamePlaceholder = String(localized: "account_name_placeholder")
+    static let accountKindCard = String(localized: "account_kind_card")
+    static let accountKindCash = String(localized: "account_kind_cash")
+    static let accountKindDeposit = String(localized: "account_kind_deposit")
+    static let accountKind = String(localized: "account_kind")
+    static let accounts = String(localized: "accounts")
+    static let defaultAccountBadge = String(localized: "default_account_badge")
+    static let moveAccountUp = String(localized: "move_account_up")
+    static let moveAccountDown = String(localized: "move_account_down")
+
+    static func deleteNamedAccount(_ name: String) -> String {
+        String(format: String(localized: "delete_named_account"), name)
+    }
+
+    static func reorderAccount(_ name: String) -> String {
+        String(format: String(localized: "reorder_account"), name)
+    }
+
     static let selectAccount = String(localized: "select_account")
     static let allAccounts = String(localized: "all_accounts")
-    static let allAccountsHint = String(localized: "all_accounts_hint")
     static let noAccounts = String(localized: "no_accounts")
-    static let noAccountsHint = String(localized: "no_accounts_hint")
     static let chooseAccount = String(localized: "choose_account")
     static let accountName = String(localized: "account_name")
     static let initialBalance = String(localized: "initial_balance")

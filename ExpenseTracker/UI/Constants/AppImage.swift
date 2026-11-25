@@ -29,7 +29,6 @@ enum AppImage {
     static let designSystemCatalog = Image(systemName: "paintpalette.fill")
     #endif
     static let pencil = Image(systemName: "pencil")
-    static let starFill = Image(systemName: "star.fill")
     static let calendar = Image(systemName: "calendar")
     static let textAlign = Image(systemName: "text.alignleft")
 
@@ -56,7 +55,6 @@ enum AppImage {
 
     static let allAccounts = Image(systemName: "square.stack.3d.up.fill")
     static let creditcard = Image(systemName: "creditcard")
-    static let noAccountsIcon = Image(systemName: "creditcard.and.123")
     static let plusCircleFill = Image(systemName: "plus.circle.fill")
 
     // MARK: - Categories

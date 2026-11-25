@@ -18,6 +18,9 @@ struct SettingsRouteView: View {
 
     var body: some View {
         switch route {
+        case .accounts:
+            AccountSelectionSheet(managesAccounts: true)
+
         case .categories:
             CategoriesListView()
                 .settingsSheetPresentation()
