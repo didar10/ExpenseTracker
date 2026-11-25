@@ -285,6 +285,36 @@ enum AppString {
     static let deleteAllDataConfirm = String(localized: "delete_all_data_confirm")
     static let deleteAllDataMessage = String(localized: "delete_all_data_message")
 
+    // MARK: - Calculator
+
+    static let calculatorDivisionByZero = String(localized: "calculator_division_by_zero")
+    static let calculatorNonPositive = String(localized: "calculator_non_positive")
+    static let calculatorKeyPlus = String(localized: "calculator_key_plus")
+    static let calculatorKeyMinus = String(localized: "calculator_key_minus")
+    static let calculatorKeyMultiply = String(localized: "calculator_key_multiply")
+    static let calculatorKeyDivide = String(localized: "calculator_key_divide")
+    static let calculatorKeyComma = String(localized: "calculator_key_comma")
+    static let calculatorKeyBackspace = String(localized: "calculator_key_backspace")
+
+    // MARK: - Category Carousel
+
+    static let carouselSearchHint = String(localized: "carousel_search_hint")
+    static let carouselAllCategoriesHint = String(localized: "carousel_all_categories_hint")
+
+    // MARK: - Tabs
+
+    static let tabHome = String(localized: "tab_home")
+    static let tabStatistics = String(localized: "tab_statistics")
+    static let addTransactionLabel = String(localized: "add_transaction_label")
+
+    // MARK: - Design System
+
+    static let dsPreviousPeriod = String(localized: "ds_previous_period")
+    static let dsNextPeriod = String(localized: "ds_next_period")
+    static let dsChoosePeriodHint = String(localized: "ds_choose_period_hint")
+    static let dsChooseAccountHint = String(localized: "ds_choose_account_hint")
+    static let dsCurrencySign = String(localized: "ds_currency_sign")
+
     // MARK: - Debug
 
     #if DEBUG

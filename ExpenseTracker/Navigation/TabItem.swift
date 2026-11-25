@@ -5,29 +5,35 @@
 //  Created by Didar on 21.01.2026.
 //
 
-import Foundation
+import SwiftUI
 
-enum TabItem: Hashable {
+enum TabItem: Hashable, CaseIterable {
     case dashboard
     case statistics
     case plans
     case settings
-    
+
+    // MARK: - Computed Properties
+
     var title: String {
         switch self {
-        case .dashboard: return "Главная"
-        case .statistics: return "Статистика"
-        case .plans: return "Планы"
-        case .settings: return "Настройки"
+        case .dashboard: return AppString.tabHome
+        case .statistics: return AppString.tabStatistics
+        case .plans: return AppString.budgets
+        case .settings: return AppString.settings
         }
     }
-    
-    var icon: String {
+
+    var icon: Image {
         switch self {
-        case .dashboard: return "house.fill"
-        case .statistics: return "chart.pie.fill"
-        case .plans: return "calendar"
-        case .settings: return "gearshape.fill"
+        case .dashboard: return AppImage.tabHome
+        case .statistics: return AppImage.tabStatistics
+        case .plans: return AppImage.tabBudgets
+        case .settings: return AppImage.tabSettings
         }
+    }
+
+    var floatingTab: FloatingTab<TabItem> {
+        FloatingTab(value: self, icon: icon, title: title)
     }
 }

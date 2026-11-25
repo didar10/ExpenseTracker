@@ -20,6 +20,10 @@ enum AppImage {
     static let chevronDown = Image(systemName: "chevron.down")
     static let chevronUp = Image(systemName: "chevron.up")
     static let trash = Image(systemName: "trash")
+    static let tabHome = Image(systemName: "house")
+    static let tabStatistics = Image(systemName: "chart.bar")
+    static let tabBudgets = Image(systemName: "target")
+    static let tabSettings = Image(systemName: "gearshape")
     static let trashFill = Image(systemName: "trash.fill")
     #if DEBUG
     static let loadFixture = Image(systemName: "arrow.triangle.2.circlepath")

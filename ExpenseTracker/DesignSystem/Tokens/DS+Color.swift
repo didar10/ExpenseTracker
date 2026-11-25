@@ -30,6 +30,20 @@ extension DS {
         /// Текст и иконки на `accent`: #111 в обеих темах — желтый не темнеет,
         /// а `ink` в темной теме светлый
         static let onAccent = SwiftUI.Color(Name.onAccent)
+
+        /// Штриховка превышенного прогресса: одинакова в обеих темах, как в макете
+        static let overStripeStrong = SwiftUI.Color(Name.overStripeStrong)
+        static let overStripeSoft = SwiftUI.Color(Name.overStripeSoft)
+
+        /// Затемнение под алертом и меню: 35% (#111 в светлой теме, черный в темной)
+        static let scrim = SwiftUI.Color(Name.scrim)
+        /// Заливка кнопки удаления в алерте: #C4281C в обеих темах — белый текст на нем читается (5.6:1)
+        static let dangerFill = SwiftUI.Color(Name.dangerFill)
+        static let onDanger = SwiftUI.Color(Name.onDanger)
+        /// Граббер листа
+        static let grabber = SwiftUI.Color(Name.grabber)
+        /// Плитка «Без категории»
+        static let noCategory = SwiftUI.Color(Name.noCategory)
     }
 
     /// Плоские заливки плиток категорий
@@ -66,7 +80,17 @@ extension DS.Color {
         static let income = "DS/income"
         static let danger = "DS/danger"
         static let onAccent = "DS/onAccent"
+        static let overStripeStrong = "DS/overStripeStrong"
+        static let overStripeSoft = "DS/overStripeSoft"
+        static let scrim = "DS/scrim"
+        static let dangerFill = "DS/dangerFill"
+        static let onDanger = "DS/onDanger"
+        static let grabber = "DS/grabber"
+        static let noCategory = "DS/noCategory"
 
-        static let all = [bg, surface, ink, ink2, line, accent, income, danger, onAccent]
+        static let all = [
+            bg, surface, ink, ink2, line, accent, income, danger, onAccent,
+            overStripeStrong, overStripeSoft, scrim, dangerFill, onDanger, grabber, noCategory
+        ]
     }
 }
