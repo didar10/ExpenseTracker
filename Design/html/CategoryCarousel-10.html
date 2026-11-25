@@ -1,0 +1,157 @@
+<!DOCTYPE html>
+<html lang="ru"><head><meta charset="utf-8"><title>Калькулятор: деление на 0</title>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Unbounded:wght@500;700&amp;family=JetBrains+Mono:wght@500;700&amp;display=swap">
+<style>html body{margin:0;padding:0}
+
+:root{--bg:#F4F2EE;--surface:#FFFFFF;--ink:#111111;--ink2:#6B6B70;--line:rgba(17,17,17,.12);--accent:#FFD60A;
+ --sh:3px 3px 0 var(--ink);--sh2:2px 2px 0 var(--ink);--bd:1.5px solid var(--ink);
+ --disp:Unbounded,-apple-system,system-ui,sans-serif;--sans:-apple-system,BlinkMacSystemFont,"SF Pro Text",Inter,system-ui,sans-serif;--mono:"JetBrains Mono",ui-monospace,Menlo,monospace}
+*{box-sizing:border-box}
+
+
+:where(button){appearance:none;border:0;background:none;font:inherit;color:inherit;padding:0;margin:0;cursor:pointer}
+.phone{position:relative;width:390px;height:844px;border-radius:52px;overflow:hidden;background:var(--bg);box-shadow:0 0 0 10px #111,0 30px 60px rgba(0,0,0,.25);flex:none}
+@media (max-width:440px){body{padding:0}.phone{width:100vw;height:100dvh;border-radius:0;box-shadow:none}.side{display:none}}
+.sb{height:54px;display:flex;align-items:center;justify-content:space-between;padding:6px 30px 0 44px;font:600 17px/22px var(--sans)}
+.sheet{position:absolute;inset:54px 0 0;border-top:var(--bd);border-radius:22px 22px 0 0;padding:10px 20px 34px;display:flex;flex-direction:column;background:var(--bg)}
+.ic{display:block;flex:none}
+.pill{height:44px;display:inline-flex;align-items:center;gap:8px;padding:0 14px 0 8px;border:var(--bd);border-radius:12px;background:var(--surface)}
+.seg{display:flex;height:44px;border:var(--bd);border-radius:12px;background:var(--surface);overflow:hidden}
+.seg button{padding:0 14px;display:flex;gap:6px;align-items:center;font:600 15px/18px var(--sans);color:var(--ink2)}
+.seg button.on{background:var(--accent);color:#111;font-weight:700;border-right:var(--bd)}
+.amt{text-align:center;font:700 48px/56px var(--disp);letter-spacing:-.03em;margin-top:0;white-space:nowrap}
+.amt.zero{color:var(--ink2)}.amt.sm{font-size:38px}
+.expr{margin-top:8px;height:22px;text-align:center;font:500 15px/22px var(--mono);color:var(--ink2);white-space:nowrap;overflow:hidden}
+.expr i{font-style:normal;color:var(--ink);font-weight:700}
+.err{height:16px;text-align:center;font:600 12px/16px var(--sans);color:#C4281C}
+.amt span{color:var(--ink2);font-weight:500;margin-left:8px}
+.meta{display:flex;justify-content:center;gap:8px;margin-top:8px}
+.meta .pill{height:34px;box-shadow:none;white-space:nowrap}
+.note{margin-top:10px;height:44px;border:var(--bd);border-radius:14px;background:var(--surface);display:flex;align-items:center;gap:10px;padding:0 14px;color:var(--ink2);font:400 16px/20px var(--sans)}
+/* carousel */
+.car{position:relative;margin:12px -20px 0;height:118px;border-top:var(--bd);border-bottom:var(--bd);background:var(--surface)}
+.track{position:absolute;inset:0 0 34px;display:flex;align-items:center;gap:10px;overflow-x:auto;overflow-y:hidden;scroll-snap-type:x mandatory;scrollbar-width:none;padding:0 calc(50% - 26px);-webkit-overflow-scrolling:touch;overscroll-behavior-x:contain}
+.track::-webkit-scrollbar{display:none}
+.it{flex:none;width:52px;height:52px;border-radius:14px;border:var(--bd);display:grid;place-items:center;scroll-snap-align:center;color:#111;transform-origin:50% 60%;will-change:transform}
+.it.tool{border-style:dashed;background:var(--bg);color:var(--ink)}
+.it.sel{box-shadow:var(--sh2)}
+.frame{position:absolute;left:50%;top:6px;width:70px;height:70px;margin-left:-35px;border-radius:18px;border:2px solid var(--ink);pointer-events:none;box-shadow:inset 0 0 0 3px var(--accent)}
+.lab{position:absolute;left:0;right:0;bottom:8px;text-align:center;font:700 15px/20px var(--sans);height:20px;transition:opacity .12s}
+.lab small{font:500 12px/20px var(--mono);color:var(--ink2);margin-left:6px}
+.fadeL,.fadeR{position:absolute;top:0;bottom:34px;width:46px;pointer-events:none;z-index:2}
+.fadeL{left:0;background:linear-gradient(90deg,var(--surface),rgba(255,255,255,0))}
+.fadeR{right:0;background:linear-gradient(-90deg,var(--surface),rgba(255,255,255,0))}
+.keys{display:grid;grid-template-columns:repeat(4,1fr);gap:8px}
+.key.opk{background:var(--ink);color:var(--bg);font:700 26px/1 var(--mono)}
+.cta.off{background:var(--bg);color:var(--ink2);box-shadow:none;border-style:dashed;cursor:default}
+.cta .eq{font:700 20px/1 var(--mono);margin-right:2px}
+.key{height:50px;border:var(--bd);border-radius:12px;background:var(--surface);display:grid;place-items:center;font:500 24px/1 var(--mono)}
+.key.op{background:var(--bg)}
+.key:active{transform:translate(2px,2px)}
+.cta{margin-top:10px;height:56px;border-radius:12px;border:var(--bd);background:var(--accent);color:#111;box-shadow:var(--sh);display:flex;align-items:center;justify-content:center;gap:8px;font:700 17px/20px var(--sans);width:100%}
+.cta:active{transform:translate(2px,2px);box-shadow:1px 1px 0 var(--ink)}
+.hi{position:absolute;left:50%;bottom:8px;width:134px;height:5px;margin-left:-67px;border-radius:3px;background:var(--ink);z-index:20}
+/* sheet list */
+.scrim{position:absolute;inset:0;background:rgba(17,17,17,.35);opacity:0;pointer-events:none;transition:opacity .25s;z-index:10}
+.list{position:absolute;left:0;right:0;bottom:0;top:110px;background:var(--bg);border-radius:22px 22px 0 0;box-shadow:0 -10px 30px rgba(17,17,17,.12);padding:10px 20px 34px;transform:translateY(105%);transition:transform .38s cubic-bezier(.2,.9,.3,1);z-index:11;display:flex;flex-direction:column}
+.open .scrim{opacity:1;pointer-events:auto}.list.show{transform:none}
+.list.short{top:auto;max-height:80%}
+.grab{background:#C9C5BC!important}
+.grab{width:40px;height:5px;border-radius:3px;background:var(--ink);margin:0 auto 12px}
+.lh{display:flex;justify-content:space-between;align-items:center;margin-bottom:12px}
+.lh b{font:700 22px/28px var(--disp)}
+.srch{height:46px;border:var(--bd);border-radius:12px;background:var(--surface);display:flex;align-items:center;gap:10px;padding:0 12px}
+.srch input{flex:1;border:0;outline:0;background:none;font:400 16px/20px var(--sans);color:var(--ink);min-width:0}
+.glist{margin-top:12px;border:var(--bd);border-radius:14px;background:var(--surface);overflow:auto;flex:1;min-height:0}
+.r{width:100%;display:flex;align-items:center;gap:12px;padding:0 14px 0 10px;height:54px;text-align:left}
+.r+.r{border-top:1px solid var(--line)}
+.r b{flex:1;font:600 16px/20px var(--sans)}
+.r .num{font:500 12px/14px var(--mono);color:var(--ink2)}
+.r.on{background:var(--accent);color:#111}
+.r .tl{width:34px;height:34px;border-radius:9px;border:var(--bd);display:grid;place-items:center;color:#111}
+.acc{width:100%;display:flex;align-items:center;gap:12px;padding:0 14px 0 10px;height:64px;text-align:left}
+.acc+.acc{border-top:1px solid var(--line)}
+.acc .cd{width:46px;height:32px;border-radius:7px;border:var(--bd);display:grid;place-items:center;color:#fff}
+.acc .t{flex:1;display:flex;flex-direction:column}.acc .t b{font:600 16px/20px var(--sans)}.acc .t span{font:500 12px/16px var(--mono);color:var(--ink2)}
+.acc.on{background:var(--accent);color:#111}.acc.on .t span{color:#111}
+.chk{width:26px;height:26px;border-radius:50%;border:var(--bd);display:grid;place-items:center;background:var(--surface)}
+.acc.on .chk{background:var(--ink);color:var(--accent)}
+.qd{display:flex;gap:8px;margin-bottom:12px}
+.qd button{flex:1;height:44px;border:var(--bd);border-radius:12px;background:var(--surface);font:600 15px/18px var(--sans)}
+.qd button.on{background:var(--accent);box-shadow:var(--sh2);color:#111}
+.cal{border:var(--bd);border-radius:14px;background:var(--surface);padding:10px 10px 12px}
+.calh{display:flex;align-items:center;justify-content:space-between;margin-bottom:8px}
+.calh b{font:700 16px/20px var(--disp)}
+.calh button{width:36px;height:36px;border-radius:10px;display:grid;place-items:center}
+.calh button[disabled]{opacity:.3}
+.cg{display:grid;grid-template-columns:repeat(7,1fr);gap:4px;text-align:center}
+.cg .w{font:600 11px/20px var(--sans);color:var(--ink2);text-transform:uppercase}
+.cg button{height:40px;border-radius:10px;font:500 15px/1 var(--mono)}
+.cg button.today{box-shadow:inset 0 0 0 1.5px var(--ink)}
+.cg button.on{background:var(--accent);border:var(--bd);box-shadow:var(--sh2);color:#111;font-weight:700}
+.cg button[disabled]{color:#C3C0B8;cursor:default}
+.trow{display:flex;align-items:center;justify-content:space-between;margin-top:12px;height:48px;border:var(--bd);border-radius:12px;background:var(--surface);padding:0 8px 0 14px;font:600 15px/18px var(--sans)}
+.trow .tm{display:flex;align-items:center;gap:6px}.trow .tm button{width:34px;height:34px;border-radius:9px;border:var(--bd);background:var(--bg);font:700 16px/1 var(--mono)}
+.trow .tm span{font:700 16px/1 var(--mono);min-width:56px;text-align:center}
+.done{margin-top:14px}
+.empty{padding:28px;text-align:center;color:var(--ink2)}
+.side{max-width:330px;font:400 15px/22px var(--sans)}
+.side h1{font:700 24px/30px var(--disp);margin:0 0 10px}
+.side ol{padding-left:20px;margin:0}
+.side li{margin-bottom:8px}
+.side code{font:500 13px var(--mono);background:var(--surface);border:1px solid var(--line);padding:1px 5px;border-radius:5px}
+@media (prefers-reduced-motion:reduce){.list,.scrim{transition:none}}
+
+.phone{border-radius:0!important;box-shadow:none!important}
+.phone{font-family:var(--sans)}
+.seg{flex:1;margin:0 10px}
+.seg button{flex:1;justify-content:center;padding:0 6px;font-size:14px}
+</style>
+</head><body style="margin:0">
+<div class="phone phone" style="width:390px;height:844px;">
+
+ <div class="sb"><span>9:41</span><span>●●● ▮</span></div>
+ <div class="sheet">
+  <div style="display:flex;justify-content:space-between;align-items:center">
+   <button class="pill" style="padding:0;width:44px;justify-content:center" aria-label="Закрыть"><svg class="ic" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"><path d="M6 6l12 12M18 6 6 18"></path></svg></button>
+   <div class="seg" role="radiogroup" aria-label="Тип"><button class="on" role="radio" aria-checked="true">Расход</button><button role="radio" aria-checked="false">Доход</button><button role="radio" aria-checked="false">Перевод</button></div>
+   <span style="width:44px"></span>
+  </div>
+  <div class="expr num on" id="expr" aria-live="polite">100 <i>÷</i> 0</div><div class="amt num" id="amt" role="status">—<span>₸</span></div><div class="err" id="err" role="alert">На ноль делить нельзя</div>
+  <div class="meta"><button class="pill" id="accBtn" style="padding:0 12px 0 6px"><span style="width:24px;height:24px;border-radius:6px;border:var(--bd);background:#0A6B53;color:#fff;display:grid;place-items:center"><svg class="ic" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="3" y="6" width="18" height="13" rx="2.5"></rect><path d="M3 10h18M16 14.5h2"></path></svg></span><b style="font:600 14px/18px var(--sans)">Freedom</b><span class="num" style="font:500 12px/14px var(--mono);color:var(--ink2)">49&nbsp;300 ₸</span></button><button class="pill" id="dateBtn" style="padding:0 12px"><svg class="ic" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="4" y="5" width="16" height="15" rx="2.5"></rect><path d="M4 9.5h16M8.5 3v4M15.5 3v4"></path></svg><b style="font:600 14px/18px var(--sans)">Сегодня</b><span class="num" style="font:500 12px/14px var(--mono);color:var(--ink2)">23:56</span></button></div>
+  <div class="note">Заметка</div>
+  <div class="car" id="car">
+   <div class="track" id="track" role="listbox" aria-label="Категория" tabindex="0" style="scroll-snap-type: none; overflow: hidden;"><button class="it tool" data-i="0" role="option" aria-label="Все категории" style="transform: scale(1); opacity: 0.55; margin-left: -248px;" aria-selected="false"><svg class="ic" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="4" y="4" width="7" height="7" rx="1.5"></rect><rect x="13" y="4" width="7" height="7" rx="1.5"></rect><rect x="4" y="13" width="7" height="7" rx="1.5"></rect><rect x="13" y="13" width="7" height="7" rx="1.5"></rect></svg></button><button class="it tool" data-i="1" role="option" aria-label="Поиск" style="transform: scale(1); opacity: 0.64;" aria-selected="false"><svg class="ic" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="11" cy="11" r="7"></circle><path d="m20 20-3.5-3.5"></path></svg></button><button class="it" data-i="2" role="option" aria-label="Без категории" style="background: rgb(230, 227, 220); transform: scale(1); opacity: 0.76;" aria-selected="false"><svg class="ic" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="8"></circle><path d="m6.5 6.5 11 11"></path></svg></button><button class="it" data-i="3" role="option" aria-label="Продукты" style="background: rgb(142, 227, 161); transform: scale(1); opacity: 0.88;" aria-selected="false"><svg class="ic" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 10h16l-1.6 8.2a2 2 0 0 1-2 1.8H7.6a2 2 0 0 1-2-1.8z"></path><path d="m8.5 10 2.5-5.5M15.5 10 13 4.5"></path></svg></button><button class="it sel" data-i="4" role="option" aria-label="Кафе и рестораны" style="background: rgb(255, 176, 168); transform: scale(1.28); opacity: 1;" aria-selected="true"><svg class="ic" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 8h11v5a5 5 0 0 1-5 5h-1a5 5 0 0 1-5-5z"></path><path d="M16 9.5h1.5a2.5 2.5 0 0 1 0 5H16M8 3v2M12 3v2"></path></svg></button><button class="it" data-i="5" role="option" aria-label="Покупки" style="background: rgb(255, 199, 138); transform: scale(1); opacity: 0.88;" aria-selected="false"><svg class="ic" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 8h14l-1 12H6z"></path><path d="M9 8V6a3 3 0 0 1 6 0v2"></path></svg></button><button class="it" data-i="6" role="option" aria-label="Развлечения" style="background: rgb(255, 179, 207); transform: scale(1); opacity: 0.76;" aria-selected="false"><svg class="ic" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="4" y="5" width="16" height="14" rx="2"></rect><path d="M8 5v14M16 5v14M4 9.5h4M4 14.5h4M16 9.5h4M16 14.5h4"></path></svg></button><button class="it" data-i="7" role="option" aria-label="Здоровье" style="background: rgb(143, 224, 214); transform: scale(1); opacity: 0.64;" aria-selected="false"><svg class="ic" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 12h4l2-5 4 10 2-5h6"></path></svg></button><button class="it" data-i="8" role="option" aria-label="Спорт" style="background: rgb(212, 181, 255); transform: scale(1); opacity: 0.55;" aria-selected="false"><svg class="ic" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 10v4M6 8v8M18 8v8M21 10v4M6 12h12"></path></svg></button><button class="it" data-i="9" role="option" aria-label="Транспорт" style="background: rgb(156, 200, 255); transform: scale(1); opacity: 0.55;" aria-selected="false"><svg class="ic" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 16V11l2-5h10l2 5v5"></path><path d="M3 16h18v3H3zM7 19v1.5M17 19v1.5M7 13h.01M17 13h.01"></path></svg></button><button class="it" data-i="10" role="option" aria-label="Жильё" style="background: rgb(214, 240, 138); transform: scale(1); opacity: 0.55;" aria-selected="false"><svg class="ic" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 11 12 4l8 7v9H4z"></path><path d="M10 20v-6h4v6"></path></svg></button><button class="it" data-i="11" role="option" aria-label="Связь" style="background: rgb(184, 227, 255); transform: scale(1); opacity: 0.55;" aria-selected="false"><svg class="ic" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="7" y="3" width="10" height="18" rx="2"></rect><path d="M11 18h2"></path></svg></button><button class="it" data-i="12" role="option" aria-label="Образование" style="background: rgb(255, 217, 160); transform: scale(1); opacity: 0.55;" aria-selected="false"><svg class="ic" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 5a2 2 0 0 1 2-2h13v16H6a2 2 0 0 0-2 2z"></path><path d="M4 19V5"></path></svg></button><button class="it" data-i="13" role="option" aria-label="Путешествия" style="background: rgb(200, 208, 255); transform: scale(1); opacity: 0.55;" aria-selected="false"><svg class="ic" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m3 13 7-2 4-7 2 1-2 7 6 2v2l-7-1-3 5H8l1-5-6-1z"></path></svg></button><button class="it" data-i="14" role="option" aria-label="Подарки" style="background: rgb(255, 200, 230); transform: scale(1); opacity: 0.55;" aria-selected="false"><svg class="ic" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 10h16v10H4zM3 7h18v3H3zM12 7v13"></path><path d="M12 7c-1.5-3.5-5-3.5-5-1.5S10 7 12 7zM12 7c1.5-3.5 5-3.5 5-1.5S14 7 12 7z"></path></svg></button></div>
+   <div class="frame" aria-hidden="true"></div>
+   <div class="fadeL"></div><div class="fadeR"></div>
+   <div class="lab" id="lab" aria-live="polite">Кафе и рестораны<small>9 600 ₸ в ноябре</small></div>
+  </div>
+  <div style="flex:1"></div>
+  <div class="keys" id="keys"><button class="key" data-k="1" aria-label="1">1</button><button class="key" data-k="2" aria-label="2">2</button><button class="key" data-k="3" aria-label="3">3</button><button class="key opk" data-k="+" aria-label="Плюс">+</button><button class="key" data-k="4" aria-label="4">4</button><button class="key" data-k="5" aria-label="5">5</button><button class="key" data-k="6" aria-label="6">6</button><button class="key opk" data-k="−" aria-label="Минус">−</button><button class="key" data-k="7" aria-label="7">7</button><button class="key" data-k="8" aria-label="8">8</button><button class="key" data-k="9" aria-label="9">9</button><button class="key opk" data-k="×" aria-label="Умножить">×</button><button class="key op" data-k="," aria-label="Запятая">,</button><button class="key" data-k="0" aria-label="0">0</button><button class="key op" data-k="⌫" aria-label="Стереть"><svg class="ic" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M9 5h11v14H9l-6-7z"></path><path d="m12.5 9.5 5 5M17.5 9.5l-5 5"></path></svg></button><button class="key opk" data-k="÷" aria-label="Разделить">÷</button></div>
+  <button class="cta off" id="save" disabled="">Проверьте сумму</button>
+ </div>
+ <div class="scrim" id="scrim"></div>
+ <div class="list" id="list" role="dialog" aria-label="Все категории">
+  <div class="grab"></div>
+  <div class="lh"><b>Категории</b><button class="pill" style="height:34px;padding:0 12px;box-shadow:none" id="close">Готово</button></div>
+  <label class="srch"><svg class="ic" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="7"></circle><path d="m20 20-3.5-3.5"></path></svg><input id="q" placeholder="Найти категорию" autocomplete="off"></label>
+  <div class="glist" id="glist"></div>
+ </div>
+ <div class="list short" id="accSheet" role="dialog" aria-label="Счёт">
+  <div class="grab"></div>
+  <div class="lh"><b>Счёт</b><button class="pill" style="height:34px;padding:0 12px;box-shadow:none" data-close="">Готово</button></div>
+  <div class="glist" id="accList" style="flex:none"></div>
+  <button class="pill" style="margin-top:12px;height:46px;justify-content:center;box-shadow:none;border-style:dashed;background:var(--bg)">+ Новый счёт</button>
+ </div>
+ <div class="list short" id="dateSheet" role="dialog" aria-label="Дата">
+  <div class="grab"></div>
+  <div class="lh"><b>Дата</b><button class="pill" style="height:34px;padding:0 12px;box-shadow:none" data-close="">Отмена</button></div>
+  <div class="qd" id="qd"></div>
+  <div class="cal"><div class="calh"><button id="mPrev" aria-label="Предыдущий месяц">‹</button><b id="mLbl"></b><button id="mNext" aria-label="Следующий месяц">›</button></div><div class="cg" id="cg"></div></div>
+  <div class="trow"><span>Время</span><span class="tm"><button id="tMinus" aria-label="Раньше">−</button><span id="tLbl" class="num"></span><button id="tPlus" aria-label="Позже">+</button></span></div>
+  <button class="cta done" id="dateDone">Готово</button>
+ </div>
+ <div class="hi"></div>
+
+</div>
+</body></html>
