@@ -14,6 +14,13 @@ final class DashboardViewModel: ObservableObject {
     // MARK: - UI State
 
     @Published var selectedTransaction: Transaction?
+    /// «Дублировать»: шаблон для новой операции с сегодняшней датой
+    @Published var duplicatedTransaction: Transaction?
+    /// «Удалить» из меню строки: операция ждет подтверждения в алерте
+    @Published private(set) var transactionPendingDeletion: Transaction?
+    /// Алерт закрывается раньше, чем выполняется выбранное действие,
+    /// поэтому его видимость хранится отдельно от ожидающей операции
+    @Published var showingDeleteConfirmation = false
     @Published var showingAccountsView = false
     /// Тост «Отменить» после удаления или повтора операции
     @Published private(set) var undoAction: TransactionUndoAction?
@@ -185,7 +192,7 @@ final class DashboardViewModel: ObservableObject {
         }
     }
 
-    /// Удаляет сразу, без подтверждения: ошибку исправляет тост «Отменить»
+    /// Удаляет без вопросов — подтверждение уже получено в алерте; тост «Отменить» страхует от ошибки
     func deleteTransaction(_ transaction: Transaction, using repository: TransactionRepository) {
         let draft = TransactionDraft(transaction)
 
@@ -193,35 +200,42 @@ final class DashboardViewModel: ObservableObject {
             try repository.delete(transaction)
         } onSuccess: {
             UINotificationFeedbackGenerator().notificationOccurred(.warning)
-            showUndo(TransactionUndoAction(kind: .deleted(draft)))
+            showUndo(TransactionUndoAction(draft: draft))
         }
     }
 
-    /// Повторяет операцию сегодняшним днем — для регулярных трат вроде кофе или такси
-    func repeatTransaction(_ transaction: Transaction, using repository: TransactionRepository) {
-        var draft = TransactionDraft(transaction)
-        draft.date = .now
+    /// Открывает новую операцию с суммой, категорией, счетом и заметкой исходной
+    /// и сегодняшней датой — для регулярных трат вроде кофе или такси
+    func duplicateTransaction(_ transaction: Transaction) {
+        duplicatedTransaction = transaction
+    }
 
-        var copy: Transaction?
-        perform {
-            copy = try repository.add(draft)
-        } onSuccess: {
-            guard let copy else { return }
-            UINotificationFeedbackGenerator().notificationOccurred(.success)
-            showUndo(TransactionUndoAction(kind: .repeated(copy)))
-        }
+    func requestDeletion(of transaction: Transaction) {
+        transactionPendingDeletion = transaction
+        showingDeleteConfirmation = true
+    }
+
+    /// Текст алерта для операции, ожидающей удаления
+    var deletionMessage: String? {
+        transactionPendingDeletion.map(TransactionDeletionMessage.text(for:))
+    }
+
+    func confirmDeletion(using repository: TransactionRepository) {
+        guard let transaction = transactionPendingDeletion else { return }
+
+        transactionPendingDeletion = nil
+        deleteTransaction(transaction, using: repository)
+    }
+
+    func cancelDeletion() {
+        transactionPendingDeletion = nil
     }
 
     func undoLastAction(using repository: TransactionRepository) {
         guard let undoAction else { return }
 
         perform {
-            switch undoAction.kind {
-            case .deleted(let draft):
-                try repository.add(draft)
-            case .repeated(let transaction):
-                try repository.delete(transaction)
-            }
+            try repository.add(undoAction.draft)
         } onSuccess: {
             dismissUndo()
         }

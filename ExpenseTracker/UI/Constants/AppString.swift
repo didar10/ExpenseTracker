@@ -40,7 +40,6 @@ enum AppString {
     static let deleteTransaction = String(localized: "delete_transaction")
     static let repeatTransaction = String(localized: "repeat_transaction")
     static let transactionDeleted = String(localized: "transaction_deleted")
-    static let transactionRepeated = String(localized: "transaction_repeated")
     static let undo = String(localized: "undo")
     static let onAccounts = String(localized: "on_accounts")
     static let balanceAllTime = String(localized: "balance_all_time")
@@ -255,6 +254,7 @@ enum AppString {
     static let expenses = String(localized: "expenses")
     static let noData = String(localized: "no_data")
     static let noDataHint = String(localized: "no_data_hint")
+    static let byCategories = String(localized: "by_categories")
     static let incomes = String(localized: "incomes")
     static let noDataHintIncome = String(localized: "no_data_hint_income")
     static let totalForPeriod = String(localized: "total_for_period")
@@ -266,6 +266,8 @@ enum AppString {
     static let periodMonth = String(localized: "statistics_period_month")
     static let periodYear = String(localized: "statistics_period_year")
     static let periodAllTime = String(localized: "statistics_period_all_time")
+    /// Пункт меню периода на главной — с «ё», как в `MainPeriodMenu.html`
+    static let periodAllTimeMenu = String(localized: "period_all_time_menu")
     static let previousPeriod = String(localized: "statistics_previous_period")
     static let nextPeriod = String(localized: "statistics_next_period")
 

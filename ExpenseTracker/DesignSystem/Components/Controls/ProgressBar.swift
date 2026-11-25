@@ -19,11 +19,14 @@ struct ProgressBar: View {
         case regular
         /// Карточка «Можно потратить сегодня» — 12 pt
         case compact
+        /// Доля категории в списке статистики — 8 pt
+        case thin
 
         var height: CGFloat {
             switch self {
             case .regular: return Metrics.regularHeight
             case .compact: return Metrics.compactHeight
+            case .thin: return Metrics.thinHeight
             }
         }
     }
@@ -141,6 +144,8 @@ private enum Metrics {
     /// Размеры из `Design/html/Budgets.html` (.prog) и `Main.html` (.bar)
     static let regularHeight: CGFloat = 14
     static let compactHeight: CGFloat = 12
+    /// `Statistics.html` (.prog в строке категории)
+    static let thinHeight: CGFloat = 8
     static let markerWidth: CGFloat = 2
     static let markerOverhang: CGFloat = 2
     static let stripeWidth: CGFloat = 6

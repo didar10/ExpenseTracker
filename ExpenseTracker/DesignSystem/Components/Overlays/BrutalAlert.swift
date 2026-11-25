@@ -59,11 +59,16 @@ struct BrutalAlertCard: View {
             }
 
             VStack(spacing: Metrics.buttonSpacing) {
-                Button(confirmTitle, action: onConfirm)
-                    .buttonStyle(AlertButtonStyle(isDestructive: true))
+                // Удаление — главное действие алерта: красная заливка и красная тень
+                Button(action: onConfirm) {
+                    Text(confirmTitle)
+                        .font(DS.Font.buttonSmall)
+                        .frame(minHeight: DS.Size.menuRow)
+                }
+                .buttonStyle(PressIntoShadowStyle(variant: .dangerFilled))
 
                 Button(AppString.cancel, action: onCancel)
-                    .buttonStyle(AlertButtonStyle(isDestructive: false))
+                    .buttonStyle(CancelButtonStyle())
             }
             .padding(.top, DS.Spacing.lg)
         }
@@ -80,18 +85,15 @@ struct BrutalAlertCard: View {
 
 // MARK: - Button Style
 
-/// Кнопки алерта 50 pt: удаление — красная заливка, отмена — surface.
-/// Нажатие — утолщение обводки, как у остальных кнопок без тени
-private struct AlertButtonStyle: ButtonStyle {
-
-    let isDestructive: Bool
+/// «Отмена» 50 pt на surface без тени. Нажатие — утолщение обводки, как у остальных кнопок без тени
+private struct CancelButtonStyle: ButtonStyle {
 
     func makeBody(configuration: Configuration) -> some View {
         configuration.label
             .font(DS.Font.buttonSmall)
-            .foregroundStyle(isDestructive ? DS.Color.onDanger : DS.Color.ink)
+            .foregroundStyle(DS.Color.ink)
             .frame(maxWidth: .infinity, minHeight: DS.Size.menuRow)
-            .background(isDestructive ? DS.Color.dangerFill : DS.Color.surface, in: RoundedRectangle(cornerRadius: DS.Radius.control))
+            .background(DS.Color.surface, in: RoundedRectangle(cornerRadius: DS.Radius.control))
             .brutalBorder(
                 radius: DS.Radius.control,
                 lineWidth: configuration.isPressed ? DS.Stroke.pressed : DS.Stroke.regular

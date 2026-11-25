@@ -395,4 +395,51 @@ struct AddTransactionViewModelTests {
         let editing = AddTransactionViewModel(transaction: transaction, accountSelection: AccountSelectionStore())
         #expect(editing.saveButtonState == .save(AppString.saveChanges))
     }
+
+    // MARK: - Дублирование
+
+    @Test func duplicatePrefillsTemplateWithTodayDate() throws {
+        let context = try makeContext()
+        let account = Account(name: "Kaspi Gold", initialBalance: 10_000)
+        let category = ExpenseTracker.Category(name: "Еда", icon: "cup.and.saucer", colorHex: "#8EE3A1")
+        context.insert(account)
+        context.insert(category)
+        let lastWeek = Calendar.current.date(byAdding: .day, value: -7, to: .now) ?? .now
+        let original = Transaction(amount: 4_850, date: lastWeek, note: "Продукты на неделю", type: .expense, category: category, account: account)
+        context.insert(original)
+
+        let viewModel = AddTransactionViewModel(template: original, accountSelection: AccountSelectionStore())
+
+        #expect(!viewModel.isEditing)
+        #expect(viewModel.amountText == "4\u{00A0}850")
+        #expect(viewModel.selectedCategory === category)
+        #expect(viewModel.selectedAccount === account)
+        #expect(viewModel.note == "Продукты на неделю")
+        #expect(viewModel.type == .expense)
+        #expect(Calendar.current.isDateInToday(viewModel.date))
+        // Нетронутую копию можно закрыть без подтверждения
+        #expect(!viewModel.hasUnsavedChanges)
+    }
+
+    @Test func savingDuplicateCreatesNewTransactionAndKeepsOriginal() throws {
+        let context = try makeContext()
+        let account = Account(name: "Основной", initialBalance: 1_000)
+        context.insert(account)
+        let lastWeek = Calendar.current.date(byAdding: .day, value: -7, to: .now) ?? .now
+        let original = Transaction(amount: 300, date: lastWeek, note: "Такси", type: .expense, account: account)
+        context.insert(original)
+
+        let viewModel = AddTransactionViewModel(template: original, accountSelection: AccountSelectionStore())
+        #expect(viewModel.save(using: Repositories(context: context).transactions))
+
+        let saved = try transactions(in: context)
+        #expect(saved.count == 2)
+        #expect(original.date == lastWeek)
+        let copy = try #require(saved.first { $0 !== original })
+        #expect(copy.amount == 300)
+        #expect(copy.note == "Такси")
+        #expect(copy.account === account)
+        #expect(Calendar.current.isDateInToday(copy.date))
+        #expect(account.currentBalance == 400)
+    }
 }

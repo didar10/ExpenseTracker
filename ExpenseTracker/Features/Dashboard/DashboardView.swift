@@ -103,6 +103,17 @@ struct DashboardView: View {
                 viewModel.deleteTransaction(transaction, using: repositories.transactions)
             }
         }
+        .sheet(item: $viewModel.duplicatedTransaction) { template in
+            AddTransactionView(template: template, accountSelection: accountSelection)
+        }
+        .brutalAlert(
+            isPresented: $viewModel.showingDeleteConfirmation,
+            title: AppString.deleteTransactionTitle,
+            message: viewModel.deletionMessage,
+            confirmTitle: AppString.delete,
+            onConfirm: { viewModel.confirmDeletion(using: repositories.transactions) },
+            onCancel: viewModel.cancelDeletion
+        )
         .sheet(isPresented: $viewModel.showingAccountsView) {
             AccountSelectionSheet(selectedAccount: viewModel.selectedAccount) { account in
                 viewModel.selectAccount(account)
@@ -176,8 +187,8 @@ private extension DashboardView {
                     TransactionDaySection(
                         section: section,
                         onTap: { viewModel.handleTransactionTap($0) },
-                        onDuplicate: { viewModel.repeatTransaction($0, using: repositories.transactions) },
-                        onDelete: { viewModel.deleteTransaction($0, using: repositories.transactions) }
+                        onDuplicate: { viewModel.duplicateTransaction($0) },
+                        onDelete: { viewModel.requestDeletion(of: $0) }
                     )
                 }
             }
@@ -194,7 +205,7 @@ private extension DashboardView {
     }
 
     func periodControl(allowsArrows: Bool) -> some View {
-        DashboardPeriodControl(
+        PeriodMenuSelector(
             filter: viewModel.periodFilter,
             allowsArrows: allowsArrows,
             onSelect: viewModel.changePeriod,

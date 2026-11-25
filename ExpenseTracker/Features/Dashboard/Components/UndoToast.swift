@@ -59,7 +59,7 @@ struct UndoToast: View {
 }
 
 #Preview("Темная") {
-    UndoToast(message: AppString.transactionRepeated) {}
+    UndoToast(message: AppString.transactionDeleted) {}
         .padding(DS.Spacing.xl)
         .background(DS.Color.bg)
         .preferredColorScheme(.dark)

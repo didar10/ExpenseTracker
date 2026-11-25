@@ -66,11 +66,11 @@ private struct DashboardCompactHeaderPreview: View {
     var body: some View {
         VStack(spacing: DS.Spacing.xl) {
             DashboardCompactHeader(title: AppString.allAccounts + AppString.titleSeparator + "Ноябрь", balance: 975_050) {
-                DashboardPeriodControl(filter: .preview(.month), allowsArrows: false, onSelect: { _ in }, onPrevious: {}, onNext: {})
+                PeriodMenuSelector(filter: .preview(.month), allowsArrows: false, onSelect: { _ in }, onPrevious: {}, onNext: {})
             }
 
             DashboardCompactHeader(title: "Kaspi Gold" + AppString.titleSeparator + "Все время", balance: 0) {
-                DashboardPeriodControl(filter: .preview(.allTime), allowsArrows: false, onSelect: { _ in }, onPrevious: {}, onNext: {})
+                PeriodMenuSelector(filter: .preview(.allTime), allowsArrows: false, onSelect: { _ in }, onPrevious: {}, onNext: {})
             }
 
             Spacer()

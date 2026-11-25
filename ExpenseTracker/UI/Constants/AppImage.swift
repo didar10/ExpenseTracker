@@ -36,7 +36,6 @@ enum AppImage {
 
     // MARK: - Dashboard
 
-    static let emptyState = Image(systemName: "tray")
     static let noteBubble = Image(systemName: "text.bubble")
     static let incomeArrow = Image(systemName: "arrow.down.circle.fill")
     static let repeatAction = Image(systemName: "arrow.clockwise")

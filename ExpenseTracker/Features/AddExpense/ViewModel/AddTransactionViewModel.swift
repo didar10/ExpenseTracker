@@ -83,7 +83,15 @@ final class AddTransactionViewModel: ObservableObject {
 
     // MARK: - Init
 
-    init(transaction: Transaction? = nil, accountSelection: AccountSelectionStore) {
+    /// - Parameters:
+    ///   - transaction: операция для редактирования
+    ///   - template: «Дублировать» — новая операция с суммой, категорией, счетом и заметкой
+    ///     шаблона и сегодняшней датой. Игнорируется при редактировании
+    init(
+        transaction: Transaction? = nil,
+        template: Transaction? = nil,
+        accountSelection: AccountSelectionStore
+    ) {
         self.editingTransaction = transaction
         self.accountSelection = accountSelection
 
@@ -92,6 +100,10 @@ final class AddTransactionViewModel: ObservableObject {
         guard let transaction else {
             // Новая операция создается на счете, выбранном на других экранах
             selectedAccount = accountSelection.selectedAccount
+
+            if let template {
+                applyTemplate(template)
+            }
             return
         }
 
@@ -180,6 +192,19 @@ final class AddTransactionViewModel: ObservableObject {
     }
 
     // MARK: - Actions
+
+    /// Копия операции на сегодня. Архивный счет не подставляется — на нем нельзя сохранить
+    private func applyTemplate(_ template: Transaction) {
+        calculator = CalculatorEngine(amount: template.amount)
+        type = template.type
+        selectedCategory = template.category
+        note = template.note ?? ""
+        date = .now
+
+        if let account = template.account, account.isAvailable {
+            selectedAccount = account
+        }
+    }
 
     func input(_ key: CalculatorKey) {
         calculator.input(key)

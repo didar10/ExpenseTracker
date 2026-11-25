@@ -20,6 +20,8 @@ struct PressIntoShadowStyle: ButtonStyle {
         case primary
         /// Кнопка удаления: красные текст, обводка и тень
         case danger
+        /// Подтверждение удаления в алерте: красная заливка, белый текст, красная тень
+        case dangerFilled
     }
 
     // MARK: - Properties
@@ -68,6 +70,7 @@ struct PressIntoShadowBody<Label: View>: View {
         switch variant {
         case .primary: return DS.Color.accent
         case .danger: return DS.Color.surface
+        case .dangerFilled: return DS.Color.dangerFill
         }
     }
 
@@ -77,13 +80,21 @@ struct PressIntoShadowBody<Label: View>: View {
         switch variant {
         case .primary: return DS.Color.onAccent
         case .danger: return DS.Color.danger
+        case .dangerFilled: return DS.Color.onDanger
         }
     }
 
-    private var tint: Color {
+    private var borderColor: Color {
+        switch variant {
+        case .primary, .dangerFilled: return DS.Color.ink
+        case .danger: return DS.Color.danger
+        }
+    }
+
+    private var shadowColor: Color {
         switch variant {
         case .primary: return DS.Color.ink
-        case .danger: return DS.Color.danger
+        case .danger, .dangerFilled: return DS.Color.danger
         }
     }
 
@@ -118,7 +129,7 @@ private extension PressIntoShadowBody {
         let shape = RoundedRectangle(cornerRadius: radius)
 
         if isEnabled {
-            shape.strokeBorder(tint, lineWidth: DS.Stroke.regular)
+            shape.strokeBorder(borderColor, lineWidth: DS.Stroke.regular)
         } else {
             shape.strokeBorder(DS.Color.ink2, style: StrokeStyle(lineWidth: DS.Stroke.regular, dash: DS.Stroke.dash))
         }
@@ -129,7 +140,7 @@ private extension PressIntoShadowBody {
     var shadowShape: some View {
         if isEnabled {
             RoundedRectangle(cornerRadius: radius)
-                .fill(tint)
+                .fill(shadowColor)
                 .offset(x: shadow.x, y: shadow.y)
         }
     }

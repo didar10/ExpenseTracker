@@ -43,6 +43,8 @@ struct DesignSystemColorTests {
         Spec(asset: DS.Color.Name.noCategory, light: "E6E3DC", dark: "3A3A3C"),
         Spec(asset: DS.Color.Name.inkDisabled, light: "C3C0B8", dark: "4A4A4E"),
         Spec(asset: DS.Color.Name.onColorFill, light: "FFFFFF", dark: "FFFFFF"),
+        // Темного варианта в макетах нет: подобран на шаг светлее bg
+        Spec(asset: DS.Color.Name.emptyHatch, light: "E6E3DC", dark: "2A2A2C"),
         Spec(asset: DS.CategoryColor.green.assetName, light: "8EE3A1", dark: "2E7D46"),
         Spec(asset: DS.CategoryColor.blue.assetName, light: "9CC8FF", dark: "2F5E9E"),
         Spec(asset: DS.CategoryColor.purple.assetName, light: "D4B5FF", dark: "6544A8"),

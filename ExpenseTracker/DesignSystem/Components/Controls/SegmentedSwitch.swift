@@ -16,6 +16,8 @@ struct SegmentedSwitch<Value: Hashable>: View {
     struct Option {
         let value: Value
         let title: String
+        /// Иконка перед названием: ↗ Расходы / ↙ Доходы в статистике
+        var icon: Image?
     }
 
     // MARK: - Properties
@@ -58,14 +60,22 @@ private extension SegmentedSwitch {
         return Button {
             selection = option.value
         } label: {
-            Text(option.title)
-                .font(DS.Font.controlBold)
-                .foregroundStyle(isSelected ? DS.Color.onAccent : DS.Color.ink2)
-                .lineLimit(1)
-                .minimumScaleFactor(Constants.minimumScale)
-                .padding(.horizontal, DS.Spacing.sm)
-                .frame(maxWidth: .infinity, maxHeight: .infinity)
-                .background(isSelected ? DS.Color.accent : .clear)
+            HStack(spacing: Constants.iconSpacing) {
+                if let icon = option.icon {
+                    icon
+                        .font(.system(size: DS.Size.iconXS, weight: .bold))
+                        .accessibilityHidden(true)
+                }
+
+                Text(option.title)
+                    .font(DS.Font.controlBold)
+                    .lineLimit(1)
+                    .minimumScaleFactor(Constants.minimumScale)
+            }
+            .foregroundStyle(isSelected ? DS.Color.onAccent : DS.Color.ink2)
+            .padding(.horizontal, DS.Spacing.sm)
+            .frame(maxWidth: .infinity, maxHeight: .infinity)
+            .background(isSelected ? DS.Color.accent : .clear)
         }
         .buttonStyle(.outlineClickSegment)
         .accessibilityAddTraits(isSelected ? .isSelected : [])
@@ -76,6 +86,8 @@ private extension SegmentedSwitch {
 
 private enum Constants {
     static let minimumScale: CGFloat = 0.8
+    /// Иконка и название — `Statistics.html` (gap 6)
+    static let iconSpacing: CGFloat = 6
 }
 
 // MARK: - Previews
@@ -92,6 +104,12 @@ private struct SegmentedSwitchGallery: View {
                 SegmentedSwitch(selection: $type, options: [
                     .init(value: "expense", title: "Расходы"),
                     .init(value: "income", title: "Доходы")
+                ])
+            }
+            DSPreviewCase("С иконками · статистика") {
+                SegmentedSwitch(selection: $type, options: [
+                    .init(value: "expense", title: "Расходы", icon: Image(systemName: "arrow.up.right")),
+                    .init(value: "income", title: "Доходы", icon: Image(systemName: "arrow.down.left"))
                 ])
             }
             DSPreviewCase("Три сегмента · выбран средний") {

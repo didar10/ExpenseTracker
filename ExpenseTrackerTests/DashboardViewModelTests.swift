@@ -156,7 +156,7 @@ struct DashboardViewModelTests {
         #expect(viewModel.periodFilter.offset == 0)
     }
 
-    // MARK: - Удаление и повтор с отменой
+    // MARK: - Удаление с отменой и дублирование
 
     private func fetchTransactions(_ context: ModelContext) throws -> [Transaction] {
         try context.fetch(FetchDescriptor<Transaction>())
@@ -196,24 +196,52 @@ struct DashboardViewModelTests {
         #expect(viewModel.undoAction == nil)
     }
 
-    @Test func repeatCreatesTodayCopyAndUndoRemovesIt() throws {
+    @Test func duplicateOpensFormWithTemplateWithoutSaving() throws {
         let context = try makeContext()
-        let account = Account(name: "Основной", initialBalance: 0)
-        context.insert(account)
-        let transaction = Transaction(amount: 300, date: date(daysAgo: 5), type: .expense, account: account)
+        let transaction = Transaction(amount: 300, date: date(daysAgo: 5), type: .expense)
         context.insert(transaction)
 
         let viewModel = makeViewModel()
-        viewModel.repeatTransaction(transaction, using: Repositories(context: context).transactions)
+        viewModel.duplicateTransaction(transaction)
 
-        let afterRepeat = try fetchTransactions(context)
-        #expect(afterRepeat.count == 2)
-        #expect(afterRepeat.contains { Calendar.current.isDateInToday($0.date) && $0.amount == 300 })
+        #expect(viewModel.duplicatedTransaction === transaction)
+        #expect(try fetchTransactions(context).count == 1)
+    }
 
-        viewModel.undoLastAction(using: Repositories(context: context).transactions)
+    // MARK: - Удаление с подтверждением
 
-        let afterUndo = try fetchTransactions(context)
-        #expect(afterUndo.count == 1)
-        #expect(afterUndo.first === transaction)
+    @Test func deletionWaitsForConfirmation() throws {
+        let context = try makeContext()
+        let transaction = Transaction(amount: 4_850, date: .now, note: "Продукты на неделю", type: .expense)
+        context.insert(transaction)
+
+        let viewModel = makeViewModel()
+        viewModel.requestDeletion(of: transaction)
+
+        #expect(viewModel.showingDeleteConfirmation)
+        #expect(viewModel.deletionMessage == AppString.deleteTransactionMessage(title: "Продукты на неделю", amount: "−4\u{00A0}850\u{00A0}₸"))
+        #expect(try fetchTransactions(context).count == 1)
+
+        // Алерт закрывается до выполнения действия — удаление не должно от этого зависеть
+        viewModel.showingDeleteConfirmation = false
+        viewModel.confirmDeletion(using: Repositories(context: context).transactions)
+
+        #expect(try fetchTransactions(context).isEmpty)
+        #expect(viewModel.transactionPendingDeletion == nil)
+        #expect(viewModel.undoAction != nil)
+    }
+
+    @Test func cancelledDeletionKeepsTransaction() throws {
+        let context = try makeContext()
+        let transaction = Transaction(amount: 500, date: .now, type: .expense)
+        context.insert(transaction)
+
+        let viewModel = makeViewModel()
+        viewModel.requestDeletion(of: transaction)
+        viewModel.cancelDeletion()
+        viewModel.confirmDeletion(using: Repositories(context: context).transactions)
+
+        #expect(try fetchTransactions(context).count == 1)
+        #expect(viewModel.undoAction == nil)
     }
 }

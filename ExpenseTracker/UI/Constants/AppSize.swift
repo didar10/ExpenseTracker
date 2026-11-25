@@ -27,7 +27,6 @@ enum AppSize {
     static let glyphSmall: CGFloat = 12
     static let glyphMedium: CGFloat = 14
     static let glyphLarge: CGFloat = 16
-    static let glyphXLarge: CGFloat = 20
     static let glyphXXLarge: CGFloat = 24
     static let glyphBig: CGFloat = 26
     static let glyphEmptyState: CGFloat = 48
@@ -80,16 +79,4 @@ enum AppSize {
     static let amountDisplay: CGFloat = 52
     /// Символ валюты рядом с вводимой суммой
     static let amountSymbol: CGFloat = 26
-
-    // MARK: - Charts
-
-    static let chartHeight: CGFloat = 300
-    /// Доля внутреннего радиуса «бублика» от внешнего
-    static let chartInnerRadiusRatio: CGFloat = 0.6
-    /// Доля внешнего радиуса невыделенного сектора
-    static let chartOuterRadiusRatio: CGFloat = 0.92
-    /// Доля внешнего радиуса выделенного сектора
-    static let chartSelectedOuterRadiusRatio: CGFloat = 1
-    /// Ширина контента в центре «бублика»
-    static let chartCenterContentWidth: CGFloat = 150
 }

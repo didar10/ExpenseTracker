@@ -20,7 +20,6 @@
 "delete_transaction" = "Удалить транзакцию?";
 "repeat_transaction" = "Повторить";
 "transaction_deleted" = "Операция удалена";
-"transaction_repeated" = "Операция повторена сегодня";
 "undo" = "Отменить";
 "on_accounts" = "На счетах";
 "balance_all_time" = "Баланс за всё время";
@@ -178,9 +177,10 @@
 /* Statistics */
 "expenses" = "Расходы";
 "no_data" = "Нет данных";
-"no_data_hint" = "Добавьте расходы за выбранный период";
+"no_data_hint" = "Добавьте расходы за выбранный период — здесь появится структура трат";
+"by_categories" = "По категориям";
 "incomes" = "Доходы";
-"no_data_hint_income" = "Добавьте доходы за выбранный период";
+"no_data_hint_income" = "Добавьте доходы за выбранный период — здесь появится структура доходов";
 "total_for_period" = "Всего за период";
 "total_expenses" = "Всего расходов";
 "no_transactions_for_period" = "За выбранный период нет транзакций в категории «%@»";
@@ -190,6 +190,7 @@
 "statistics_period_month" = "Месяц";
 "statistics_period_year" = "Год";
 "statistics_period_all_time" = "Все время";
+"period_all_time_menu" = "Всё время";
 "statistics_previous_period" = "Предыдущий период";
 "statistics_next_period" = "Следующий период";
 

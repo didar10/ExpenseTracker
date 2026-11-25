@@ -16,22 +16,16 @@ final class ChartBox {
     var totalAmount: Decimal = 0
 }
 
-/// Обертка, повторяющая условия экрана статистики: диаграмма скрывается при пустых данных
+/// Обертка, повторяющая условия экрана статистики: без данных пончик сменяется пустым кольцом
 struct ChartHarness: View {
     @Bindable var box: ChartBox
 
     var body: some View {
-        VStack {
-            if box.statistics.isEmpty {
-                AppText(AppString.noData, style: .caption)
-            } else {
-                CategoryPieChartView(
-                    statistics: box.statistics,
-                    totalAmount: box.totalAmount,
-                    title: AppString.expenses
-                )
-            }
-        }
+        CategoryDonutChart(
+            statistics: box.statistics,
+            total: box.totalAmount,
+            title: AppString.expenses
+        )
     }
 }
 

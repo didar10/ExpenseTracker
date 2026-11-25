@@ -45,12 +45,14 @@ struct AddTransactionView: View {
 
     init(
         transaction: Transaction? = nil,
+        template: Transaction? = nil,
         accountSelection: AccountSelectionStore,
         onDelete: ((Transaction) -> Void)? = nil
     ) {
         _viewModel = StateObject(
             wrappedValue: AddTransactionViewModel(
                 transaction: transaction,
+                template: template,
                 accountSelection: accountSelection
             )
         )
@@ -282,11 +284,7 @@ private extension AddTransactionView {
     }
 
     var deleteMessage: String? {
-        guard let transaction = viewModel.editingTransaction else { return nil }
-
-        let title = transaction.note?.nilIfEmpty ?? transaction.category?.name ?? AppString.noCategory
-        let sign = transaction.type == .income ? Constants.plus : Constants.minus
-        return AppString.deleteTransactionMessage(title: title, amount: sign + MoneyFormat.money(transaction.amount))
+        viewModel.editingTransaction.map(TransactionDeletionMessage.text(for:))
     }
 }
 
@@ -341,20 +339,6 @@ private enum Metrics {
     static let pillMinimumScale: CGFloat = 0.8
     /// Ниже этой высоты листа экран целиком не помещается в обычных размерах
     static let compactHeight: CGFloat = 700
-}
-
-// MARK: - Constants
-
-private enum Constants {
-    static let minus = "−"
-    static let plus = "+"
-}
-
-private extension String {
-
-    var nilIfEmpty: String? {
-        isEmpty ? nil : self
-    }
 }
 
 // MARK: - Previews

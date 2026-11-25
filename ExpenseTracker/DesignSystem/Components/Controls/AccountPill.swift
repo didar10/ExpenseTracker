@@ -62,12 +62,16 @@ extension AccountPill {
                 Text(title)
                     .font(DS.Font.control)
                     .lineLimit(1)
+                    // iPhone SE рядом с периодом: «Все счета» не влезает на пару пунктов
+                    .minimumScaleFactor(Metrics.minimumScale)
 
                 Text(balance)
                     .font(DS.Font.moneySmall)
                     .foregroundStyle(DS.Color.ink2)
                     .lineLimit(1)
             }
+            // На узком экране текст сжимается последним — раньше него уступает промежуток
+            .layoutPriority(1)
 
             if fillsWidth {
                 Spacer(minLength: DS.Spacing.xs)
@@ -101,6 +105,7 @@ private extension AccountPill {
         static let badge: CGFloat = 28
         static let badgeRadius: CGFloat = 8
         static let trailingPadding: CGFloat = 14
+        static let minimumScale: CGFloat = 0.85
     }
 }
 
