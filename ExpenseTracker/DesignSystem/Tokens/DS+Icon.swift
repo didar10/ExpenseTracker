@@ -25,5 +25,8 @@ extension DS {
         static let calendar = Image(systemName: "calendar")
         static let minus = Image(systemName: "minus")
         static let equal = Image(systemName: "equal")
+        /// ⇄ — перевод между счетами
+        static let transfer = Image(systemName: "arrow.left.arrow.right")
+        static let warning = Image(systemName: "exclamationmark.circle")
     }
 }

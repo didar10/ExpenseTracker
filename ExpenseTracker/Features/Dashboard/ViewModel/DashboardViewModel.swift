@@ -71,8 +71,8 @@ final class DashboardViewModel: ObservableObject {
                 periodTransactions: periodTransactions
             ),
             totalBalance: totalBalanceData(accounts: accounts, transactions: transactions).balance,
-            // Переводы появятся в ленте вместе с поддержкой их редактирования.
-            sections: TransactionSection.group(periodTransactions.filter { $0.kind != .transfer }),
+            // Переводы в ленте есть, но в итог дня не входят: `Transaction.netIncome` у них 0
+            sections: TransactionSection.group(periodTransactions),
             dailyAllowance: dailyAllowance(transactions: transactions)
         )
     }

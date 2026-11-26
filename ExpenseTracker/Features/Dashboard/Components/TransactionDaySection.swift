@@ -15,6 +15,8 @@ struct TransactionDaySection: View {
     // MARK: - Properties
 
     let section: TransactionSection
+    /// Счет фильтра ленты: переводы в нем показываются со знаком. nil — «Все счета»
+    var account: Account?
     let onTap: (Transaction) -> Void
     let onDuplicate: (Transaction) -> Void
     let onDelete: (Transaction) -> Void
@@ -34,6 +36,7 @@ struct TransactionDaySection: View {
 
                         DashboardTransactionRow(
                             transaction: transaction,
+                            account: account,
                             onTap: { onTap(transaction) },
                             onDuplicate: { onDuplicate(transaction) },
                             onDelete: { onDelete(transaction) }
@@ -76,6 +79,7 @@ private struct DashboardTransactionRow: View {
     // MARK: - Properties
 
     let transaction: Transaction
+    let account: Account?
     let onTap: () -> Void
     let onDuplicate: () -> Void
     let onDelete: () -> Void
@@ -85,13 +89,13 @@ private struct DashboardTransactionRow: View {
     // MARK: - Body
 
     var body: some View {
-        let model = TransactionRowModel(transaction)
+        let model = TransactionRowModel(transaction, account: account)
 
         TransactionRow(
             title: model.title,
             subtitle: model.subtitle,
             amount: model.amount,
-            isIncome: model.isIncome,
+            tone: model.tone,
             icon: model.icon,
             color: model.color
         )
@@ -154,16 +158,29 @@ private enum Metrics {
 private struct TransactionDaySectionPreview: View {
 
     let fixture: Fixture
+    /// Лента одного счета: переводы со знаком
+    var filtersByAccount = false
 
     var body: some View {
         let environment = FixtureEnvironment(fixture)
-        let transactions = (try? environment.context.fetch(FetchDescriptor<Transaction>(sortBy: [SortDescriptor(\.date, order: .reverse)]))) ?? []
-        let sections = TransactionSection.group(transactions).prefix(2)
+        let all = (try? environment.context.fetch(FetchDescriptor<Transaction>(sortBy: [SortDescriptor(\.date, order: .reverse)]))) ?? []
+        let account = filtersByAccount ? all.first { $0.kind == .transfer }?.fromAccount : nil
+        let transactions = account.map { account in all.filter { $0.involves(account) } } ?? all
+        // Дни с переводом — первыми, чтобы превью их показывало
+        let grouped = TransactionSection.group(transactions)
+        let hasTransfer: (TransactionSection) -> Bool = { $0.transactions.contains { $0.kind == .transfer } }
+        let sections = (grouped.filter(hasTransfer) + grouped.filter { !hasTransfer($0) }).prefix(2)
 
         ScrollView {
             VStack(spacing: .zero) {
                 ForEach(Array(sections)) { section in
-                    TransactionDaySection(section: section, onTap: { _ in }, onDuplicate: { _ in }, onDelete: { _ in })
+                    TransactionDaySection(
+                        section: section,
+                        account: account,
+                        onTap: { _ in },
+                        onDuplicate: { _ in },
+                        onDelete: { _ in }
+                    )
                 }
             }
             .padding(.horizontal, DS.Spacing.xl)
@@ -179,6 +196,15 @@ private struct TransactionDaySectionPreview: View {
 
 #Preview("Данные · темная") {
     TransactionDaySectionPreview(fixture: .sample)
+        .preferredColorScheme(.dark)
+}
+
+#Preview("Один счет: переводы со знаком · светлая") {
+    TransactionDaySectionPreview(fixture: .sample, filtersByAccount: true)
+}
+
+#Preview("Один счет: переводы со знаком · темная") {
+    TransactionDaySectionPreview(fixture: .sample, filtersByAccount: true)
         .preferredColorScheme(.dark)
 }
 #endif

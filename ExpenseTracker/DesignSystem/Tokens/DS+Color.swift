@@ -44,6 +44,8 @@ extension DS {
         static let grabber = SwiftUI.Color(Name.grabber)
         /// Плитка «Без категории»
         static let noCategory = SwiftUI.Color(Name.noCategory)
+        /// Плитка перевода в ленте — тот же нейтральный серый, что у «Без категории»
+        static let transferTile = SwiftUI.Color(Name.noCategory)
         /// Недоступный день в календаре — будущее
         static let inkDisabled = SwiftUI.Color(Name.inkDisabled)
         /// Иконка на цветной плашке счета: белая в обеих темах

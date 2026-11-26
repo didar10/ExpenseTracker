@@ -185,6 +185,7 @@ private extension DashboardView {
                 ForEach(sections) { section in
                     TransactionDaySection(
                         section: section,
+                        account: viewModel.selectedAccount,
                         onTap: { viewModel.handleTransactionTap($0) },
                         onDuplicate: { viewModel.duplicateTransaction($0) },
                         onDelete: { viewModel.transactionDeletion.requestDeletion(of: $0) }

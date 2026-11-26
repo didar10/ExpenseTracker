@@ -399,3 +399,20 @@
 "account_color_cyan" = "Небесный";
 "account_color_indigo" = "Сиреневый";
 "account_color_black" = "Чёрный";
+
+/* Transfer */
+"transfer" = "Перевод";
+"transfer_from" = "Откуда";
+"transfer_to" = "Куда";
+"transfer_choose_account" = "Выберите счёт";
+"transfer_hint" = "Перевод не попадает в расходы, доходы и бюджеты";
+"transfer_choose_source" = "Выберите счёт списания";
+"transfer_choose_target" = "Выберите счёт зачисления";
+"transfer_swap" = "Поменять счета местами";
+"transfer_debit_tag" = "Списание";
+"transfer_credit_tag" = "Зачисление";
+"transfer_amount" = "Перевести %@";
+"transfer_route" = "%@ → %@";
+"transfer_balance_change" = "сейчас %@, после перевода %@";
+"transfer_overdraft_warning" = "На счёте «%@» %@ — после перевода баланс уйдёт в минус";
+"delete_transfer_message" = "Перевод «%@» %@. Балансы счетов пересчитаются.";

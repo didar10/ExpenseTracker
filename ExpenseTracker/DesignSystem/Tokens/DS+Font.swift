@@ -55,6 +55,8 @@ extension DS {
         static let bodySmall = SwiftUI.Font.subheadline
         /// Подписи — SF 13
         static let caption = SwiftUI.Font.footnote
+        /// Предупреждение под карточкой перевода — SF Medium 13
+        static let captionMedium = SwiftUI.Font.footnote.weight(.medium)
         /// Мелкая подсказка над кнопкой — SF 12
         static let captionSmall = SwiftUI.Font.caption
         /// Подписи с акцентом: пилюля лимита, плашка темпа — SF Semibold 13
@@ -124,6 +126,8 @@ extension DS.Font {
         static let monthTitle: CGFloat = 16
         static let calendarDay: CGFloat = 15
         static let time: CGFloat = 16
+        /// Сегменты в три опции: «Расход | Доход | Перевод» — SF Bold 14
+        static let segmentCompact: CGFloat = 14
     }
 
     /// Разрядка метки: 0.06em от 12 pt

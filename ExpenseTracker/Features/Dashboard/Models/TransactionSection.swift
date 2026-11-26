@@ -18,7 +18,7 @@ struct TransactionSection: Identifiable {
 
     // MARK: - Computed Properties
 
-    /// Итог дня: доходы минус расходы — «+473 050» в заголовке дня
+    /// Итог дня: доходы минус расходы — «+473 050» в заголовке дня. Переводы не входят
     var total: Decimal {
         transactions.reduce(into: Decimal.zero) { total, transaction in
             total += transaction.netIncome

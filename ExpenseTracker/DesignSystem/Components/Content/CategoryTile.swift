@@ -50,17 +50,32 @@ struct CategoryTile: View {
     // MARK: - Properties
 
     let icon: Image
-    let color: DS.CategoryColor
+    let fill: Color
+    let foreground: Color
     var size: Size = .regular
+
+    // MARK: - Init
+
+    init(icon: Image, color: DS.CategoryColor, size: Size = .regular) {
+        self.init(icon: icon, fill: color.color, foreground: color.foreground, size: size)
+    }
+
+    /// Плитка не из палитры категорий: нейтральная плитка перевода
+    init(icon: Image, fill: Color, foreground: Color, size: Size = .regular) {
+        self.icon = icon
+        self.fill = fill
+        self.foreground = foreground
+        self.size = size
+    }
 
     // MARK: - Body
 
     var body: some View {
         icon
             .font(.system(size: size.iconSize, weight: .semibold))
-            .foregroundStyle(color.foreground)
+            .foregroundStyle(foreground)
             .frame(width: size.side, height: size.side)
-            .background(color.color, in: RoundedRectangle(cornerRadius: size.radius))
+            .background(fill, in: RoundedRectangle(cornerRadius: size.radius))
             .brutalBorder(radius: size.radius)
             .accessibilityHidden(true)
     }

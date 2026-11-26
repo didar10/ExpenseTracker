@@ -9,7 +9,8 @@ import SwiftData
 import SwiftUI
 
 /// Экран «Новая операция» и его режим редактирования: сумма калькулятором,
-/// счет и дата пилюлями, заметка, лента категорий. Лист во всю высоту, без темной обводки
+/// счет и дата пилюлями, заметка, лента категорий. В режиме «Перевод» вместо пилюли счета
+/// и ленты — карточка «Откуда / Куда». Лист во всю высоту, без темной обводки
 struct AddTransactionView: View {
 
     // MARK: - Properties
@@ -22,7 +23,7 @@ struct AddTransactionView: View {
 
     @FocusState private var isNoteFocused: Bool
 
-    @State private var showingAccountSheet = false
+    @State private var accountSheet: AccountSheet?
     @State private var showingDateSheet = false
     @State private var categorySheet: CategoryListSheetMode?
     @State private var showingDiscardAlert = false
@@ -80,6 +81,14 @@ struct AddTransactionView: View {
         viewModel.isEditing && onDelete != nil
     }
 
+    private var kindOptions: [SegmentedSwitch<TransactionKind>.Option] {
+        [
+            .init(value: .expense, title: AppString.expense),
+            .init(value: .income, title: AppString.income),
+            .init(value: .transfer, title: AppString.transfer)
+        ]
+    }
+
     // MARK: - Body
 
     var body: some View {
@@ -100,9 +109,14 @@ struct AddTransactionView: View {
             NoteField(text: $viewModel.note, isFocused: $isNoteFocused)
                 .padding(.top, Metrics.noteTop)
 
-            carousel
-                .padding(.top, DS.Spacing.md)
-                .padding(.horizontal, -DS.Spacing.xl)
+            if viewModel.isTransfer {
+                transferSection
+                    .padding(.top, DS.Spacing.md)
+            } else {
+                carousel
+                    .padding(.top, DS.Spacing.md)
+                    .padding(.horizontal, -DS.Spacing.xl)
+            }
 
             Spacer(minLength: isCompact ? .zero : DS.Spacing.sm)
 
@@ -132,18 +146,16 @@ struct AddTransactionView: View {
         .sensoryFeedback(.impact(weight: .light), trigger: viewModel.calculator)
         .sensoryFeedback(.error, trigger: viewModel.errorMessage) { _, message in message != nil }
         .sensoryFeedback(.success, trigger: viewModel.isSaved) { _, isSaved in isSaved }
-        .onChange(of: viewModel.type) {
+        .onChange(of: viewModel.kind) {
             viewModel.resetCategoryIfTypeMismatched()
         }
+        .sensoryFeedback(.warning, trigger: viewModel.isOverdrawn) { _, isOverdrawn in isOverdrawn }
         .task(id: accounts.count) {
             viewModel.applyDefaultAccountIfNeeded(from: accounts)
         }
         .onDisappear(perform: deleteIfConfirmed)
-        .brutalSheet(isPresented: $showingAccountSheet, title: AppString.accountSheetTitle) {
-            AccountPickerSheetContent(selectedAccount: viewModel.selectedAccount) { account in
-                viewModel.selectedAccount = account
-                showingAccountSheet = false
-            }
+        .brutalSheet(item: $accountSheet, title: \.title) { sheet in
+            accountPicker(sheet)
         }
         .brutalSheet(isPresented: $showingDateSheet, title: AppString.date, actionTitle: AppString.cancel, detents: [.large]) {
             DatePickerSheetContent(date: viewModel.date) { date in
@@ -190,14 +202,8 @@ private extension AddTransactionView {
         HStack(spacing: Metrics.headerSpacing) {
             IconButton(icon: DS.Icon.close, accessibilityLabel: AppString.accessibilityClose, action: handleClose)
 
-            SegmentedSwitch(
-                selection: $viewModel.type,
-                options: [
-                    .init(value: .expense, title: AppString.expense),
-                    .init(value: .income, title: AppString.income)
-                ]
-            )
-            .accessibilityLabel(AppString.transactionType)
+            SegmentedSwitch(selection: $viewModel.kind, options: kindOptions, labelSize: .compact)
+                .accessibilityLabel(AppString.transactionType)
 
             if canDelete {
                 deleteButton
@@ -229,22 +235,9 @@ private extension AddTransactionView {
         let rules = TransactionDateRules()
 
         return HStack(spacing: DS.Spacing.sm) {
-            if let account = viewModel.selectedAccount, account.isAvailable {
-                MetaPill(
-                    leading: .badge(Image(systemName: account.icon), DS.accountColor(named: account.color)),
-                    title: account.name,
-                    value: MoneyFormat.money(account.currentBalance),
-                    accessibilityHint: AppString.dsChooseAccountHint,
-                    action: openAccountSheet
-                )
-            } else {
-                MetaPill(
-                    leading: .icon(AppImage.creditcard),
-                    title: AppString.chooseAccount,
-                    value: "",
-                    accessibilityHint: AppString.dsChooseAccountHint,
-                    action: openAccountSheet
-                )
+            // В переводе счета — в карточке «Откуда / Куда», под суммой остается только дата
+            if !viewModel.isTransfer {
+                accountPill
             }
 
             MetaPill(
@@ -259,6 +252,104 @@ private extension AddTransactionView {
         }
         .lineLimit(1)
         .minimumScaleFactor(Metrics.pillMinimumScale)
+    }
+
+    @ViewBuilder
+    var accountPill: some View {
+        if let account = viewModel.availableFromAccount {
+            MetaPill(
+                leading: .badge(Image(systemName: account.icon), DS.accountColor(named: account.color)),
+                title: account.name,
+                value: MoneyFormat.money(account.currentBalance),
+                accessibilityHint: AppString.dsChooseAccountHint
+            ) {
+                openAccountSheet(.entry)
+            }
+        } else {
+            MetaPill(
+                leading: .icon(AppImage.creditcard),
+                title: AppString.chooseAccount,
+                value: "",
+                accessibilityHint: AppString.dsChooseAccountHint
+            ) {
+                openAccountSheet(.entry)
+            }
+        }
+    }
+
+    /// Карточка «Откуда / Куда» и под ней подсказка или предупреждение о минусе
+    var transferSection: some View {
+        VStack(spacing: DS.Spacing.sm) {
+            TransferAccountsCard(
+                from: transferRow(viewModel.availableFromAccount, balance: viewModel.fromBalance),
+                to: transferRow(viewModel.availableToAccount, balance: viewModel.toBalance),
+                isOverdrawn: viewModel.isOverdrawn,
+                onSelectFrom: { openAccountSheet(.transfer(.from)) },
+                onSelectTo: { openAccountSheet(.transfer(.to)) },
+                onSwap: swapAccounts
+            )
+
+            if let warning = viewModel.overdraftWarning {
+                overdraftWarning(warning)
+            } else {
+                Text(AppString.transferHint)
+                    .font(DS.Font.caption)
+                    .foregroundStyle(DS.Color.ink2)
+                    .multilineTextAlignment(.center)
+                    .frame(maxWidth: .infinity)
+            }
+        }
+        .animation(reduceMotion ? nil : DS.Motion.toggle, value: viewModel.isOverdrawn)
+    }
+
+    func overdraftWarning(_ text: String) -> some View {
+        HStack(alignment: .firstTextBaseline, spacing: DS.Spacing.sm) {
+            DS.Icon.warning
+                .font(.system(size: DS.Size.iconS, weight: .semibold))
+                .accessibilityHidden(true)
+
+            Text(text)
+                .font(DS.Font.captionMedium)
+                .frame(maxWidth: .infinity, alignment: .leading)
+        }
+        .foregroundStyle(DS.Color.danger)
+        .accessibilityElement(children: .combine)
+    }
+
+    func transferRow(
+        _ account: Account?,
+        balance: AddTransactionViewModel.TransferBalance?
+    ) -> TransferAccountsCard.Row? {
+        guard let account, let balance else { return nil }
+
+        return TransferAccountsCard.Row(
+            name: account.name,
+            icon: Image(systemName: account.icon),
+            color: DS.accountColor(named: account.color),
+            balance: MoneyFormat.money(balance.current),
+            balanceAfter: balance.after.map(MoneyFormat.money),
+            isNegativeAfter: balance.isNegativeAfter
+        )
+    }
+
+    @ViewBuilder
+    func accountPicker(_ sheet: AccountSheet) -> some View {
+        switch sheet {
+        case .entry:
+            AccountPickerSheetContent(selectedAccount: viewModel.selectedAccount) { account in
+                viewModel.selectAccount(account)
+                accountSheet = nil
+            }
+        case .transfer(let side):
+            AccountPickerSheetContent(
+                selectedAccount: side == .from ? viewModel.availableFromAccount : viewModel.availableToAccount,
+                disabledAccount: viewModel.counterpartAccount(for: side),
+                disabledTag: side == .from ? AppString.transferCreditTag : AppString.transferDebitTag
+            ) { account in
+                viewModel.selectAccount(account, for: side)
+                accountSheet = nil
+            }
+        }
     }
 
     var carousel: some View {
@@ -277,10 +368,16 @@ private extension AddTransactionView {
 
         return PrimaryButton(
             title: state.title,
-            icon: state.showsEqualsSign ? DS.Icon.equal : nil,
+            icon: saveButtonIcon(for: state),
             action: handleSave
         )
         .disabled(!state.isEnabled)
+    }
+
+    func saveButtonIcon(for state: AddTransactionViewModel.SaveButtonState) -> Image? {
+        if state.showsEqualsSign { return DS.Icon.equal }
+        if state.showsTransferSign { return DS.Icon.transfer }
+        return nil
     }
 
     var deleteMessage: String? {
@@ -310,9 +407,16 @@ private extension AddTransactionView {
         showingDiscardAlert = true
     }
 
-    func openAccountSheet() {
+    func openAccountSheet(_ sheet: AccountSheet) {
         isNoteFocused = false
-        showingAccountSheet = true
+        accountSheet = sheet
+    }
+
+    func swapAccounts() {
+        isNoteFocused = false
+        withAnimation(reduceMotion ? nil : DS.Motion.toggle) {
+            viewModel.swapTransferAccounts()
+        }
     }
 
     func openCategorySheet(_ mode: CategoryListSheetMode) {
@@ -325,6 +429,24 @@ private extension AddTransactionView {
 
         isDeletionConfirmed = false
         onDelete?(transaction)
+    }
+}
+
+// MARK: - Account Sheet
+
+/// Какой счет выбирается на листе: счет расхода/дохода или сторона перевода
+private enum AccountSheet: Identifiable, Hashable {
+    case entry
+    case transfer(AddTransactionViewModel.TransferSide)
+
+    var id: Self { self }
+
+    var title: String {
+        switch self {
+        case .entry: return AppString.accountSheetTitle
+        case .transfer(.from): return AppString.transferFrom
+        case .transfer(.to): return AppString.transferTo
+        }
     }
 }
 
@@ -347,13 +469,14 @@ private enum Metrics {
 private struct AddTransactionPreview: View {
 
     let fixture: Fixture
-    var editsFirstTransaction = false
+    /// Открыть на редактирование первую операцию этого вида
+    var editedKind: TransactionKind?
 
     var body: some View {
         let environment = FixtureEnvironment(fixture)
-        let transaction = editsFirstTransaction
-            ? (try? environment.context.fetch(FetchDescriptor<Transaction>()))?.first { $0.type == .expense }
-            : nil
+        let transaction = editedKind.flatMap { kind in
+            (try? environment.context.fetch(FetchDescriptor<Transaction>()))?.first { $0.kind == kind }
+        }
 
         Color.clear
             .sheet(isPresented: .constant(true)) {
@@ -373,11 +496,20 @@ private struct AddTransactionPreview: View {
 }
 
 #Preview("Редактирование · светлая") {
-    AddTransactionPreview(fixture: .sample, editsFirstTransaction: true)
+    AddTransactionPreview(fixture: .sample, editedKind: .expense)
 }
 
 #Preview("Редактирование · темная") {
-    AddTransactionPreview(fixture: .sample, editsFirstTransaction: true)
+    AddTransactionPreview(fixture: .sample, editedKind: .expense)
+        .preferredColorScheme(.dark)
+}
+
+#Preview("Редактирование перевода · светлая") {
+    AddTransactionPreview(fixture: .sample, editedKind: .transfer)
+}
+
+#Preview("Редактирование перевода · темная") {
+    AddTransactionPreview(fixture: .sample, editedKind: .transfer)
         .preferredColorScheme(.dark)
 }
 

@@ -174,6 +174,43 @@ enum AppString {
     static let previousMonth = String(localized: "previous_month")
     static let nextMonth = String(localized: "next_month")
 
+    // MARK: - Transfer
+
+    static let transfer = String(localized: "transfer")
+    static let transferFrom = String(localized: "transfer_from")
+    static let transferTo = String(localized: "transfer_to")
+    static let transferChooseAccount = String(localized: "transfer_choose_account")
+    static let transferHint = String(localized: "transfer_hint")
+    static let transferChooseSource = String(localized: "transfer_choose_source")
+    static let transferChooseTarget = String(localized: "transfer_choose_target")
+    static let transferSwap = String(localized: "transfer_swap")
+    static let transferDebitTag = String(localized: "transfer_debit_tag")
+    static let transferCreditTag = String(localized: "transfer_credit_tag")
+
+    /// «Перевести 50 000 ₸»: знак «⇄» рисует кнопка
+    static func transferAmount(_ amount: String) -> String {
+        String(format: String(localized: "transfer_amount"), amount)
+    }
+
+    /// «Kaspi Gold → Наличные»
+    static func transferRoute(from: String, to: String) -> String {
+        String(format: String(localized: "transfer_route"), from, to)
+    }
+
+    /// «78 300 ₸ → 28 300 ₸» для VoiceOver: «сейчас 78 300 ₸, после перевода 28 300 ₸»
+    static func transferBalanceChange(current: String, after: String) -> String {
+        String(format: String(localized: "transfer_balance_change"), current, after)
+    }
+
+    static func transferOverdraftWarning(account: String, balance: String) -> String {
+        String(format: String(localized: "transfer_overdraft_warning"), account, balance)
+    }
+
+    /// «Перевод «Kaspi Gold → Наличные» 50 000 ₸. Балансы счетов пересчитаются.»
+    static func deleteTransferMessage(title: String, amount: String) -> String {
+        String(format: String(localized: "delete_transfer_message"), title, amount)
+    }
+
     /// «= Сохранить 2 000 ₸»: знак «=» рисует кнопка
     static func saveAmount(_ amount: String) -> String {
         String(format: String(localized: "save_amount"), amount)

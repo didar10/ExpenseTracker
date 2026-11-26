@@ -8,15 +8,25 @@
 import SwiftUI
 
 /// Строка операции в списке: плитка категории, название, подпись и сумма моноширинным шрифтом.
-/// Суммы приходят отформатированными: «−3 200», «+45 000». Доход — зеленым
+/// Суммы приходят отформатированными: «−3 200», «+45 000». Доход — зеленым,
+/// перевод — серая плитка и серая сумма
 struct TransactionRow: View {
+
+    // MARK: - Types
+
+    enum Tone {
+        case expense
+        case income
+        /// Перевод между счетами: нейтральная плитка, сумма ink2. Цвет категории не используется
+        case transfer
+    }
 
     // MARK: - Properties
 
     let title: String
     var subtitle: String?
     let amount: String
-    var isIncome = false
+    var tone: Tone = .expense
     let icon: Image
     let color: DS.CategoryColor
 
@@ -26,23 +36,37 @@ struct TransactionRow: View {
         title: String,
         subtitle: String? = nil,
         amount: String,
-        isIncome: Bool = false,
+        tone: Tone = .expense,
         icon: Image,
         color: DS.CategoryColor
     ) {
         self.title = title
         self.subtitle = subtitle
         self.amount = amount
-        self.isIncome = isIncome
+        self.tone = tone
         self.icon = icon
         self.color = color
+    }
+
+    // MARK: - Computed Properties
+
+    private var amountColor: Color {
+        switch tone {
+        case .expense: return DS.Color.ink
+        case .income: return DS.Color.income
+        case .transfer: return DS.Color.ink2
+        }
     }
 
     // MARK: - Body
 
     var body: some View {
         HStack(spacing: DS.Spacing.md) {
-            CategoryTile(icon: icon, color: color)
+            if tone == .transfer {
+                CategoryTile(icon: icon, fill: DS.Color.transferTile, foreground: DS.Color.ink)
+            } else {
+                CategoryTile(icon: icon, color: color)
+            }
 
             VStack(alignment: .leading, spacing: Metrics.textSpacing) {
                 Text(title)
@@ -61,7 +85,7 @@ struct TransactionRow: View {
 
             Text(amount)
                 .font(DS.Font.money)
-                .foregroundStyle(isIncome ? DS.Color.income : DS.Color.ink)
+                .foregroundStyle(amountColor)
                 .lineLimit(1)
                 .layoutPriority(1)
         }
@@ -95,8 +119,11 @@ private struct TransactionRowGallery: View {
                         TransactionRow(title: "Еда", subtitle: "Обед в кафе · Kaspi Gold", amount: "−3 200",
                                        icon: Image(systemName: "cup.and.saucer"), color: .green)
                         ListDivider()
-                        TransactionRow(title: "Доход", subtitle: "Дизайн проекта", amount: "+45 000", isIncome: true,
+                        TransactionRow(title: "Доход", subtitle: "Дизайн проекта", amount: "+45 000", tone: .income,
                                        icon: Image(systemName: "banknote"), color: .green)
+                        ListDivider()
+                        TransactionRow(title: "Перевод", subtitle: "Kaspi Gold → Наличные", amount: "50 000", tone: .transfer,
+                                       icon: DS.Icon.transfer, color: .blue)
                     }
                 }
             }

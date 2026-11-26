@@ -43,13 +43,34 @@ struct SegmentedSwitch<Value: Hashable>: View {
         }
     }
 
+    /// Размер подписей
+    enum LabelSize {
+        /// SF Bold 15
+        case regular
+        /// SF Bold 14 — три длинные опции в узкой шапке: «Расход | Доход | Перевод»
+        case compact
+    }
+
     // MARK: - Properties
 
     @Binding var selection: Value
     let options: [Option]
     var fill: Fill = .accent
+    var labelSize: LabelSize = .regular
 
     @Environment(\.accessibilityReduceMotion) private var reduceMotion
+
+    /// Системного стиля размера 14 нет: размер масштабируется Dynamic Type вручную
+    @ScaledMetric(relativeTo: .subheadline) private var compactFontSize = DS.Font.Size.segmentCompact
+
+    // MARK: - Computed Properties
+
+    private var labelFont: Font {
+        switch labelSize {
+        case .regular: return DS.Font.controlBold
+        case .compact: return .system(size: compactFontSize, weight: .bold)
+        }
+    }
 
     // MARK: - Body
 
@@ -93,7 +114,7 @@ private extension SegmentedSwitch {
                 }
 
                 Text(option.title)
-                    .font(DS.Font.controlBold)
+                    .font(labelFont)
                     .lineLimit(1)
                     .minimumScaleFactor(Constants.minimumScale)
             }
@@ -144,6 +165,13 @@ private struct SegmentedSwitchGallery: View {
                     .init(value: "cash", title: "Наличные"),
                     .init(value: "deposit", title: "Вклад")
                 ])
+            }
+            DSPreviewCase("Три сегмента · компактные подписи") {
+                SegmentedSwitch(selection: $type, options: [
+                    .init(value: "expense", title: "Расход"),
+                    .init(value: "income", title: "Доход"),
+                    .init(value: "transfer", title: "Перевод")
+                ], labelSize: .compact)
             }
             DSPreviewCase("Disabled") {
                 SegmentedSwitch(selection: .constant("week"), options: [

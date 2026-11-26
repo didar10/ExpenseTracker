@@ -9,13 +9,31 @@ import SwiftData
 import SwiftUI
 
 /// Содержимое листа «Счёт»: список счетов с балансом, выбранный — на accent с галочкой.
-/// Под списком — «+ Новый счёт». Выбор сразу закрывает лист
+/// Под списком — «+ Новый счёт». Выбор сразу закрывает лист.
+/// В переводе счет другой стороны недоступен и помечен «Списание» / «Зачисление»
 struct AccountPickerSheetContent: View {
 
     // MARK: - Properties
 
     let selectedAccount: Account?
+    /// Счет, который нельзя выбрать, и метка вместо галочки
+    var disabledAccount: Account?
+    var disabledTag: String?
     let onSelect: (Account) -> Void
+
+    // MARK: - Init
+
+    init(
+        selectedAccount: Account?,
+        disabledAccount: Account? = nil,
+        disabledTag: String? = nil,
+        onSelect: @escaping (Account) -> Void
+    ) {
+        self.selectedAccount = selectedAccount
+        self.disabledAccount = disabledAccount
+        self.disabledTag = disabledTag
+        self.onSelect = onSelect
+    }
 
     /// Список читается своим запросом: после удаления счета родитель мог бы отдать
     /// снимок с невалидной моделью
@@ -31,7 +49,7 @@ struct AccountPickerSheetContent: View {
             VStack(spacing: DS.Spacing.md) {
                 if !accounts.isEmpty {
                     AccountPickerList(
-                        rows: accounts.filter(\.isAvailable).map(AccountPickerRow.init),
+                        rows: accounts.filter(\.isAvailable).map(makeRow),
                         selectedID: selectedAccount?.persistentModelID
                     ) { id in
                         guard let account = accounts.first(where: { $0.persistentModelID == id }) else { return }
@@ -52,6 +70,11 @@ struct AccountPickerSheetContent: View {
 // MARK: - Subviews
 
 private extension AccountPickerSheetContent {
+
+    func makeRow(_ account: Account) -> AccountPickerRow {
+        let isDisabled = account.persistentModelID == disabledAccount?.persistentModelID
+        return AccountPickerRow(account, disabledTag: isDisabled ? disabledTag ?? "" : nil)
+    }
 
     var newAccountButton: some View {
         Button {
@@ -78,22 +101,30 @@ struct AccountPickerRow: Identifiable {
     let balance: String
     let icon: Image
     let color: Color
+    /// Не nil — строка недоступна, справа метка: «Списание» на листе «Куда»
+    var disabledTag: String?
 
-    init(id: PersistentIdentifier?, title: String, balance: String, icon: Image, color: Color) {
+    var isDisabled: Bool {
+        disabledTag != nil
+    }
+
+    init(id: PersistentIdentifier?, title: String, balance: String, icon: Image, color: Color, disabledTag: String? = nil) {
         self.id = id
         self.title = title
         self.balance = balance
         self.icon = icon
         self.color = color
+        self.disabledTag = disabledTag
     }
 
-    init(_ account: Account) {
+    init(_ account: Account, disabledTag: String? = nil) {
         self.init(
             id: account.persistentModelID,
             title: account.name,
             balance: MoneyFormat.money(account.currentBalance),
             icon: Image(systemName: account.icon),
-            color: DS.accountColor(named: account.color)
+            color: DS.accountColor(named: account.color),
+            disabledTag: disabledTag
         )
     }
 }
@@ -147,7 +178,11 @@ struct AccountPickerList: View {
                 }
                 .frame(maxWidth: .infinity, alignment: .leading)
 
-                checkCircle(isSelected: isSelected)
+                if let tag = row.disabledTag {
+                    disabledTagView(tag)
+                } else {
+                    checkCircle(isSelected: isSelected)
+                }
             }
             .padding(.leading, Metrics.leadingPadding)
             .padding(.trailing, Metrics.trailingPadding)
@@ -155,11 +190,26 @@ struct AccountPickerList: View {
             .background(isSelected ? DS.Color.accent : .clear)
             .foregroundStyle(isSelected ? DS.Color.onAccent : DS.Color.ink)
             .contentShape(Rectangle())
+            .opacity(row.isDisabled ? Metrics.disabledOpacity : 1)
         }
         .buttonStyle(.outlineClickSegment)
+        .disabled(row.isDisabled)
         .accessibilityElement(children: .ignore)
-        .accessibilityLabel("\(row.title), \(row.balance)")
+        .accessibilityLabel([row.title, row.balance, row.disabledTag].compactMap { $0 }.joined(separator: ", "))
         .accessibilityAddTraits(isSelected ? .isSelected : [])
+    }
+
+    /// Метка недоступного счета: `AddTransferPickTo.html` (.acc .tag)
+    private func disabledTagView(_ tag: String) -> some View {
+        Text(tag)
+            .dsLabel(font: DS.Font.labelSmall)
+            .lineLimit(1)
+            .padding(.horizontal, Metrics.tagHorizontalPadding)
+            .padding(.vertical, Metrics.tagVerticalPadding)
+            .overlay {
+                RoundedRectangle(cornerRadius: Metrics.tagRadius)
+                    .strokeBorder(DS.Color.line, lineWidth: DS.Stroke.hairline)
+            }
     }
 
     private func checkCircle(isSelected: Bool) -> some View {
@@ -190,6 +240,11 @@ private enum Metrics {
     static let leadingPadding: CGFloat = 10
     static let trailingPadding: CGFloat = 14
     static let newAccountHeight: CGFloat = 46
+    /// `AddTransferPickTo.html` (.acc[disabled], .acc .tag)
+    static let disabledOpacity: CGFloat = 0.45
+    static let tagHorizontalPadding: CGFloat = 6
+    static let tagVerticalPadding: CGFloat = 3
+    static let tagRadius: CGFloat = 6
 }
 
 // MARK: - Previews
@@ -200,6 +255,14 @@ private enum AccountPickerPreviewData {
         AccountPickerRow(id: nil, title: "Freedom", balance: "49 300 ₸", icon: Image(systemName: "creditcard"), color: DS.CategoryColor.green.color),
         AccountPickerRow(id: nil, title: "Kaspi Gold", balance: "78 300 ₸", icon: Image(systemName: "building.columns"), color: DS.CategoryColor.blue.color),
         AccountPickerRow(id: nil, title: "Наличные", balance: "12 000 ₸", icon: Image(systemName: "banknote"), color: DS.CategoryColor.orange.color)
+    ]
+
+    /// Лист «Куда»: счет списания недоступен
+    static let transferRows = [
+        rows[0],
+        AccountPickerRow(id: nil, title: "Kaspi Gold", balance: "78 300 ₸", icon: Image(systemName: "building.columns"),
+                         color: DS.CategoryColor.blue.color, disabledTag: "Списание"),
+        rows[2]
     ]
 }
 
@@ -229,5 +292,18 @@ private enum AccountPickerPreviewData {
     AccountPickerList(rows: AccountPickerPreviewData.rows, selectedID: nil) { _ in }
         .padding(DS.Spacing.xl)
         .background(DS.Color.bg)
+}
+
+#Preview("Перевод: счет списания недоступен · светлая") {
+    AccountPickerList(rows: AccountPickerPreviewData.transferRows, selectedID: nil) { _ in }
+        .padding(DS.Spacing.xl)
+        .background(DS.Color.bg)
+}
+
+#Preview("Перевод: счет списания недоступен · темная") {
+    AccountPickerList(rows: AccountPickerPreviewData.transferRows, selectedID: nil) { _ in }
+        .padding(DS.Spacing.xl)
+        .background(DS.Color.bg)
+        .preferredColorScheme(.dark)
 }
 #endif
