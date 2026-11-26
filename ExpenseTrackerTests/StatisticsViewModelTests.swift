@@ -96,7 +96,8 @@ struct StatisticsViewModelTests {
         let (context, _, food, _) = try makeFilledContext()
         let viewModel = makeViewModel(context: context)
 
-        #expect(viewModel.transactions(for: food).count == 2)
+        let transactions = try context.fetch(FetchDescriptor<Transaction>())
+        #expect(viewModel.categoryTransactionsScope.transactions(from: transactions, categoryID: food.id).count == 2)
     }
 
     // MARK: - Идентификаторы

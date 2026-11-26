@@ -59,10 +59,10 @@ struct SaveErrorHandlingTests {
         let viewModel = makeDashboardViewModel()
         let transaction = Transaction(amount: 100, date: .now, type: .expense)
 
-        viewModel.deleteTransaction(transaction, using: FailingTransactionRepository())
+        viewModel.transactionDeletion.deleteTransaction(transaction, using: FailingTransactionRepository())
 
-        #expect(viewModel.undoAction == nil)
-        #expect(viewModel.showingSaveError)
+        #expect(viewModel.transactionDeletion.undoAction == nil)
+        #expect(viewModel.transactionDeletion.showingSaveError)
     }
 
     @Test func failedAccountSaveKeepsFormOpenAndShowsError() {

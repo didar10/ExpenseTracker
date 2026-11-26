@@ -105,7 +105,7 @@ private extension CategoryListSheetContent {
                             id: category.id,
                             title: category.title,
                             amount: category.monthlySpend > .zero ? MoneyFormat.number(category.monthlySpend) : nil,
-                            tile: tile(icon: category.icon, color: category.color)
+                            tile: tile(icon: category.icon, color: category.color, iconColor: category.iconColor)
                         )
                     }
 
@@ -158,10 +158,10 @@ private extension CategoryListSheetContent {
         .accessibilityAddTraits(isSelected ? .isSelected : [])
     }
 
-    func tile(icon: Image, color: Color) -> some View {
+    func tile(icon: Image, color: Color, iconColor: Color = DS.Color.ink) -> some View {
         icon
             .font(.system(size: DS.Size.iconS, weight: .semibold))
-            .foregroundStyle(DS.Color.ink)
+            .foregroundStyle(iconColor)
             .frame(width: Metrics.tile, height: Metrics.tile)
             .background(color, in: RoundedRectangle(cornerRadius: Metrics.tileRadius))
             .brutalBorder(radius: Metrics.tileRadius)

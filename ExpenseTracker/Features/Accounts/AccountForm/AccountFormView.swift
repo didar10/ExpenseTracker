@@ -125,7 +125,10 @@ struct AccountFormView: View {
 
             VStack(alignment: .leading, spacing: DS.Spacing.sm) {
                 Text(AppString.color).dsLabel().padding(.horizontal, DS.Spacing.xs)
-                AccountColorGrid(selection: $viewModel.selectedColor)
+                ColorSwatchGrid(selection: Binding(
+                    get: { DS.AccountColor(name: viewModel.selectedColor) },
+                    set: { viewModel.selectedColor = $0.rawValue }
+                ))
             }
 
             Card(padding: EdgeInsets(top: DS.Spacing.sm, leading: DS.Spacing.md, bottom: DS.Spacing.sm, trailing: DS.AccountList.trailingPadding)) {

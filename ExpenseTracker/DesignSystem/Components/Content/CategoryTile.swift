@@ -58,7 +58,7 @@ struct CategoryTile: View {
     var body: some View {
         icon
             .font(.system(size: size.iconSize, weight: .semibold))
-            .foregroundStyle(DS.Color.ink)
+            .foregroundStyle(color.foreground)
             .frame(width: size.side, height: size.side)
             .background(color.color, in: RoundedRectangle(cornerRadius: size.radius))
             .brutalBorder(radius: size.radius)

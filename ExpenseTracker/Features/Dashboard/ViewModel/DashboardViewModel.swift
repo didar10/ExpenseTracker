@@ -16,16 +16,9 @@ final class DashboardViewModel: ObservableObject {
     @Published var selectedTransaction: Transaction?
     /// «Дублировать»: шаблон для новой операции с сегодняшней датой
     @Published var duplicatedTransaction: Transaction?
-    /// «Удалить» из меню строки: операция ждет подтверждения в алерте
-    @Published private(set) var transactionPendingDeletion: Transaction?
-    /// Алерт закрывается раньше, чем выполняется выбранное действие,
-    /// поэтому его видимость хранится отдельно от ожидающей операции
-    @Published var showingDeleteConfirmation = false
     @Published var showingAccountsView = false
-    /// Тост «Отменить» после удаления или повтора операции
-    @Published private(set) var undoAction: TransactionUndoAction?
+    let transactionDeletion = TransactionDeletionState()
     @Published var showingMonthlyLimit = false
-    @Published var showingSaveError = false
     /// Обновляется в полночь: «сегодня» в карточке лимита должно смениться без перезапуска
     @Published private(set) var today = Date.now
 
@@ -34,7 +27,6 @@ final class DashboardViewModel: ObservableObject {
     private let accountSelection: AccountSelectionStore
     private let periodStore: DashboardPeriodStore
     let limitStore: MonthlyLimitStore
-    private var undoDismissTask: Task<Void, Never>?
 
     // MARK: - Init
 
@@ -192,92 +184,13 @@ final class DashboardViewModel: ObservableObject {
         }
     }
 
-    /// Удаляет без вопросов — подтверждение уже получено в алерте; тост «Отменить» страхует от ошибки
-    func deleteTransaction(_ transaction: Transaction, using repository: TransactionRepository) {
-        let draft = TransactionDraft(transaction)
-
-        perform {
-            try repository.delete(transaction)
-        } onSuccess: {
-            UINotificationFeedbackGenerator().notificationOccurred(.warning)
-            showUndo(TransactionUndoAction(draft: draft))
-        }
-    }
-
     /// Открывает новую операцию с суммой, категорией, счетом и заметкой исходной
     /// и сегодняшней датой — для регулярных трат вроде кофе или такси
     func duplicateTransaction(_ transaction: Transaction) {
         duplicatedTransaction = transaction
     }
 
-    func requestDeletion(of transaction: Transaction) {
-        transactionPendingDeletion = transaction
-        showingDeleteConfirmation = true
-    }
-
-    /// Текст алерта для операции, ожидающей удаления
-    var deletionMessage: String? {
-        transactionPendingDeletion.map(TransactionDeletionMessage.text(for:))
-    }
-
-    func confirmDeletion(using repository: TransactionRepository) {
-        guard let transaction = transactionPendingDeletion else { return }
-
-        transactionPendingDeletion = nil
-        deleteTransaction(transaction, using: repository)
-    }
-
-    func cancelDeletion() {
-        transactionPendingDeletion = nil
-    }
-
-    func undoLastAction(using repository: TransactionRepository) {
-        guard let undoAction else { return }
-
-        perform {
-            try repository.add(undoAction.draft)
-        } onSuccess: {
-            dismissUndo()
-        }
-    }
-
-    func dismissUndo() {
-        undoDismissTask?.cancel()
-        undoDismissTask = nil
-
-        withAnimation(Self.animation(DS.Motion.overlay)) {
-            undoAction = nil
-        }
-    }
-
     // MARK: - Private Methods
-
-    /// Новое действие заменяет тост предыдущего: отменить можно только последнее
-    private func showUndo(_ action: TransactionUndoAction) {
-        undoDismissTask?.cancel()
-
-        withAnimation(Self.animation(DS.Motion.overlay)) {
-            undoAction = action
-        }
-
-        undoDismissTask = Task { [weak self] in
-            try? await Task.sleep(for: .seconds(Constants.undoVisibleSeconds))
-            guard !Task.isCancelled else { return }
-            self?.dismissUndo()
-        }
-    }
-
-    /// Изменение списка анимируется; при ошибке тост не показывается, а экран сообщает о ней
-    private func perform(_ change: () throws -> Void, onSuccess: () -> Void) {
-        do {
-            try withAnimation(Self.animation(DS.Motion.overlay)) {
-                try change()
-            }
-            onSuccess()
-        } catch {
-            showingSaveError = true
-        }
-    }
 
     /// «Уменьшить движение» — изменения без анимации
     private static func animation(_ animation: Animation) -> Animation? {
@@ -289,15 +202,5 @@ final class DashboardViewModel: ObservableObject {
     private func periodTransactions(from transactions: [Transaction]) -> [Transaction] {
         let interval = periodFilter.interval
         return filteredTransactions(from: transactions).filter { interval.contains($0.date) }
-    }
-}
-
-// MARK: - Constants
-
-private extension DashboardViewModel {
-
-    enum Constants {
-        /// Сколько секунд тост ждет отмены
-        static let undoVisibleSeconds: Int = 4
     }
 }

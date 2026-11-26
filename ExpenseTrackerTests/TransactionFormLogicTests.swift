@@ -211,6 +211,12 @@ struct TransactionFormLogicTests {
         #expect(DS.CategoryColor(legacyHex: "#FF2D55") == .pink)
     }
 
+    @Test func categoryFormSwatchesKeepTheirColorInOtherScreens() {
+        for swatch in DS.AccountColor.allCases {
+            #expect(DS.CategoryColor(legacyHex: swatch.categoryHex).rawValue == swatch.rawValue)
+        }
+    }
+
     @Test func unknownCategoryColorFallsBackToBlue() {
         #expect(DS.CategoryColor(legacyHex: "nonsense") == .blue)
         #expect(DS.CategoryColor(legacyHex: "#808080") == .blue)

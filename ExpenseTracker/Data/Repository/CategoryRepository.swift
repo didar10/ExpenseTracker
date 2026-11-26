@@ -30,6 +30,21 @@ extension CategoryDraft {
     }
 }
 
+enum CategoryNameError: Error {
+    case empty
+    case duplicate
+
+    static func validate(_ name: String, excluding id: UUID?, in categories: [Category]) -> Self? {
+        let candidate = name.trimmingCharacters(in: .whitespacesAndNewlines)
+        guard !candidate.isEmpty else { return .empty }
+        let conflict = categories.contains { category in
+            !category.isDeleted && category.id != id &&
+            category.name.trimmingCharacters(in: .whitespacesAndNewlines).caseInsensitiveCompare(candidate) == .orderedSame
+        }
+        return conflict ? .duplicate : nil
+    }
+}
+
 /// Запись категорий
 @MainActor
 protocol CategoryRepository {
@@ -51,6 +66,7 @@ struct SwiftDataCategoryRepository: CategoryRepository {
 
     @discardableResult
     func add(_ draft: CategoryDraft) throws -> Category {
+        try validateName(draft.name)
         let category = Category(name: draft.name, icon: draft.icon, colorHex: draft.colorHex, type: draft.type)
         context.insert(category)
         try context.saveOrRollback()
@@ -58,6 +74,7 @@ struct SwiftDataCategoryRepository: CategoryRepository {
     }
 
     func update(_ category: Category, with draft: CategoryDraft) throws {
+        try validateName(draft.name, excluding: category.id)
         let previous = CategoryDraft(category)
         draft.apply(to: category)
 
@@ -68,6 +85,11 @@ struct SwiftDataCategoryRepository: CategoryRepository {
             previous.apply(to: category)
             throw error
         }
+    }
+
+    private func validateName(_ name: String, excluding id: UUID? = nil) throws {
+        let categories = try context.fetch(FetchDescriptor<Category>())
+        if let error = CategoryNameError.validate(name, excluding: id, in: categories) { throw error }
     }
 
     func delete(_ category: Category) throws {

@@ -42,7 +42,6 @@ enum AppImage {
     /// Операция дохода без категории
     static let incomeFallback = Image(systemName: "banknote")
     static let undo = Image(systemName: "arrow.uturn.backward")
-    static let dailyLimit = Image(systemName: "gauge.with.needle")
     static let dataUnavailable = Image(systemName: "externaldrive.badge.exclamationmark")
 
     // MARK: - Transactions

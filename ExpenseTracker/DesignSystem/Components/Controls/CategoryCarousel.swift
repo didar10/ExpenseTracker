@@ -20,6 +20,7 @@ struct CarouselCategory: Identifiable {
     let monthlySpend: Decimal
     /// Готовая подпись под названием: «18 400 ₸ в ноябре»; nil — без подписи
     var spendCaption: String?
+    var iconColor: Color = DS.Color.ink
 
     // MARK: - Methods
 
@@ -201,13 +202,19 @@ private extension CategoryCarousel {
 
     func tileView(_ slot: Slot) -> some View {
         let shape = RoundedRectangle(cornerRadius: metrics.tileRadius)
+        let iconColor: Color
+        if case .category(let id) = slot {
+            iconColor = categories.first(where: { $0.id == id })?.iconColor ?? DS.Color.ink
+        } else {
+            iconColor = DS.Color.ink
+        }
 
         return Button {
             tap(slot)
         } label: {
             icon(for: slot)
                 .font(.system(size: metrics.iconSize, weight: .semibold))
-                .foregroundStyle(DS.Color.ink)
+                .foregroundStyle(iconColor)
                 .frame(width: metrics.tile, height: metrics.tile)
                 .background(fill(for: slot), in: shape)
                 .overlay {

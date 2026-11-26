@@ -65,7 +65,6 @@
 "delete_account_message" = "Счёт и все его операции будут удалены. Это нельзя отменить.";
 "edit_account" = "Редактировать счёт";
 "new_account" = "Новый счёт";
-"new_account_short" = "Новый";
 "create_account" = "Создать счёт";
 "add_account" = "Добавить счёт";
 "add_account_hint" = "Создайте первый счёт, чтобы видеть баланс и историю операций";
@@ -129,20 +128,31 @@
 "create_category" = "Создать категорию";
 "create_category_hint" = "Создайте категорию";
 "categories" = "Категории";
+"category_no_monthly_amount" = "— ₸";
+"category_back" = "Назад";
+"category_move" = "Переместить категорию";
+"category_no_monthly_transactions" = "В этом месяце операций нет";
+"category_total_today" = "Всего за сегодня";
+"category_total_yesterday" = "Всего за вчера";
+"category_total_period" = "Всего за %@";
+"category_budget_amount" = "бюджет %@";
+"category_operations_one" = "%lld операция";
+"category_operations_few" = "%lld операции";
+"category_operations_many" = "%lld операций";
+"category_affected_operations" = "Операций без категории после удаления: %lld.";
 "delete_category_confirm" = "Удалить категорию?";
 "delete_category_message" = "Категория будет удалена, а её операции останутся без категории. Это действие нельзя отменить.";
 "delete_category_with_budget_message" = "Категория будет удалена вместе с её бюджетом, а операции останутся без категории. Это действие нельзя отменить.";
 "category_name" = "Название категории";
 "enter_name" = "Введите название";
 "select_icon" = "Выбрать иконку";
-"select_color" = "Выбрать цвет";
 "edit_category" = "Редактировать";
+"duplicate_category_name" = "Категория с таким названием уже есть";
 "new_category" = "Новая категория";
 "save_changes" = "Сохранить изменения";
 "add_category_hint" = "Создайте категорию, чтобы раскладывать по ней операции";
 "name" = "Название";
 "edit" = "Изменить";
-"add_new" = "Новая";
 "category_name_example" = "Например, Кофе";
 
 /* Budgets */
@@ -200,8 +210,6 @@
 "budgets_step_hints_title" = "Подсказки";
 "budgets_step_hints_subtitle" = "Предупредим на 80% и при превышении";
 "budget_row_hint" = "Удержание — меню действий";
-"all_categories_used" = "Все категории уже используются";
-"all_categories_used_hint" = "Создайте новую категорию, чтобы запланировать ещё один бюджет";
 "select_category" = "Выберите категорию";
 "search_category" = "Поиск категории";
 
@@ -212,9 +220,7 @@
 "by_categories" = "По категориям";
 "incomes" = "Доходы";
 "no_data_hint_income" = "Добавьте доходы за выбранный период — здесь появится структура доходов";
-"total_for_period" = "Всего за период";
 "total_expenses" = "Всего расходов";
-"no_transactions_for_period" = "За выбранный период нет транзакций в категории «%@»";
 "amount" = "Сумма";
 "statistics_period_day" = "День";
 "statistics_period_week" = "Неделя";
@@ -254,6 +260,8 @@
 
 /* Data */
 "data" = "Данные";
+"settings_limit_subtitle" = "«Можно потратить сегодня»";
+"settings_delete_data_subtitle" = "Счета, операции и бюджеты";
 "delete_all_data" = "Удалить все данные";
 "delete_all_data_confirm" = "Удалить все данные?";
 "delete_all_data_message" = "Все транзакции, счета, бюджеты и добавленные категории будут удалены. Категории и счет по умолчанию будут созданы заново. Это действие нельзя отменить.";

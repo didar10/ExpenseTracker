@@ -1,26 +1,18 @@
-//
-//  SettingsView.swift
-//  ExpenseTracker
-//
-//  Created by Didar on 20.12.2025.
-//
-
-import SwiftUI
 import SwiftData
+import SwiftUI
 
 struct SettingsView: View {
-
-    // MARK: - Properties
-
+    @Query private var accounts: [Account]
+    @Query private var categories: [Category]
     @Environment(\.repositories) private var repositories
 
-    /// Вызывается после удаления всех данных — нужен для возврата на главный экран
     private let onDataReset: () -> Void
 
     @State private var viewModel: SettingsViewModel
     @State private var coordinator: SettingsCoordinator
-
-    // MARK: - Init
+    #if DEBUG
+    @State private var showingDebugMenu = false
+    #endif
 
     @MainActor
     init(
@@ -33,174 +25,153 @@ struct SettingsView: View {
         self.onDataReset = onDataReset
     }
 
-    // MARK: - Body
-
     var body: some View {
-        NavigationStack {
-            VStack(spacing: .zero) {
-                ScreenHeaderView(title: AppString.settings)
+        ScrollView {
+            VStack(alignment: .leading, spacing: .zero) {
+                Text(AppString.settings)
+                    .font(DS.Font.screenTitle)
+                    .foregroundStyle(DS.Color.ink)
+                    .accessibilityAddTraits(.isHeader)
 
-                ScrollView {
-                    VStack(spacing: AppSpacing.xLarge) {
-                        generalSection
-                        informationSection
-                        dataSection
-                        #if DEBUG
-                        debugSection
-                        #endif
-                        appInfoSection
-                    }
-                    .padding(AppSpacing.large)
-                    .padding(.bottom, AppSpacing.tabBarBottomInset)
+                VStack(spacing: DS.Settings.sectionSpacing) {
+                    generalSection
+                    informationSection
+                    dataSection
                 }
+                .padding(.top, DS.Settings.sectionSpacing)
+
+                appInfoSection
+                    .padding(.top, DS.Settings.footerTop)
             }
-            .background(AppColor.background)
-            .navigationBarHidden(true)
-            .sheet(item: $coordinator.activeRoute) { route in
-                SettingsRouteView(route: route)
-            }
-            .saveErrorAlert(isPresented: $viewModel.showingSaveError)
-            .alert(AppString.deleteAllDataConfirm, isPresented: $viewModel.showingDeleteAllDataAlert) {
-                Button(AppString.cancel, role: .cancel) {
-                    viewModel.cancelDeleteAllData()
-                }
-                Button(AppString.delete, role: .destructive, action: handleDeleteAllData)
-            } message: {
-                Text(AppString.deleteAllDataMessage)
-            }
-            #if DEBUG
-            .alert(AppString.debugLoadFixtureConfirm, isPresented: $viewModel.showingLoadFixtureAlert) {
-                Button(AppString.cancel, role: .cancel) {}
-                Button(AppString.load, role: .destructive, action: handleLoadFixture)
-            } message: {
-                Text(AppString.debugLoadFixtureMessage)
-            }
-            #endif
+            .padding(.horizontal, DS.Spacing.xl)
+            .padding(.top, DS.Spacing.xs)
+            .padding(.bottom, DS.Spacing.lg)
         }
+        .scrollBounceBehavior(.basedOnSize)
+        .scrollIndicators(.hidden)
+        .background(DS.Color.bg)
+        .sheet(item: $coordinator.activeRoute) { route in
+            SettingsRouteView(route: route)
+        }
+        .brutalAlert(
+            isPresented: $viewModel.showingDeleteAllDataAlert,
+            title: AppString.deleteAllDataConfirm,
+            message: AppString.deleteAllDataMessage,
+            confirmTitle: AppString.delete,
+            onConfirm: handleDeleteAllData,
+            onCancel: viewModel.cancelDeleteAllData
+        )
+        .saveErrorAlert(isPresented: $viewModel.showingSaveError)
+        #if DEBUG
+        .brutalAlert(
+            isPresented: $viewModel.showingLoadFixtureAlert,
+            title: AppString.debugLoadFixtureConfirm,
+            message: AppString.debugLoadFixtureMessage,
+            confirmTitle: AppString.load,
+            onConfirm: handleLoadFixture
+        )
+        #endif
     }
-}
 
-// MARK: - Subviews
-
-private extension SettingsView {
-
-    var generalSection: some View {
+    private var generalSection: some View {
         SettingsSectionView(title: AppString.general) {
-            SettingsRowView(icon: AppImage.allAccounts, iconColor: AppColor.accent, title: AppString.accounts) {
+            SettingsRowView(
+                icon: Image(systemName: "wallet.bifold"),
+                iconColor: DS.CategoryColor.green.color,
+                title: AppString.accounts,
+                value: accounts.count.formatted()
+            ) {
                 coordinator.show(.accounts)
             }
-
-            SettingsRowDivider()
+            ListDivider()
 
             SettingsRowView(
-                icon: AppImage.categoriesGrid,
-                iconColor: AppColor.accent,
-                title: AppString.categories
+                icon: Image(systemName: "tag"),
+                iconColor: DS.CategoryColor.orange.color,
+                title: AppString.categories,
+                value: categories.count.formatted()
             ) {
                 coordinator.show(.categories)
             }
+            ListDivider()
 
-            SettingsRowDivider()
-
-            SettingsToggleRowView(
-                icon: AppImage.dailyLimit,
-                iconColor: AppColor.income,
-                title: AppString.showLimitOnDashboard,
-                isOn: $viewModel.isLimitShownOnDashboard
-            )
+            HStack(spacing: DS.Spacing.md) {
+                SettingsIconBadge(icon: Image(systemName: "target"), fill: DS.Color.accent, foreground: DS.Color.onAccent)
+                BrutalToggle(
+                    AppString.showLimitOnDashboard,
+                    subtitle: AppString.settingsLimitSubtitle,
+                    isOn: $viewModel.isLimitShownOnDashboard
+                )
+            }
+            .settingsRowInsets()
         }
     }
 
-    var informationSection: some View {
+    private var informationSection: some View {
         SettingsSectionView(title: AppString.information) {
-            SettingsRowView(
-                icon: AppImage.handRaised,
-                iconColor: AppColor.decorativePurple,
-                title: AppString.privacyPolicy
-            ) {
+            SettingsRowView(icon: Image(systemName: "shield"), title: AppString.privacyPolicy) {
                 coordinator.show(.privacyPolicy)
             }
+            ListDivider()
 
-            SettingsRowDivider()
-
-            SettingsRowView(
-                icon: AppImage.questionmarkCircle,
-                iconColor: AppColor.warning,
-                title: AppString.helpAndSupport
-            ) {
+            SettingsRowView(icon: AppImage.questionmarkCircle, title: AppString.helpAndSupport) {
                 coordinator.show(.helpSupport)
             }
+            ListDivider()
 
-            SettingsRowDivider()
-
-            SettingsRowView(
-                icon: AppImage.docText,
-                // Красный в приложении означает расход и удаление, поэтому
-                // у обычного пункта меню он не используется
-                iconColor: AppColor.accent,
-                title: AppString.termsOfService
-            ) {
+            SettingsRowView(icon: AppImage.docText, title: AppString.termsOfService) {
                 coordinator.show(.termsOfService)
             }
         }
     }
 
-    var dataSection: some View {
+    private var dataSection: some View {
         SettingsSectionView(title: AppString.data) {
             SettingsRowView(
-                icon: AppImage.trashFill,
-                iconColor: AppColor.expense,
+                icon: DS.Icon.trash,
+                iconColor: DS.Color.accountRed,
                 title: AppString.deleteAllData,
-                titleColor: AppColor.expense,
-                showsChevron: false
-            ) {
-                viewModel.prepareDeleteAllData()
-            }
+                subtitle: AppString.settingsDeleteDataSubtitle,
+                isDestructive: true,
+                action: viewModel.prepareDeleteAllData
+            )
         }
     }
 
-    #if DEBUG
-    var debugSection: some View {
-        SettingsSectionView(title: AppString.debugSection) {
-            SettingsRowView(
-                icon: AppImage.designSystemCatalog,
-                iconColor: AppColor.accent,
-                title: AppString.dsCatalogTitle
-            ) {
-                coordinator.show(.designSystemCatalog)
-            }
-
-            SettingsRowDivider()
-
-            SettingsRowView(
-                icon: AppImage.loadFixture,
-                iconColor: AppColor.warning,
-                title: AppString.debugLoadFixture,
-                showsChevron: false
-            ) {
-                viewModel.prepareLoadFixture()
-            }
+    private var appInfoSection: some View {
+        VStack(spacing: DS.Settings.subtitleSpacing) {
+            Text(AppString.appName)
+                .font(DS.Font.appName)
+                .foregroundStyle(DS.Color.ink)
+            versionLabel
         }
-    }
-    #endif
-
-    var appInfoSection: some View {
-        VStack(spacing: AppSpacing.small) {
-            AppText(AppString.appName, style: .sectionHeader, color: AppColor.textSecondary)
-
-            AppText(viewModel.appVersionTitle, style: .caption, color: AppColor.textSecondary)
-        }
-        .padding(.top, AppSpacing.xLarge)
         .frame(maxWidth: .infinity)
-        .accessibilityElement(children: .combine)
     }
-}
 
-// MARK: - Actions
+    @ViewBuilder
+    private var versionLabel: some View {
+        let label = Text(viewModel.appVersionTitle)
+            .font(DS.Font.moneySmall)
+            .foregroundStyle(DS.Color.ink2)
 
-private extension SettingsView {
+        #if DEBUG
+        label
+            .contentShape(Rectangle())
+            .onLongPressGesture { showingDebugMenu = true }
+            .accessibilityAction(named: AppString.debugSection) { showingDebugMenu = true }
+            .brutalMenu(isPresented: $showingDebugMenu, items: [
+                BrutalMenuItem(title: AppString.deleteAllData, icon: DS.Icon.trash, role: .destructive, action: viewModel.prepareDeleteAllData),
+                BrutalMenuItem(title: AppString.debugLoadFixture, icon: AppImage.loadFixture, action: viewModel.prepareLoadFixture),
+                BrutalMenuItem(title: AppString.dsCatalogTitle, icon: AppImage.designSystemCatalog) {
+                    coordinator.show(.designSystemCatalog)
+                }
+            ], alignment: .center)
+        #else
+        label
+        #endif
+    }
 
-    func handleDeleteAllData() {
+    private func handleDeleteAllData() {
         guard viewModel.confirmDeleteAllData(using: repositories.appData) else { return }
 
         UINotificationFeedbackGenerator().notificationOccurred(.success)
@@ -208,11 +179,11 @@ private extension SettingsView {
     }
 
     #if DEBUG
-    func handleLoadFixture() {
+    private func handleLoadFixture() {
         let fixture = Fixture.sample
         guard viewModel.confirmLoadFixture(fixture, using: repositories.appData) else { return }
 
-        // Общий сброс обнуляет лимит и возвращает на главный экран — лимит фикстуры ставится после него
+        // Общий сброс обнуляет лимит, поэтому ставим лимит фикстуры после него.
         onDataReset()
         viewModel.applyFixtureLimit(fixture)
         UINotificationFeedbackGenerator().notificationOccurred(.success)
@@ -220,9 +191,19 @@ private extension SettingsView {
     #endif
 }
 
-#Preview {
-    let fixture = FixtureEnvironment(.sample)
+#if DEBUG
+private struct SettingsPreview: View {
+    var fixture: Fixture
 
-    SettingsView(limitStore: fixture.limitStore)
-        .fixture(fixture)
+    var body: some View {
+        let environment = FixtureEnvironment(fixture)
+        return SettingsView(limitStore: environment.limitStore)
+            .fixture(environment)
+    }
 }
+
+#Preview("Светлая") { SettingsPreview(fixture: .sample) }
+#Preview("Тёмная") { SettingsPreview(fixture: .sample).preferredColorScheme(.dark) }
+#Preview("Пустая база") { SettingsPreview(fixture: .empty) }
+#Preview("Пустая база · тёмная") { SettingsPreview(fixture: .empty).preferredColorScheme(.dark) }
+#endif

@@ -136,8 +136,6 @@ enum AppString {
     static let deleteAccountMessage = String(localized: "delete_account_message")
     static let editAccount = String(localized: "edit_account")
     static let newAccount = String(localized: "new_account")
-    /// Короткая подпись плавающей кнопки в списке счетов
-    static let newAccountShort = String(localized: "new_account_short")
     static let createAccount = String(localized: "create_account")
     static let addAccount = String(localized: "add_account")
     static let addAccountHint = String(localized: "add_account_hint")
@@ -204,6 +202,35 @@ enum AppString {
     // MARK: - Categories
 
     static let allCategories = String(localized: "all_categories")
+    static let categoryNoMonthlyAmount = String(localized: "category_no_monthly_amount")
+    static let categoryBack = String(localized: "category_back")
+    static let categoryMove = String(localized: "category_move")
+    static let categoryNoMonthlyTransactions = String(localized: "category_no_monthly_transactions")
+    static let categoryTotalToday = String(localized: "category_total_today")
+    static let categoryTotalYesterday = String(localized: "category_total_yesterday")
+
+    static func categoryTotal(_ periodTitle: String) -> String {
+        String(format: String(localized: "category_total_period"), periodTitle)
+    }
+
+    static func categoryBudgetAmount(_ amount: String) -> String {
+        String(format: String(localized: "category_budget_amount"), amount)
+    }
+
+    static func categoryOperationCount(_ count: Int) -> String {
+        let key: String
+        switch (count % 10, count % 100) {
+        case (1, let lastTwo) where lastTwo != 11: key = "category_operations_one"
+        case (2...4, let lastTwo) where !(12...14).contains(lastTwo): key = "category_operations_few"
+        default: key = "category_operations_many"
+        }
+        return String(format: Bundle.main.localizedString(forKey: key, value: nil, table: nil), count)
+    }
+
+    static func categoryAffectedOperations(_ count: Int) -> String {
+        String(format: String(localized: "category_affected_operations"), count)
+    }
+
     static let noCategories = String(localized: "no_categories")
     static let createCategory = String(localized: "create_category")
     static let createCategoryHint = String(localized: "create_category_hint")
@@ -214,14 +241,13 @@ enum AppString {
     static let categoryName = String(localized: "category_name")
     static let enterName = String(localized: "enter_name")
     static let selectIcon = String(localized: "select_icon")
-    static let selectColor = String(localized: "select_color")
+    static let duplicateCategoryName = String(localized: "duplicate_category_name")
     static let editCategory = String(localized: "edit_category")
     static let newCategory = String(localized: "new_category")
     static let saveChanges = String(localized: "save_changes")
     static let addCategoryHint = String(localized: "add_category_hint")
     static let name = String(localized: "name")
     static let edit = String(localized: "edit")
-    static let addNew = String(localized: "add_new")
     static let categoryNameExample = String(localized: "category_name_example")
 
     // MARK: - Budgets
@@ -296,8 +322,6 @@ enum AppString {
     static let budgetsStepHintsTitle = String(localized: "budgets_step_hints_title")
     static let budgetsStepHintsSubtitle = String(localized: "budgets_step_hints_subtitle")
     static let budgetRowHint = String(localized: "budget_row_hint")
-    static let allCategoriesUsed = String(localized: "all_categories_used")
-    static let allCategoriesUsedHint = String(localized: "all_categories_used_hint")
     static let selectCategory = String(localized: "select_category")
     static let searchCategory = String(localized: "search_category")
 
@@ -369,9 +393,7 @@ enum AppString {
     static let byCategories = String(localized: "by_categories")
     static let incomes = String(localized: "incomes")
     static let noDataHintIncome = String(localized: "no_data_hint_income")
-    static let totalForPeriod = String(localized: "total_for_period")
     static let totalExpenses = String(localized: "total_expenses")
-    static let noTransactionsForPeriod = String(localized: "no_transactions_for_period")
     static let amount = String(localized: "amount")
     static let periodDay = String(localized: "statistics_period_day")
     static let periodWeek = String(localized: "statistics_period_week")
@@ -380,10 +402,6 @@ enum AppString {
     static let periodAllTime = String(localized: "statistics_period_all_time")
     /// Пункт меню периода на главной — с «ё», как в `MainPeriodMenu.html`
     static let periodAllTimeMenu = String(localized: "period_all_time_menu")
-
-    static func noTransactionsForPeriod(category: String) -> String {
-        String(format: noTransactionsForPeriod, category)
-    }
 
     // MARK: - Onboarding
 
@@ -441,6 +459,8 @@ enum AppString {
     // MARK: - Data
 
     static let data = String(localized: "data")
+    static let settingsLimitSubtitle = String(localized: "settings_limit_subtitle")
+    static let settingsDeleteDataSubtitle = String(localized: "settings_delete_data_subtitle")
     static let deleteAllData = String(localized: "delete_all_data")
     static let deleteAllDataConfirm = String(localized: "delete_all_data_confirm")
     static let deleteAllDataMessage = String(localized: "delete_all_data_message")

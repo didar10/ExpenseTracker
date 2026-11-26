@@ -1,157 +1,195 @@
-//
-//  AddEditCategoryView.swift
-//  ExpenseTracker
-//
-//  Created by Didar on 03.01.2026.
-//
-
-import SwiftUI
 import SwiftData
+import SwiftUI
 
 struct AddEditCategoryView: View {
-
-    // MARK: - Properties
-
+    @Query private var categories: [Category]
     @Environment(\.repositories) private var repositories
     @Environment(\.dismiss) private var dismiss
 
     @State private var viewModel: AddEditCategoryViewModel
+    @State private var deletion = CategoryListViewModel()
     @State private var showingDiscardConfirmation = false
 
-    // MARK: - Init
-
-    init(category: Category? = nil) {
-        _viewModel = State(initialValue: AddEditCategoryViewModel(category: category))
+    init(category: Category? = nil, initialType: TransactionType = .expense, showsSaveError: Bool = false) {
+        let viewModel = AddEditCategoryViewModel(category: category, initialType: initialType)
+        viewModel.showingSaveError = showsSaveError
+        _viewModel = State(initialValue: viewModel)
     }
-
-    // MARK: - Body
 
     var body: some View {
-        ZStack(alignment: .bottom) {
-            AppColor.background
-                .ignoresSafeArea()
+        let nameError = viewModel.nameError(in: categories)
 
-            VStack(spacing: 0) {
-                header
-
-                form
+        VStack(spacing: .zero) {
+            SheetGrabber()
+            header.padding(.horizontal, DS.Spacing.xl)
+            ScrollView {
+                form(nameError: nameError)
+                    .padding(.horizontal, DS.Spacing.xl)
+                    .padding(.vertical, DS.CategoryManagement.sectionSpacing)
             }
-
-            saveBar
+            .scrollDismissesKeyboard(.interactively)
+            .scrollBounceBehavior(.basedOnSize)
+            .scrollIndicators(.hidden)
         }
-        .toolbar(.hidden, for: .navigationBar)
-        .navigationBarBackButtonHidden(true)
-        // Введенные данные не теряются молча: закрытие проходит через подтверждение
+        .padding(.top, SheetGrabber.topPadding)
+        .background(DS.Color.bg)
+        .safeAreaInset(edge: .bottom, spacing: .zero) { saveBar(disabled: nameError != nil) }
+        .brutalSheetPresentation(detents: [.large])
         .interactiveDismissDisabled(viewModel.hasUnsavedChanges)
-        .toolbar {
-            ToolbarItemGroup(placement: .keyboard) {
-                Spacer()
-
-                Button(AppString.done, action: dismissKeyboard)
-            }
-        }
+        .sensoryFeedback(.selection, trigger: viewModel.formData.colorHex)
+        .sensoryFeedback(.selection, trigger: viewModel.formData.icon)
+        .onChange(of: viewModel.formData.name) { viewModel.clearSaveNameError() }
         .saveErrorAlert(isPresented: $viewModel.showingSaveError)
-        .alert(AppString.discardCategoryTitle, isPresented: $showingDiscardConfirmation) {
-            Button(AppString.discardChanges, role: .destructive) { dismiss() }
-            Button(AppString.keepEditing, role: .cancel) { }
-        } message: {
-            Text(AppString.discardChangesMessage)
-        }
+        .brutalAlert(
+            isPresented: $deletion.showDeleteAlert,
+            title: AppString.deleteCategoryConfirm,
+            message: deletion.deleteMessage,
+            confirmTitle: AppString.delete,
+            onConfirm: deleteCategory,
+            onCancel: deletion.cancelDelete
+        )
+        .brutalAlert(
+            isPresented: $showingDiscardConfirmation,
+            title: AppString.discardCategoryTitle,
+            message: AppString.discardChangesMessage,
+            confirmTitle: AppString.discardChanges,
+            onConfirm: { dismiss() }
+        )
     }
-}
 
-// MARK: - Subviews
-private extension AddEditCategoryView {
-
-    var header: some View {
-        SheetHeaderView(title: viewModel.title, onClose: handleClose)
-    }
-
-    var form: some View {
-        ScrollView {
-            VStack(spacing: AppSpacing.xLarge) {
-                NamePreviewCardView(
-                    name: $viewModel.formData.name,
-                    icon: viewModel.formData.icon,
-                    color: Color(hex: viewModel.formData.colorHex),
-                    placeholder: AppString.categoryName
-                )
-
-                TransactionTypePickerView(
-                    selectedType: $viewModel.formData.type,
-                    backgroundColor: AppColor.fieldFill
-                )
-
-                colorSection
-                iconSection
+    private var header: some View {
+        HStack(spacing: DS.Spacing.sm) {
+            IconButton(icon: DS.Icon.close, accessibilityLabel: AppString.accessibilityClose, action: handleClose)
+            Text(viewModel.title)
+                .font(DS.Font.dialogTitle)
+                .foregroundStyle(DS.Color.ink)
+                .lineLimit(1)
+                .minimumScaleFactor(DS.CategoryManagement.minimumScale)
+                .frame(maxWidth: .infinity)
+                .accessibilityAddTraits(.isHeader)
+            if let category = viewModel.category {
+                Button {
+                    dismissKeyboard()
+                    deletion.prepareDelete(category)
+                } label: {
+                    DS.Icon.trash
+                        .font(.system(size: DS.Size.iconM, weight: .semibold))
+                        .frame(width: DS.Size.control, height: DS.Size.control)
+                }
+                .buttonStyle(.pressIntoShadow(.danger))
+                .frame(width: DS.Size.control, height: DS.Size.control)
+                .accessibilityLabel(AppString.deleteCategoryConfirm)
+            } else {
+                Color.clear.frame(width: DS.Size.control, height: DS.Size.control).accessibilityHidden(true)
             }
-            .padding(AppSpacing.large)
-            .padding(.bottom, AppSpacing.huge + AppSpacing.xxxLarge)
         }
-        .scrollDismissesKeyboard(.interactively)
     }
 
-    var colorSection: some View {
-        ColorPickerView(selectedColor: $viewModel.formData.colorHex, palette: .hex)
-    }
-
-    var iconSection: some View {
-        IconPicker(
-            selectedIcon: $viewModel.formData.icon,
-            color: Color(hex: viewModel.formData.colorHex)
+    private func form(nameError: CategoryNameError?) -> some View {
+        @Bindable var viewModel = viewModel
+        let color = Binding(
+            get: { DS.AccountColor(categoryHex: viewModel.formData.colorHex) },
+            set: { viewModel.formData.colorHex = $0.categoryHex }
         )
+
+        return VStack(spacing: DS.CategoryManagement.sectionSpacing) {
+            HStack(spacing: DS.CategoryManagement.sectionSpacing) {
+                previewTile(color: color.wrappedValue)
+                BrutalTextField(
+                    AppString.categoryName,
+                    text: $viewModel.formData.name,
+                    placeholder: AppString.accountFormName,
+                    errorMessage: nameMessage(nameError),
+                    showsInlineLabel: false
+                )
+                .textInputAutocapitalization(.sentences)
+                .submitLabel(.done)
+                .onSubmit(dismissKeyboard)
+            }
+
+            SegmentedSwitch(selection: $viewModel.formData.type, options: [
+                .init(value: .expense, title: AppString.expense, icon: Image(systemName: "arrow.up.right")),
+                .init(value: .income, title: AppString.income, icon: Image(systemName: "arrow.down.left"))
+            ])
+            .disabled(viewModel.isEditMode)
+
+            VStack(alignment: .leading, spacing: DS.Spacing.sm) {
+                Text(AppString.color).dsLabel()
+                ColorSwatchGrid(selection: color)
+            }
+
+            VStack(alignment: .leading, spacing: DS.Spacing.sm) {
+                Text(AppString.icon).dsLabel()
+                IconPicker(selection: $viewModel.formData.icon, originalIcon: viewModel.originalIcon)
+            }
+        }
     }
 
-    var saveBar: some View {
-        PrimaryActionButton(
-            title: viewModel.saveButtonTitle,
-            isEnabled: viewModel.canSave,
-            action: handleSave
-        )
-        .padding(.horizontal, AppSpacing.large)
-        .padding(.top, AppSpacing.medium)
-        .padding(.bottom, AppSpacing.large)
-        .background(
-            AppColor.background
-                .ignoresSafeArea(edges: .bottom)
-        )
+    private func previewTile(color: DS.AccountColor) -> some View {
+        Image(systemName: viewModel.formData.icon)
+            .font(.system(size: DS.Size.iconAdd, weight: .semibold))
+            .foregroundStyle(color.foreground)
+            .frame(width: DS.CategoryForm.previewSide, height: DS.CategoryForm.previewSide)
+            .background(color.color, in: RoundedRectangle(cornerRadius: DS.Radius.tabBar))
+            .brutalBorder(radius: DS.Radius.tabBar)
+            .hardShadow(.hardSmall)
+            .accessibilityHidden(true)
     }
-}
 
-// MARK: - Actions
-private extension AddEditCategoryView {
+    private func nameMessage(_ error: CategoryNameError?) -> String? {
+        switch error {
+        case .empty: AppString.enterName
+        case .duplicate: AppString.duplicateCategoryName
+        case nil: nil
+        }
+    }
 
-    func handleSave() {
-        UIImpactFeedbackGenerator(style: .medium).impactOccurred()
-        dismissKeyboard()
+    private func saveBar(disabled: Bool) -> some View {
+        PrimaryButton(title: viewModel.saveButtonTitle, icon: DS.Icon.checkmark) {
+            guard viewModel.nameError(in: categories) == nil else { return }
+            dismissKeyboard()
+            if viewModel.save(using: repositories.categories) { dismiss() }
+        }
+        .disabled(disabled)
+        .padding(.horizontal, DS.Spacing.xl)
+        .padding(.top, DS.Spacing.md)
+        .padding(.bottom, DS.Spacing.sm)
+        .background(DS.Color.bg)
+    }
 
-        if viewModel.save(using: repositories.categories) {
+    private func deleteCategory() {
+        if deletion.confirmDelete(using: repositories.categories) {
             dismiss()
+        } else {
+            viewModel.showingSaveError = deletion.showingSaveError
         }
     }
 
-    func handleClose() {
+    private func handleClose() {
         dismissKeyboard()
-
-        guard viewModel.hasUnsavedChanges else {
-            dismiss()
-            return
-        }
-
-        showingDiscardConfirmation = true
+        if viewModel.hasUnsavedChanges { showingDiscardConfirmation = true } else { dismiss() }
     }
 
-    func dismissKeyboard() {
-        UIApplication.shared.sendAction(
-            #selector(UIResponder.resignFirstResponder),
-            to: nil,
-            from: nil,
-            for: nil
-        )
+    private func dismissKeyboard() {
+        UIApplication.shared.sendAction(#selector(UIResponder.resignFirstResponder), to: nil, from: nil, for: nil)
     }
 }
 
-#Preview("Новая категория") {
-    AddEditCategoryView()
-        .fixture(FixtureEnvironment(.empty))
+#if DEBUG
+#Preview("Новая") { AddEditCategoryView().fixture(FixtureEnvironment(.empty)) }
+#Preview("Новая · тёмная") { AddEditCategoryView().fixture(FixtureEnvironment(.empty)).preferredColorScheme(.dark) }
+#Preview("Редактирование") { categoryFormEditPreview() }
+#Preview("Редактирование · тёмная") { categoryFormEditPreview().preferredColorScheme(.dark) }
+#Preview("Ошибка сохранения") { AddEditCategoryView(showsSaveError: true).fixture(FixtureEnvironment(.empty)) }
+#Preview("Ошибка сохранения · тёмная") {
+    AddEditCategoryView(showsSaveError: true).fixture(FixtureEnvironment(.empty)).preferredColorScheme(.dark)
 }
+
+@MainActor
+private func categoryFormEditPreview() -> some View {
+    let fixture = FixtureEnvironment(.empty)
+    let category = Category(name: "Кафе и рестораны", icon: "cup.and.saucer", colorHex: "#FFB0A8")
+    fixture.context.insert(category)
+    return AddEditCategoryView(category: category).fixture(fixture)
+}
+#endif

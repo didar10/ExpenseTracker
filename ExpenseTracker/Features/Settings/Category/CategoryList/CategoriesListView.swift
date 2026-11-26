@@ -1,209 +1,264 @@
-//
-//  CategoriesListView.swift
-//  ExpenseTracker
-//
-//  Created by Didar on 03.01.2026.
-//
-
-import SwiftUI
 import SwiftData
+import SwiftUI
 
 struct CategoriesListView: View {
+    @Query(sort: \Category.name) private var categories: [Category]
+    @Query(sort: \Transaction.date, order: .reverse) private var transactions: [Transaction]
 
-    // MARK: - Properties
-
-    /// Когда задан — экран работает в режиме выбора: тап по категории выбирает её, а не открывает редактирование.
-    var onSelect: ((Category) -> Void)? = nil
-    var initialType: TransactionType = .expense
-    /// Когда задан — в списке доступны только эти категории (например, свободные для нового бюджета).
-    var selectableCategoryIDs: Set<PersistentIdentifier>? = nil
-
-    @Query(sort: \Category.name)
-    private var categories: [Category]
-
+    @AppStorage("categoryOrder.expense") private var expenseOrder = ""
+    @AppStorage("categoryOrder.income") private var incomeOrder = ""
     @Environment(\.repositories) private var repositories
     @Environment(\.dismiss) private var dismiss
+    @Environment(\.accessibilityReduceMotion) private var reduceMotion
 
-    @State private var viewModel = CategoryListViewModel()
-    @State private var isEditing = false
+    @State private var viewModel: CategoryListViewModel
+    @State private var selectedType: TransactionType
+    @State private var isEditing: Bool
     @State private var showingAddCategory = false
     @State private var editingCategory: Category?
-    @State private var selectedType: TransactionType = .expense
+    @State private var viewingCategory: Category?
+    @State private var rowFrames: [UUID: CGRect] = [:]
+    @GestureState private var dragTarget: UUID?
 
-    // MARK: - Computed Properties
-
-    private var filteredCategories: [Category] {
-        categories.filter { category in
-            guard category.type == selectedType else { return false }
-            guard let selectableCategoryIDs else { return true }
-            return selectableCategoryIDs.contains(category.persistentModelID)
-        }
+    init(initialType: TransactionType = .expense, isEditing: Bool = false, viewModel: CategoryListViewModel? = nil) {
+        _viewModel = State(initialValue: viewModel ?? CategoryListViewModel())
+        _selectedType = State(initialValue: initialType)
+        _isEditing = State(initialValue: isEditing)
     }
 
-    /// Категории этого типа есть, но все заняты фильтром выбора — например,
-    /// на каждую из них уже заведен бюджет
-    private var isFilteredOutByPicker: Bool {
-        selectableCategoryIDs != nil && categories.contains { $0.type == selectedType }
+    private var visibleCategories: [Category] {
+        let order = selectedType == .expense ? expenseOrder : incomeOrder
+        return CategoryListViewModel.ordered(
+            categories.filter { !$0.isDeleted && $0.type == selectedType },
+            by: order.split(separator: ",").compactMap { UUID(uuidString: String($0)) }
+        )
     }
-
-    // MARK: - Body
 
     var body: some View {
-        ZStack(alignment: .bottomTrailing) {
-            AppColor.background
-                .ignoresSafeArea()
+        @Bindable var viewModel = viewModel
+        let rows = visibleCategories
+        let now = Date.now
+        let summary = CategoryMonthSummary(transactions: transactions, type: selectedType, now: now)
 
-            VStack(spacing: 0) {
-                header
+        VStack(spacing: DS.CategoryManagement.sectionSpacing) {
+            header(hasCategories: !rows.isEmpty)
+            SegmentedSwitch(selection: $selectedType, options: [
+                .init(value: .expense, title: AppString.expenses, icon: Image(systemName: "arrow.up.right")),
+                .init(value: .income, title: AppString.incomes, icon: Image(systemName: "arrow.down.left"))
+            ])
 
-                content
-            }
-
-            if !isEditing {
-                AddFloatingButton(title: AppString.addNew) {
-                    showingAddCategory = true
+            ScrollView {
+                if rows.isEmpty {
+                    EmptyCategoriesView { showingAddCategory = true }
+                } else {
+                    VStack(spacing: DS.Spacing.md) {
+                        Card(padding: nil) {
+                            VStack(spacing: .zero) {
+                                ForEach(Array(rows.enumerated()), id: \.element.id) { index, category in
+                                    if index > 0 { ListDivider() }
+                                    row(category, caption: summary.caption(for: category.id), in: rows)
+                                }
+                            }
+                        }
+                        if !isEditing { addCategoryButton }
+                    }
                 }
-                .padding(.trailing, AppSpacing.large)
-                .padding(.bottom, AppSpacing.xxxLarge)
-                .transition(.scale(scale: 0.9).combined(with: .opacity))
             }
+            .scrollBounceBehavior(.basedOnSize)
+            .scrollIndicators(.hidden)
         }
-        .onAppear {
-            selectedType = initialType
-        }
-        .onChange(of: selectedType) {
-            isEditing = false
-        }
-        // Список опустел — редактировать больше нечего
-        .onChange(of: filteredCategories.isEmpty) { _, isEmpty in
-            if isEmpty {
-                isEditing = false
-            }
+        .padding(.horizontal, DS.Spacing.xl)
+        .padding(.top, DS.Spacing.xs)
+        .padding(.bottom, DS.Spacing.sm)
+        .background(DS.Color.bg)
+        .onChange(of: selectedType) { isEditing = false }
+        .onChange(of: rows.isEmpty) { _, empty in
+            if empty { isEditing = false }
         }
         .sheet(isPresented: $showingAddCategory) {
-            AddEditCategoryView()
+            AddEditCategoryView(initialType: selectedType)
         }
         .sheet(item: $editingCategory) { category in
             AddEditCategoryView(category: category)
         }
+        .sheet(item: $viewingCategory) { category in
+            CategoryTransactionsView(
+                category: category,
+                scope: CategoryTransactionsScope(period: .month, interval: summary.interval, title: summary.title, type: selectedType)
+            )
+        }
+        .brutalAlert(
+            isPresented: $viewModel.showDeleteAlert,
+            title: AppString.deleteCategoryConfirm,
+            message: viewModel.deleteMessage,
+            confirmTitle: AppString.delete,
+            onConfirm: { viewModel.confirmDelete(using: repositories.categories) },
+            onCancel: viewModel.cancelDelete
+        )
         .saveErrorAlert(isPresented: $viewModel.showingSaveError)
-        .alert(AppString.deleteCategoryConfirm, isPresented: $viewModel.showDeleteAlert) {
-            Button(AppString.cancel, role: .cancel) {
-                viewModel.cancelDelete()
+    }
+
+    private func header(hasCategories: Bool) -> some View {
+        HStack(spacing: DS.Spacing.sm) {
+            editLabel.hidden().overlay(alignment: .leading) {
+                IconButton(icon: DS.Icon.chevronLeft, accessibilityLabel: AppString.categoryBack) { dismiss() }
             }
-            Button(AppString.delete, role: .destructive) {
-                viewModel.confirmDelete(using: repositories.categories)
+            Text(AppString.categories)
+                .font(DS.Font.dialogTitle)
+                .foregroundStyle(DS.Color.ink)
+                .lineLimit(1)
+                .minimumScaleFactor(DS.CategoryManagement.minimumScale)
+                .frame(maxWidth: .infinity)
+                .accessibilityAddTraits(.isHeader)
+            Button {
+                withAnimation(reduceMotion ? nil : DS.Motion.toggle) { isEditing.toggle() }
+            } label: {
+                editLabel
             }
-        } message: {
-            Text(viewModel.deleteMessage)
+            .buttonStyle(.outlineClick)
+            .disabled(!hasCategories)
         }
     }
-}
 
-// MARK: - Subviews
-private extension CategoriesListView {
+    private var editLabel: some View {
+        Text(isEditing ? AppString.done : AppString.edit)
+            .font(DS.Font.control)
+            .lineLimit(1)
+            .padding(.horizontal, DS.Spacing.md)
+            .frame(minWidth: DS.Size.control, minHeight: DS.Size.control)
+    }
 
-    var header: some View {
-        SheetHeaderView(title: AppString.categories) {
-            dismiss()
-        } trailing: {
-            // В режиме выбора категории не редактируются: это чужой экран, открытый ради выбора
-            if onSelect == nil && !filteredCategories.isEmpty {
-                EditToggleButton(isEditing: isEditing) {
-                    withAnimation(.easeInOut(duration: 0.2)) {
-                        isEditing.toggle()
+    private func row(_ category: Category, caption: String, in rows: [Category]) -> some View {
+        let id = category.id
+        return HStack(spacing: DS.Spacing.md) {
+            if isEditing {
+                Button { viewModel.prepareDelete(category) } label: {
+                    DS.Icon.minus
+                        .font(.system(size: DS.Size.iconXS, weight: .bold))
+                        .foregroundStyle(DS.Color.dangerFill)
+                        .frame(width: DS.CategoryManagement.deleteSize, height: DS.CategoryManagement.deleteSize)
+                        .background(DS.Color.accountRed, in: Circle())
+                        .overlay { Circle().strokeBorder(DS.Color.dangerFill, lineWidth: DS.Stroke.regular) }
+                        .frame(minHeight: DS.Size.control)
+                        .contentShape(Rectangle())
+                }
+                .buttonStyle(.plain)
+                .accessibilityLabel("\(AppString.delete) \(category.name)")
+            }
+
+            Button {
+                if isEditing { editingCategory = category } else { viewingCategory = category }
+            } label: {
+                HStack(spacing: DS.Spacing.md) {
+                    CategoryTile(icon: Image(systemName: category.icon), color: .init(legacyHex: category.colorHex), size: .medium)
+                    VStack(alignment: .leading, spacing: DS.CategoryManagement.captionSpacing) {
+                        Text(category.name)
+                            .font(DS.Font.bodyBold)
+                            .foregroundStyle(DS.Color.ink)
+                        Text(caption)
+                            .font(DS.Font.moneySmall)
+                            .foregroundStyle(DS.Color.ink2)
+                    }
+                    .frame(maxWidth: .infinity, alignment: .leading)
+                    if !isEditing {
+                        DS.Icon.chevronRight
+                            .font(.system(size: DS.Size.iconXS, weight: .semibold))
+                            .accessibilityHidden(true)
                     }
                 }
-                .accessibilityLabel(isEditing ? AppString.done : AppString.edit)
+                .frame(minHeight: DS.CategoryManagement.rowHeight)
+                .contentShape(Rectangle())
+            }
+            .buttonStyle(.outlineClickSegment)
+
+            if isEditing {
+                DS.Icon.equal
+                    .font(.system(size: DS.Size.iconM, weight: .semibold))
+                    .frame(width: DS.Size.control, height: DS.Size.control)
+                    .contentShape(Rectangle())
+                    .gesture(reorderGesture(for: id, in: rows))
+                    .accessibilityLabel("\(AppString.categoryMove) \(category.name)")
+                    .accessibilityAction(named: AppString.moveAccountUp) { move(id, by: -1, in: rows) }
+                    .accessibilityAction(named: AppString.moveAccountDown) { move(id, by: 1, in: rows) }
             }
         }
+        .padding(.leading, DS.Spacing.md)
+        .padding(.trailing, DS.CategoryManagement.sectionSpacing)
+        .foregroundStyle(DS.Color.ink)
+        .background(dragTarget == id ? DS.Color.line : DS.Color.surface)
+        .onGeometryChange(for: CGRect.self) { $0.frame(in: .global) } action: { frame in
+            rowFrames[id] = frame
+        }
+        .onDisappear { rowFrames[id] = nil }
     }
 
-    var content: some View {
-        ScrollView {
-            VStack(spacing: AppSpacing.large) {
-                TransactionTypePickerView(selectedType: $selectedType)
+    private func reorderGesture(for source: UUID, in rows: [Category]) -> some Gesture {
+        DragGesture(coordinateSpace: .global)
+            .updating($dragTarget) { value, target, _ in
+                target = destination(at: value.location.y, in: rows)
+            }
+            .onEnded { value in
+                guard let target = destination(at: value.location.y, in: rows) else { return }
+                _ = move(source, to: target, in: rows)
+            }
+    }
 
-                if filteredCategories.isEmpty {
-                    emptyState
-                } else {
-                    categoriesList
+    private func destination(at y: CGFloat, in rows: [Category]) -> UUID? {
+        rows.first { row in
+            guard let frame = rowFrames[row.id] else { return false }
+            return y >= frame.minY && y < frame.maxY
+        }?.id
+    }
+
+    private var addCategoryButton: some View {
+        Button { showingAddCategory = true } label: {
+            Label { Text(AppString.newCategory) } icon: { DS.Icon.plus }
+                .font(DS.Font.buttonSmall)
+                .frame(maxWidth: .infinity, minHeight: DS.Size.menuRow)
+                .contentShape(Rectangle())
+                .overlay {
+                    RoundedRectangle(cornerRadius: DS.Radius.control)
+                        .strokeBorder(DS.Color.ink, style: StrokeStyle(lineWidth: DS.Stroke.regular, dash: DS.Stroke.dash))
                 }
-            }
-            .padding(AppSpacing.large)
-            // Плавающая кнопка не должна перекрывать последнюю строку списка
-            .padding(.bottom, AppSpacing.huge + AppSpacing.xxxLarge)
         }
-        .scrollBounceBehavior(.basedOnSize)
+        .buttonStyle(.outlineClickSegment)
     }
 
-    @ViewBuilder
-    var emptyState: some View {
-        if isFilteredOutByPicker {
-            EmptyCategoriesView(
-                title: AppString.allCategoriesUsed,
-                hint: AppString.allCategoriesUsedHint
-            ) {
-                showingAddCategory = true
-            }
-        } else {
-            EmptyCategoriesView {
-                showingAddCategory = true
-            }
-        }
+    private func move(_ source: UUID, by offset: Int, in rows: [Category]) {
+        guard let index = rows.firstIndex(where: { $0.id == source }), rows.indices.contains(index + offset) else { return }
+        _ = move(source, to: rows[index + offset].id, in: rows)
     }
 
-    var categoriesList: some View {
-        // Отступы совпадают со строкой списка счетов: одинаковые карточки на всех экранах
-        VStack(spacing: 0) {
-            ForEach(Array(filteredCategories.enumerated()), id: \.element.id) { index, category in
-                rowContent(for: category)
-
-                if index < filteredCategories.count - 1 {
-                    Divider()
-                        .padding(.leading, AppSize.iconLarge + AppSpacing.medium)
-                }
-            }
+    private func move(_ source: UUID, to target: UUID, in rows: [Category]) -> Bool {
+        guard let order = CategoryListViewModel.moved(source, to: target, in: rows.map(\.id)) else { return false }
+        let encoded = order.map(\.uuidString).joined(separator: ",")
+        withAnimation(reduceMotion ? nil : DS.Motion.toggle) {
+            if selectedType == .expense { expenseOrder = encoded } else { incomeOrder = encoded }
         }
-        .padding(.vertical, AppSpacing.small)
-        .padding(.horizontal, AppSpacing.large)
-        .card(cornerRadius: AppRadius.xLarge)
-    }
-
-    @ViewBuilder
-    func rowContent(for category: Category) -> some View {
-        if isEditing {
-            CategoryRowView(category: category, isEditing: true) {
-                viewModel.prepareDelete(category)
-            }
-        } else {
-            Button {
-                handleTap(on: category)
-            } label: {
-                CategoryRowView(category: category, isEditing: false, onDelete: {})
-            }
-            .buttonStyle(HighlightRowButtonStyle(cornerRadius: AppRadius.medium))
-        }
+        return true
     }
 }
 
-// MARK: - Actions
-private extension CategoriesListView {
-
-    func handleTap(on category: Category) {
-        UIImpactFeedbackGenerator(style: .light).impactOccurred()
-
-        guard let onSelect else {
-            editingCategory = category
-            return
-        }
-
-        onSelect(category)
-        dismiss()
-    }
+#if DEBUG
+#Preview("Расходы") { CategoriesListView().fixture(FixtureEnvironment(.sample)) }
+#Preview("Расходы · тёмная") { CategoriesListView().fixture(FixtureEnvironment(.sample)).preferredColorScheme(.dark) }
+#Preview("Доходы") { CategoriesListView(initialType: .income).fixture(FixtureEnvironment(.sample)) }
+#Preview("Доходы · тёмная") {
+    CategoriesListView(initialType: .income).fixture(FixtureEnvironment(.sample)).preferredColorScheme(.dark)
 }
-
-#Preview {
-    CategoriesListView()
-        .fixture(FixtureEnvironment(.sample))
+#Preview("Редактирование") { CategoriesListView(isEditing: true).fixture(FixtureEnvironment(.sample)) }
+#Preview("Редактирование · тёмная") {
+    CategoriesListView(isEditing: true).fixture(FixtureEnvironment(.sample)).preferredColorScheme(.dark)
 }
+#Preview("Пусто") { CategoriesListView().fixture(FixtureEnvironment(.empty)) }
+#Preview("Пусто · тёмная") { CategoriesListView().fixture(FixtureEnvironment(.empty)).preferredColorScheme(.dark) }
+#Preview("Ошибка сохранения") { categoryErrorPreview() }
+#Preview("Ошибка сохранения · тёмная") { categoryErrorPreview().preferredColorScheme(.dark) }
+
+@MainActor
+private func categoryErrorPreview() -> some View {
+    let viewModel = CategoryListViewModel()
+    viewModel.showingSaveError = true
+    return CategoriesListView(viewModel: viewModel).fixture(FixtureEnvironment(.sample))
+}
+#endif

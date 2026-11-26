@@ -170,10 +170,10 @@ struct DashboardViewModelTests {
         context.insert(transaction)
 
         let viewModel = makeViewModel()
-        viewModel.deleteTransaction(transaction, using: Repositories(context: context).transactions)
+        viewModel.transactionDeletion.deleteTransaction(transaction, using: Repositories(context: context).transactions)
 
         #expect(try fetchTransactions(context).isEmpty)
-        #expect(viewModel.undoAction != nil)
+        #expect(viewModel.transactionDeletion.undoAction != nil)
     }
 
     @Test func undoDeleteRestoresTransactionFields() throws {
@@ -185,15 +185,15 @@ struct DashboardViewModelTests {
         context.insert(transaction)
 
         let viewModel = makeViewModel()
-        viewModel.deleteTransaction(transaction, using: Repositories(context: context).transactions)
-        viewModel.undoLastAction(using: Repositories(context: context).transactions)
+        viewModel.transactionDeletion.deleteTransaction(transaction, using: Repositories(context: context).transactions)
+        viewModel.transactionDeletion.undoLastAction(using: Repositories(context: context).transactions)
 
         let restored = try #require(try fetchTransactions(context).first)
         #expect(restored.amount == 500)
         #expect(restored.date == originalDate)
         #expect(restored.note == "Кофе")
         #expect(restored.account === account)
-        #expect(viewModel.undoAction == nil)
+        #expect(viewModel.transactionDeletion.undoAction == nil)
     }
 
     @Test func duplicateOpensFormWithTemplateWithoutSaving() throws {
@@ -216,19 +216,19 @@ struct DashboardViewModelTests {
         context.insert(transaction)
 
         let viewModel = makeViewModel()
-        viewModel.requestDeletion(of: transaction)
+        viewModel.transactionDeletion.requestDeletion(of: transaction)
 
-        #expect(viewModel.showingDeleteConfirmation)
-        #expect(viewModel.deletionMessage == AppString.deleteTransactionMessage(title: "Продукты на неделю", amount: "−4\u{00A0}850\u{00A0}₸"))
+        #expect(viewModel.transactionDeletion.showingDeleteConfirmation)
+        #expect(viewModel.transactionDeletion.deletionMessage == AppString.deleteTransactionMessage(title: "Продукты на неделю", amount: "−4\u{00A0}850\u{00A0}₸"))
         #expect(try fetchTransactions(context).count == 1)
 
         // Алерт закрывается до выполнения действия — удаление не должно от этого зависеть
-        viewModel.showingDeleteConfirmation = false
-        viewModel.confirmDeletion(using: Repositories(context: context).transactions)
+        viewModel.transactionDeletion.showingDeleteConfirmation = false
+        viewModel.transactionDeletion.confirmDeletion(using: Repositories(context: context).transactions)
 
         #expect(try fetchTransactions(context).isEmpty)
-        #expect(viewModel.transactionPendingDeletion == nil)
-        #expect(viewModel.undoAction != nil)
+        #expect(viewModel.transactionDeletion.transactionPendingDeletion == nil)
+        #expect(viewModel.transactionDeletion.undoAction != nil)
     }
 
     @Test func cancelledDeletionKeepsTransaction() throws {
@@ -237,11 +237,11 @@ struct DashboardViewModelTests {
         context.insert(transaction)
 
         let viewModel = makeViewModel()
-        viewModel.requestDeletion(of: transaction)
-        viewModel.cancelDeletion()
-        viewModel.confirmDeletion(using: Repositories(context: context).transactions)
+        viewModel.transactionDeletion.requestDeletion(of: transaction)
+        viewModel.transactionDeletion.cancelDeletion()
+        viewModel.transactionDeletion.confirmDeletion(using: Repositories(context: context).transactions)
 
         #expect(try fetchTransactions(context).count == 1)
-        #expect(viewModel.undoAction == nil)
+        #expect(viewModel.transactionDeletion.undoAction == nil)
     }
 }

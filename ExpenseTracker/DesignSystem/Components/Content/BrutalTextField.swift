@@ -28,6 +28,7 @@ struct BrutalTextField: View {
     var kind: Kind = .text
     /// nil — ошибки нет
     var errorMessage: String?
+    var showsInlineLabel = true
     var onFocusChange: (Bool) -> Void = { _ in }
 
     @FocusState private var isFocused: Bool
@@ -40,6 +41,7 @@ struct BrutalTextField: View {
         placeholder: String = "",
         kind: Kind = .text,
         errorMessage: String? = nil,
+        showsInlineLabel: Bool = true,
         onFocusChange: @escaping (Bool) -> Void = { _ in }
     ) {
         self.label = label
@@ -47,6 +49,7 @@ struct BrutalTextField: View {
         self.placeholder = placeholder
         self.kind = kind
         self.errorMessage = errorMessage
+        self.showsInlineLabel = showsInlineLabel
         self.onFocusChange = onFocusChange
     }
 
@@ -87,9 +90,11 @@ private extension BrutalTextField {
 
     var field: some View {
         HStack(spacing: Metrics.spacing) {
-            Text(label)
-                .dsLabel()
-                .accessibilityHidden(true)
+            if showsInlineLabel {
+                Text(label)
+                    .dsLabel()
+                    .accessibilityHidden(true)
+            }
 
             input
         }
@@ -110,7 +115,7 @@ private extension BrutalTextField {
             TextField(label, text: $text, prompt: prompt)
                 .font(DS.Font.body)
                 .foregroundStyle(DS.Color.ink)
-                .multilineTextAlignment(.trailing)
+                .multilineTextAlignment(showsInlineLabel ? .trailing : .leading)
                 .focused($isFocused)
                 .accessibilityLabel(label)
 

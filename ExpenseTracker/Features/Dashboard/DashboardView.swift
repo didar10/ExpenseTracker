@@ -55,6 +55,7 @@ struct DashboardView: View {
     // MARK: - Body
 
     var body: some View {
+        @Bindable var deletion = viewModel.transactionDeletion
         // Баланс, карточки и лента считаются из одного снимка данных
         let snapshot = viewModel.makeSnapshot(accounts: accounts, transactions: transactions)
 
@@ -100,19 +101,19 @@ struct DashboardView: View {
         }
         .sheet(item: $viewModel.selectedTransaction) { transaction in
             AddTransactionView(transaction: transaction, accountSelection: accountSelection) { transaction in
-                viewModel.deleteTransaction(transaction, using: repositories.transactions)
+                viewModel.transactionDeletion.deleteTransaction(transaction, using: repositories.transactions)
             }
         }
         .sheet(item: $viewModel.duplicatedTransaction) { template in
             AddTransactionView(template: template, accountSelection: accountSelection)
         }
         .brutalAlert(
-            isPresented: $viewModel.showingDeleteConfirmation,
+            isPresented: $deletion.showingDeleteConfirmation,
             title: AppString.deleteTransactionTitle,
-            message: viewModel.deletionMessage,
+            message: viewModel.transactionDeletion.deletionMessage,
             confirmTitle: AppString.delete,
-            onConfirm: { viewModel.confirmDeletion(using: repositories.transactions) },
-            onCancel: viewModel.cancelDeletion
+            onConfirm: { viewModel.transactionDeletion.confirmDeletion(using: repositories.transactions) },
+            onCancel: viewModel.transactionDeletion.cancelDeletion
         )
         .sheet(isPresented: $viewModel.showingAccountsView) {
             AccountSelectionSheet(selectedAccount: viewModel.selectedAccount) { account in
@@ -120,7 +121,7 @@ struct DashboardView: View {
             }
         }
         .monthlyLimitSheet(isPresented: $viewModel.showingMonthlyLimit, limitStore: viewModel.limitStore)
-        .saveErrorAlert(isPresented: $viewModel.showingSaveError)
+        .saveErrorAlert(isPresented: $deletion.showingSaveError)
         .onReceive(
             NotificationCenter.default
                 .publisher(for: .NSCalendarDayChanged)
@@ -186,7 +187,7 @@ private extension DashboardView {
                         section: section,
                         onTap: { viewModel.handleTransactionTap($0) },
                         onDuplicate: { viewModel.duplicateTransaction($0) },
-                        onDelete: { viewModel.requestDeletion(of: $0) }
+                        onDelete: { viewModel.transactionDeletion.requestDeletion(of: $0) }
                     )
                 }
             }
@@ -214,9 +215,9 @@ private extension DashboardView {
 
     @ViewBuilder
     var undoToast: some View {
-        if let undoAction = viewModel.undoAction {
+        if let undoAction = viewModel.transactionDeletion.undoAction {
             UndoToast(message: undoAction.message) {
-                viewModel.undoLastAction(using: repositories.transactions)
+                viewModel.transactionDeletion.undoLastAction(using: repositories.transactions)
             }
             .id(undoAction.id)
             .padding(.horizontal, DS.Spacing.lg)

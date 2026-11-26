@@ -60,6 +60,7 @@ extension DS {
         case purple
         case orange
         case pink
+        case yellow, red, teal, lime, cyan, indigo, black
 
         // MARK: - Computed Properties
 
@@ -67,8 +68,21 @@ extension DS {
             SwiftUI.Color(assetName)
         }
 
+        var foreground: SwiftUI.Color {
+            DS.AccountColor(name: rawValue).foreground
+        }
+
         var assetName: String {
-            "DS/category\(rawValue.prefix(1).uppercased())\(rawValue.dropFirst())"
+            switch self {
+            case .yellow: Color.Name.accent
+            case .red: Color.Name.accountRed
+            case .teal: Color.Name.accountTeal
+            case .lime: Color.Name.accountLime
+            case .cyan: Color.Name.accountCyan
+            case .indigo: Color.Name.accountIndigo
+            case .black: Color.Name.onAccent
+            default: "DS/category\(rawValue.capitalized)"
+            }
         }
     }
 }
@@ -80,26 +94,25 @@ extension DS.CategoryColor {
     /// Цвет плитки для категории, у которой в данных записан hex старой палитры
     /// (#34C759, #007AFF…): ближайший по оттенку токен. Серый и нераспознанный — `.blue`
     init(legacyHex: String) {
+        if let exact = DS.AccountColor.allCases.first(where: { $0.categoryHex.caseInsensitiveCompare(legacyHex) == .orderedSame }),
+           let color = Self(rawValue: exact.rawValue) {
+            self = color
+            return
+        }
         guard let hue = Self.hue(ofHex: legacyHex) else {
             self = .blue
             return
         }
 
-        self = Self.allCases.min { lhs, rhs in
-            Self.distance(hue, lhs.anchorHue) < Self.distance(hue, rhs.anchorHue)
-        } ?? .blue
+        self = Self.legacyAnchors.min { lhs, rhs in
+            Self.distance(hue, lhs.hue) < Self.distance(hue, rhs.hue)
+        }?.color ?? .blue
     }
 
     /// Оттенок токена на круге 0…360
-    private var anchorHue: Double {
-        switch self {
-        case .green: return 135
-        case .blue: return 211
-        case .purple: return 280
-        case .orange: return 35
-        case .pink: return 345
-        }
-    }
+    private static let legacyAnchors: [(color: Self, hue: Double)] = [
+        (.green, 135), (.blue, 211), (.purple, 280), (.orange, 35), (.pink, 345)
+    ]
 
     private static func distance(_ lhs: Double, _ rhs: Double) -> Double {
         let delta = abs(lhs - rhs)

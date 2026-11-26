@@ -25,13 +25,15 @@ enum CategoryCarouselItems {
         return categories.map { category in
             let spend = spending[category.id] ?? .zero
 
+            let color = DS.CategoryColor(legacyHex: category.colorHex)
             return CarouselCategory(
                 id: category.id,
                 title: category.name,
                 icon: Image(systemName: category.icon),
-                color: DS.CategoryColor(legacyHex: category.colorHex).color,
+                color: color.color,
                 monthlySpend: spend,
-                spendCaption: spend > .zero ? AppString.spentInMonth(MoneyFormat.money(spend), month: month) : nil
+                spendCaption: spend > .zero ? AppString.spentInMonth(MoneyFormat.money(spend), month: month) : nil,
+                iconColor: color.foreground
             )
         }
     }

@@ -1,117 +1,91 @@
-//
-//  SettingsRowView.swift
-//  ExpenseTracker
-//
-//  Created by Didar on 02.09.2026.
-//
-
 import SwiftUI
 
-/// Строка настроек: цветная иконка, название и шеврон.
-/// Нажатие подсвечивается фоном, а не масштабом: строка стоит в общей карточке
 struct SettingsRowView: View {
-
-    // MARK: - Properties
-
     let icon: Image
-    let iconColor: Color
+    var iconColor = DS.Color.surface
     let title: String
-    var titleColor: Color = AppColor.textPrimary
-    var showsChevron: Bool = true
+    var subtitle: String?
+    var value: String?
+    var isDestructive = false
     let action: () -> Void
 
-    // MARK: - Body
-
     var body: some View {
-        Button {
-            UIImpactFeedbackGenerator(style: .light).impactOccurred()
-            action()
-        } label: {
-            label
-        }
-        // Углы скругляет карточка раздела, поэтому подсветка строки прямоугольная
-        .buttonStyle(HighlightRowButtonStyle(cornerRadius: .zero))
-    }
-}
+        Button(action: action) {
+            HStack(spacing: DS.Spacing.md) {
+                SettingsIconBadge(icon: icon, fill: iconColor, isDestructive: isDestructive)
 
-// MARK: - Subviews
-private extension SettingsRowView {
+                VStack(alignment: .leading, spacing: DS.Settings.subtitleSpacing) {
+                    Text(title)
+                        .font(DS.Font.bodyBold)
+                        .foregroundStyle(isDestructive ? DS.Color.danger : DS.Color.ink)
+                    if let subtitle {
+                        Text(subtitle)
+                            .font(DS.Font.caption)
+                            .foregroundStyle(DS.Color.ink2)
+                    }
+                }
+                .frame(maxWidth: .infinity, alignment: .leading)
+                .fixedSize(horizontal: false, vertical: true)
 
-    var label: some View {
-        HStack(spacing: AppSpacing.large) {
-            SettingsIconBadge(icon: icon, color: iconColor)
-
-            AppText(title, style: .bodySmaller, color: titleColor)
-                .lineLimit(2)
-
-            Spacer(minLength: AppSpacing.small)
-
-            if showsChevron {
-                AppImage.chevronRight
-                    .font(.system(size: AppSize.glyphMedium, weight: .semibold))
-                    .foregroundStyle(AppColor.textTertiary)
+                if let value {
+                    Text(value)
+                        .font(DS.Font.moneySmall)
+                        .foregroundStyle(DS.Color.ink2)
+                }
+                if !isDestructive {
+                    DS.Icon.chevronRight
+                        .font(.system(size: DS.Size.iconXS, weight: .semibold))
+                        .foregroundStyle(DS.Color.ink)
+                        .accessibilityHidden(true)
+                }
             }
+            .settingsRowInsets()
+            .contentShape(Rectangle())
         }
-        .padding(.horizontal, AppSpacing.large)
-        .padding(.vertical, AppSpacing.medium)
-        .frame(minHeight: AppSize.iconXLarge)
-        .contentShape(Rectangle())
+        .buttonStyle(.outlineClickSegment)
     }
 }
 
-// MARK: - Icon Badge
-
-/// Цветная иконка в круге — общая для всех видов строк настроек
 struct SettingsIconBadge: View {
-
     let icon: Image
-    let color: Color
+    let fill: Color
+    var isDestructive = false
+    var foreground = DS.Color.ink
 
     var body: some View {
-        ZStack {
-            Circle()
-                .fill(color.opacity(0.15))
-                .frame(width: AppSize.iconMedium, height: AppSize.iconMedium)
-
-            icon
-                .font(.system(size: AppSize.glyphLarge, weight: .semibold))
-                .foregroundStyle(color)
-        }
-        .circleShadow()
-        .accessibilityHidden(true)
+        let size = CategoryTile.Size.medium
+        let color = isDestructive ? DS.Color.dangerFill : foreground
+        icon
+            .font(.system(size: size.iconSize, weight: .semibold))
+            .foregroundStyle(color)
+            .frame(width: size.side, height: size.side)
+            .background(fill, in: RoundedRectangle(cornerRadius: size.radius))
+            .brutalBorder(radius: size.radius, color: isDestructive ? DS.Color.dangerFill : DS.Color.ink)
+            .accessibilityHidden(true)
     }
 }
 
-// MARK: - Divider
-
-/// Разделитель строк настроек: начинается там же, где название строки
-struct SettingsRowDivider: View {
-
-    var body: some View {
-        Divider()
-            .padding(.leading, AppSpacing.large + AppSize.iconMedium + AppSpacing.large)
+extension View {
+    func settingsRowInsets() -> some View {
+        padding(.leading, DS.Spacing.md)
+            .padding(.trailing, DS.Settings.rowTrailing)
+            .padding(.vertical, DS.Spacing.sm)
+            .frame(minHeight: DS.Settings.rowHeight)
     }
 }
 
-#Preview {
-    VStack(spacing: .zero) {
-        SettingsRowView(
-            icon: AppImage.categoriesGrid,
-            iconColor: AppColor.accent,
-            title: AppString.categories
-        ) {}
+#Preview("Строки · светлая") { settingsRowsPreview }
+#Preview("Строки · тёмная") { settingsRowsPreview.preferredColorScheme(.dark) }
 
-        SettingsRowDivider()
-
-        SettingsRowView(
-            icon: AppImage.trashFill,
-            iconColor: AppColor.expense,
-            title: AppString.deleteAllData,
-            titleColor: AppColor.expense,
-            showsChevron: false
-        ) {}
+@MainActor
+private var settingsRowsPreview: some View {
+    SettingsSectionView(title: AppString.general) {
+        SettingsRowView(icon: Image(systemName: "wallet.bifold"), iconColor: DS.CategoryColor.green.color,
+                        title: AppString.accounts, value: "3") {}
+        ListDivider()
+        SettingsRowView(icon: DS.Icon.trash, iconColor: DS.Color.accountRed,
+                        title: AppString.deleteAllData, subtitle: AppString.settingsDeleteDataSubtitle, isDestructive: true) {}
     }
-    .layeredCard()
-    .padding(AppSpacing.large)
-    .background(AppColor.background)
+    .padding(DS.Spacing.xl)
+    .background(DS.Color.bg)
 }

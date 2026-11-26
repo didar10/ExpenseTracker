@@ -39,7 +39,7 @@ final class StatisticsViewModel {
     
     var modelContext: ModelContext?
 
-    private let accountSelection: AccountSelectionStore
+    let accountSelection: AccountSelectionStore
 
     // MARK: - Init
 
@@ -165,18 +165,24 @@ final class StatisticsViewModel {
         calculateStatistics()
     }
     
-    /// Возвращает транзакции для конкретной категории
-    func transactions(for category: Category) -> [Transaction] {
-        filteredTransactions.filter { $0.category == category }
+    var categoryTransactionsScope: CategoryTransactionsScope {
+        CategoryTransactionsScope(
+            period: selectedPeriod,
+            interval: periodInterval,
+            title: periodTitle,
+            type: selectedType,
+            accountID: selectedAccount?.persistentModelID
+        )
     }
-    
+
     // MARK: - Private Methods
     
     /// Операции выбранного типа за выбранный период по выбранному счету
     private var filteredTransactions: [Transaction] {
-        transactions.filter {
+        let interval = periodInterval
+        return transactions.filter {
             $0.type == selectedType &&
-            periodInterval.contains($0.date) &&
+            $0.date >= interval.start && $0.date < interval.end &&
             (selectedAccount == nil || $0.account == selectedAccount)
         }
     }

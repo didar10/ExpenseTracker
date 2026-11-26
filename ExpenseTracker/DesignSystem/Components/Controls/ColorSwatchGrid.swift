@@ -1,13 +1,13 @@
 import SwiftUI
 
-struct AccountColorGrid: View {
-    @Binding var selection: String
+struct ColorSwatchGrid: View {
+    @Binding var selection: DS.AccountColor
 
     var body: some View {
         LazyVGrid(columns: Array(repeating: GridItem(.flexible(), spacing: DS.AccountForm.paletteSpacing), count: DS.AccountForm.paletteColumns), spacing: DS.AccountForm.paletteSpacing) {
             ForEach(DS.AccountColor.allCases, id: \.self) { color in
-                let selected = DS.AccountColor(name: selection) == color
-                Button { selection = color.rawValue } label: {
+                let selected = selection == color
+                Button { selection = color } label: {
                     RoundedRectangle(cornerRadius: DS.AccountForm.swatchRadius)
                         .fill(color.color)
                         .frame(height: DS.AccountForm.swatchHeight)
@@ -32,8 +32,8 @@ struct AccountColorGrid: View {
 }
 
 #Preview("Светлая") {
-    AccountColorGrid(selection: .constant("yellow")).padding(DS.Spacing.xl).background(DS.Color.bg)
+    ColorSwatchGrid(selection: .constant(.yellow)).padding(DS.Spacing.xl).background(DS.Color.bg)
 }
 #Preview("Темная") {
-    AccountColorGrid(selection: .constant("green")).padding(DS.Spacing.xl).background(DS.Color.bg).preferredColorScheme(.dark)
+    ColorSwatchGrid(selection: .constant(.green)).padding(DS.Spacing.xl).background(DS.Color.bg).preferredColorScheme(.dark)
 }

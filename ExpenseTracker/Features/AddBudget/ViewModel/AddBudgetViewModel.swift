@@ -94,13 +94,15 @@ final class AddBudgetViewModel {
         let items = categories.map { category in
             let spend = lastMonthSpend(of: category.id)
 
+            let color = DS.CategoryColor(legacyHex: category.colorHex)
             return CarouselCategory(
                 id: category.id,
                 title: category.name,
                 icon: Image(systemName: category.icon),
-                color: DS.CategoryColor(legacyHex: category.colorHex).color,
+                color: color.color,
                 monthlySpend: spend,
-                spendCaption: spend > 0 ? AppString.addBudgetSpentInMonth(MoneyFormat.money(spend), month: month) : nil
+                spendCaption: spend > 0 ? AppString.addBudgetSpentInMonth(MoneyFormat.money(spend), month: month) : nil,
+                iconColor: color.foreground
             )
         }
         return CarouselCategory.orderedBySpend(items)

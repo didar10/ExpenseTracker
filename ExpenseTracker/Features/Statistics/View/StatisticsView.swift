@@ -65,13 +65,12 @@ struct StatisticsView: View {
         .background(DS.Color.bg)
         .sensoryFeedback(.impact(weight: .light), trigger: selectedStatistic) { _, statistic in statistic != nil }
         .sensoryFeedback(.selection, trigger: viewModel.selectedType)
-        .sheet(item: $selectedStatistic) { statistic in
+        .sheet(item: $selectedStatistic, onDismiss: viewModel.fetchData) { statistic in
             CategoryTransactionsView(
                 category: statistic.category,
-                periodTitle: viewModel.periodTitle,
-                transactions: viewModel.transactions(for: statistic.category)
+                scope: viewModel.categoryTransactionsScope,
+                accountSelection: viewModel.accountSelection
             )
-            .presentationDragIndicator(.hidden)
         }
         .sheet(isPresented: $showingAccountsView) {
             AccountSelectionSheet(selectedAccount: viewModel.selectedAccount) { account in

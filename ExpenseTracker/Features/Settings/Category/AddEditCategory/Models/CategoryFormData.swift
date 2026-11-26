@@ -16,8 +16,8 @@ struct CategoryFormData: Equatable {
 
     init(
         name: String = "",
-        icon: String = "cart.fill",
-        colorHex: String = "#34C759",
+        icon: String = "basket",
+        colorHex: String = "#8EE3A1",
         type: TransactionType = .expense
     ) {
         self.name = name
@@ -33,11 +33,7 @@ struct CategoryFormData: Equatable {
         self.type = category.type
     }
     
-    var isValid: Bool {
-        !name.trimmingCharacters(in: .whitespaces).isEmpty
-    }
-    
     var trimmedName: String {
-        name.trimmingCharacters(in: .whitespaces)
+        name.trimmingCharacters(in: .whitespacesAndNewlines)
     }
 }
