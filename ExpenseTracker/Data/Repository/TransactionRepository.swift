@@ -29,22 +29,31 @@ struct SwiftDataTransactionRepository: TransactionRepository {
 
     @discardableResult
     func add(_ draft: TransactionDraft) throws -> Transaction {
-        let transaction = draft.makeTransaction()
+        try validateTransferAccounts(in: draft)
+        let transaction = try Transaction(validating: draft)
         context.insert(transaction)
         try context.saveOrRollback()
         return transaction
     }
 
     func update(_ transaction: Transaction, with draft: TransactionDraft) throws {
+        try validateTransferAccounts(in: draft)
         let previous = TransactionDraft(transaction)
-        draft.apply(to: transaction)
+        try transaction.apply(draft)
 
         do {
             try context.saveOrRollback()
         } catch {
             // Иначе экран показывал бы правку, которой нет в базе
-            previous.apply(to: transaction)
+            try transaction.apply(previous)
             throw error
+        }
+    }
+
+    private func validateTransferAccounts(in draft: TransactionDraft) throws {
+        guard draft.kind == .transfer else { return }
+        guard draft.fromAccount?.modelContext === context, draft.toAccount?.modelContext === context else {
+            throw TransferValidationError.unavailableAccount
         }
     }
 

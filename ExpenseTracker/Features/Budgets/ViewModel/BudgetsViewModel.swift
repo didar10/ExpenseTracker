@@ -191,7 +191,7 @@ final class BudgetsViewModel {
         // Операции с датой в будущем еще не потрачены
         var byCategory: [PersistentIdentifier?: (category: Category?, amount: Decimal)] = [:]
         for transaction in transactions
-        where transaction.type == .expense && month.interval.contains(transaction.date) && transaction.date <= currentDate {
+        where transaction.kind == .expense && month.interval.contains(transaction.date) && transaction.date <= currentDate {
             let key = transaction.category?.persistentModelID
             byCategory[key, default: (transaction.category, 0)].amount += transaction.amount
         }

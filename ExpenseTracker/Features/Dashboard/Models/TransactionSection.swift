@@ -21,7 +21,7 @@ struct TransactionSection: Identifiable {
     /// Итог дня: доходы минус расходы — «+473 050» в заголовке дня
     var total: Decimal {
         transactions.reduce(into: Decimal.zero) { total, transaction in
-            total += transaction.type == .income ? transaction.amount : -transaction.amount
+            total += transaction.netIncome
         }
     }
 

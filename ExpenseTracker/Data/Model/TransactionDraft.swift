@@ -1,26 +1,22 @@
-//
-//  TransactionDraft.swift
-//  ExpenseTracker
-//
-//  Created by Didar on 26.10.2026.
-//
-
 import Foundation
+import SwiftData
 
-/// Поля операции без привязки к контексту: из них репозиторий создает
-/// или обновляет операцию, ими же восстанавливается удаленная
+enum TransferValidationError: Error, Equatable {
+    case nonPositiveAmount
+    case sameAccount
+    case unavailableAccount
+}
+
+/// Данные для создания, обновления и восстановления операции после удаления.
 struct TransactionDraft {
-
-    // MARK: - Properties
-
-    var amount: Decimal
-    var date: Date
-    var note: String?
-    var type: TransactionType
-    var category: Category?
-    var account: Account?
-
-    // MARK: - Init
+    let amount: Decimal
+    let date: Date
+    let note: String?
+    let kind: TransactionKind
+    let category: Category?
+    let account: Account?
+    let fromAccount: Account?
+    let toAccount: Account?
 
     init(
         amount: Decimal,
@@ -33,42 +29,43 @@ struct TransactionDraft {
         self.amount = amount
         self.date = date
         self.note = note
-        self.type = type
+        kind = TransactionKind(type)
         self.category = category
         self.account = account
+        fromAccount = nil
+        toAccount = nil
+    }
+
+    init(amount: Decimal, date: Date, note: String? = nil, fromAccount: Account, toAccount: Account) {
+        self.amount = amount
+        self.date = date
+        self.note = note
+        kind = .transfer
+        category = nil
+        account = nil
+        self.fromAccount = fromAccount
+        self.toAccount = toAccount
     }
 
     init(_ transaction: Transaction) {
-        self.init(
-            amount: transaction.amount,
-            date: transaction.date,
-            note: transaction.note,
-            type: transaction.type,
-            category: transaction.category,
-            account: transaction.account
-        )
+        amount = transaction.amount
+        date = transaction.date
+        note = transaction.note
+        kind = transaction.kind
+        category = transaction.category
+        account = transaction.account
+        fromAccount = transaction.fromAccount
+        toAccount = transaction.toAccount
     }
 
-    // MARK: - Methods
-
-    func makeTransaction() -> Transaction {
-        Transaction(
-            amount: amount,
-            date: date,
-            note: note,
-            type: type,
-            category: category,
-            account: account
-        )
-    }
-
-    /// Применяет поля к существующей операции
-    func apply(to transaction: Transaction) {
-        transaction.amount = amount
-        transaction.date = date
-        transaction.note = note
-        transaction.type = type
-        transaction.category = category
-        transaction.account = account
+    func validate() throws {
+        guard kind == .transfer else { return }
+        guard !amount.isNaN, amount > .zero else { throw TransferValidationError.nonPositiveAmount }
+        guard let fromAccount, let toAccount, !fromAccount.isDeleted, !toAccount.isDeleted else {
+            throw TransferValidationError.unavailableAccount
+        }
+        guard fromAccount.persistentModelID != toAccount.persistentModelID else {
+            throw TransferValidationError.sameAccount
+        }
     }
 }

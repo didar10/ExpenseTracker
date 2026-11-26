@@ -72,7 +72,7 @@ struct DailyAllowance: Equatable {
         var spentToday: Decimal = 0
 
         // Операции с датой в будущем не считаются: они еще не потрачены
-        for transaction in transactions where transaction.type == .expense {
+        for transaction in transactions where transaction.kind == .expense {
             if transaction.date >= month.start, transaction.date < startOfToday {
                 spentBeforeToday += transaction.amount
             } else if transaction.date >= startOfToday, transaction.date < startOfTomorrow {

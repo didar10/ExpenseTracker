@@ -46,6 +46,9 @@ struct FixtureTests {
         #expect(transactions.allSatisfy { $0.date >= month.start && $0.date <= now })
         #expect(transactions.contains { $0.type == .income })
         #expect(transactions.contains { $0.type == .expense })
+        let transfers = transactions.filter { $0.kind == .transfer }
+        #expect(transfers.count == 3)
+        #expect(transfers.allSatisfy { $0.amount > 0 && $0.category == nil && $0.fromAccount != nil && $0.toAccount != nil && $0.fromAccount !== $0.toAccount })
     }
 
     // MARK: - Empty

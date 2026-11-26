@@ -23,6 +23,13 @@ final class Account {
     
     @Relationship(deleteRule: .cascade, inverse: \Transaction.account)
     var transactions: [Transaction] = []
+
+    // При удалении любого счета удаляется весь перевод, включая его вторую сторону.
+    @Relationship(deleteRule: .cascade, inverse: \Transaction.fromAccount)
+    var outgoingTransfers: [Transaction] = []
+
+    @Relationship(deleteRule: .cascade, inverse: \Transaction.toAccount)
+    var incomingTransfers: [Transaction] = []
     
     init(
         name: String,
@@ -49,25 +56,18 @@ final class Account {
     var currentBalance: Decimal {
         guard isAvailable else { return 0 }
 
-        var balance = initialBalance
-        
-        for transaction in transactions {
-            if transaction.type == .income {
-                balance += transaction.amount
-            } else {
-                balance -= transaction.amount
-            }
-        }
-        
-        return balance
+        let entries = transactions.lazy.filter { !$0.isDeleted }.reduce(Decimal.zero) { $0 + $1.netIncome }
+        let outgoing = outgoingTransfers.lazy.filter { !$0.isDeleted }.reduce(Decimal.zero) { $0 + $1.amount }
+        let incoming = incomingTransfers.lazy.filter { !$0.isDeleted }.reduce(Decimal.zero) { $0 + $1.amount }
+        return initialBalance + entries - outgoing + incoming
     }
-    
+
     /// Общий доход по счету
     var totalIncome: Decimal {
         guard isAvailable else { return 0 }
 
         return transactions
-            .filter { $0.type == .income }
+            .filter { !$0.isDeleted && $0.kind == .income }
             .reduce(0) { $0 + $1.amount }
     }
     
@@ -76,7 +76,7 @@ final class Account {
         guard isAvailable else { return 0 }
 
         return transactions
-            .filter { $0.type == .expense }
+            .filter { !$0.isDeleted && $0.kind == .expense }
             .reduce(0) { $0 + $1.amount }
     }
     

@@ -15,25 +15,22 @@ struct BalanceData {
     
     /// Инициализатор для транзакций (обратная совместимость)
     init(transactions: [Transaction]) {
-        var balance: Decimal = 0
         var income: Decimal = 0
         var expenses: Decimal = 0
-        
+
         for transaction in transactions {
-            if transaction.type == .income {
-                balance += transaction.amount
-                income += transaction.amount
-            } else {
-                balance -= transaction.amount
-                expenses += transaction.amount
+            switch transaction.kind {
+            case .income: income += transaction.amount
+            case .expense: expenses += transaction.amount
+            case .transfer: break
             }
         }
-        
-        self.balance = balance
-        self.totalIncome = income
-        self.totalExpenses = expenses
+
+        balance = income - expenses
+        totalIncome = income
+        totalExpenses = expenses
     }
-    
+
     /// Инициализатор для счетов (общий баланс всех счетов)
     init(accounts: [Account]) {
         var totalBalance: Decimal = 0

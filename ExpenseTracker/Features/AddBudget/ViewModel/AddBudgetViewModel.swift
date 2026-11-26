@@ -215,7 +215,7 @@ final class AddBudgetViewModel {
         }
         var result: [UUID: [Decimal]] = [:]
 
-        for transaction in transactions where transaction.type == .expense {
+        for transaction in transactions where transaction.kind == .expense {
             guard let id = transaction.category?.id,
                   let index = (1..<starts.count).first(where: { transaction.date >= starts[$0] && transaction.date < starts[$0 - 1] })
             else { continue }

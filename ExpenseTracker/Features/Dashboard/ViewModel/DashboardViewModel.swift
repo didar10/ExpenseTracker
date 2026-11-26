@@ -56,7 +56,7 @@ final class DashboardViewModel: ObservableObject {
 
     func filteredTransactions(from transactions: [Transaction]) -> [Transaction] {
         guard let selectedAccount else { return transactions }
-        return transactions.filter { $0.account?.id == selectedAccount.id }
+        return transactions.filter { $0.involves(selectedAccount) }
     }
 
     /// Все данные экрана считаются за один проход: раньше список операций
@@ -71,7 +71,8 @@ final class DashboardViewModel: ObservableObject {
                 periodTransactions: periodTransactions
             ),
             totalBalance: totalBalanceData(accounts: accounts, transactions: transactions).balance,
-            sections: TransactionSection.group(periodTransactions),
+            // Переводы появятся в ленте вместе с поддержкой их редактирования.
+            sections: TransactionSection.group(periodTransactions.filter { $0.kind != .transfer }),
             dailyAllowance: dailyAllowance(transactions: transactions)
         )
     }

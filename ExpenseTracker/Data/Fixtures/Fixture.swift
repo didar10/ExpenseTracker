@@ -36,7 +36,7 @@ enum Fixture: CaseIterable {
     @MainActor
     func populate(_ context: ModelContext, now: Date = .now) throws {
         switch self {
-        case .sample: SampleData.insert(into: context, now: now)
+        case .sample: try SampleData.insert(into: context, now: now)
         case .empty: break
         }
 
@@ -130,9 +130,15 @@ private enum SampleData {
         Operation(day: 13, hour: 10, amount: 20_000, category: .gift, account: .cash, note: "От родителей")
     ]
 
+    static let transfers: [(day: Int, hour: Int, amount: Decimal, from: AccountKey, to: AccountKey)] = [
+        (5, 13, 50_000, .kaspi, .cash),
+        (8, 14, 75_000, .freedom, .kaspi),
+        (12, 11, 10_000, .cash, .freedom)
+    ]
+
     // MARK: - Methods
 
-    static func insert(into context: ModelContext, now: Date) {
+    static func insert(into context: ModelContext, now: Date) throws {
         // Модели создаются заново на каждый вызов: SwiftData-модель живет в одном контексте
         let accounts = self.accounts.mapValues {
             Account(name: $0.name, icon: $0.icon, color: $0.color, initialBalance: $0.initialBalance, isDefault: $0.isDefault)
@@ -168,6 +174,17 @@ private enum SampleData {
                     account: accounts[operation.account]
                 )
             )
+        }
+
+        for transfer in transfers {
+            guard let from = accounts[transfer.from], let to = accounts[transfer.to] else { continue }
+            let draft = TransactionDraft(
+                amount: transfer.amount,
+                date: date(day: transfer.day, hour: transfer.hour, now: now),
+                fromAccount: from,
+                toAccount: to
+            )
+            context.insert(try Transaction(validating: draft))
         }
     }
 

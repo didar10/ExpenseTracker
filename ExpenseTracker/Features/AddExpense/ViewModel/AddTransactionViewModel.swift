@@ -112,7 +112,7 @@ final class AddTransactionViewModel: ObservableObject {
         selectedAccount = transaction.account
         note = transaction.note ?? ""
         date = transaction.date
-        type = transaction.type
+        type = transaction.type ?? .expense
     }
 
     // MARK: - Computed Properties
@@ -196,7 +196,7 @@ final class AddTransactionViewModel: ObservableObject {
     /// Копия операции на сегодня. Архивный счет не подставляется — на нем нельзя сохранить
     private func applyTemplate(_ template: Transaction) {
         calculator = CalculatorEngine(amount: template.amount)
-        type = template.type
+        type = template.type ?? .expense
         selectedCategory = template.category
         note = template.note ?? ""
         date = .now
@@ -228,7 +228,7 @@ final class AddTransactionViewModel: ObservableObject {
     // MARK: - Save
 
     func save(using repository: TransactionRepository) -> Bool {
-        guard isSaveEnabled, let amount else { return false }
+        guard editingTransaction?.kind != .transfer, isSaveEnabled, let amount else { return false }
 
         let draft = TransactionDraft(
             amount: amount,
