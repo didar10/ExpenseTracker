@@ -149,7 +149,7 @@ private struct PeriodSelectorGallery: View {
                 }
             }
             DSPreviewCase("Нажатый сегмент") {
-                OutlineClickBody(shape: .segment, fill: .clear, isPressed: true) {
+                OutlineClickBody(shape: .segment(), fill: .clear, isPressed: true) {
                     Text("Ноябрь")
                         .font(DS.Font.control)
                         .padding(.horizontal, DS.Spacing.sm)

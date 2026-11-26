@@ -145,8 +145,7 @@ private extension DatePickerSheetContent {
                 .font(.system(size: DS.Size.iconM, weight: .semibold))
                 .frame(width: Metrics.monthButton, height: Metrics.monthButton)
         }
-        .buttonStyle(OutlineClickStyle(shape: .segment, fill: .clear))
-        .clipShape(RoundedRectangle(cornerRadius: Metrics.dayRadius))
+        .buttonStyle(OutlineClickStyle(shape: .segment(radius: Metrics.dayRadius), fill: .clear))
         .disabled(!isEnabled)
         .accessibilityLabel(label)
     }
@@ -174,7 +173,8 @@ private extension DatePickerSheetContent {
                 }
                 .contentShape(shape)
         }
-        .buttonStyle(.plain)
+        // Выбранный день и сегодня обводит сама метка, щелчок добавляет заливку и обводку 2.5 pt
+        .buttonStyle(OutlineClickStyle(shape: .segment(radius: Metrics.dayRadius), fill: .clear))
         .disabled(!isSelectable)
         .accessibilityLabel(day.formatted(date: .complete, time: .omitted))
         .accessibilityAddTraits(isSelected ? .isSelected : [])

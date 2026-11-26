@@ -218,7 +218,8 @@ struct BrutalMenuList: View {
             .background(item.isSelected ? DS.Color.accent : .clear)
             .contentShape(Rectangle())
         }
-        .buttonStyle(MenuRowStyle())
+        // Строка меню — «щелчок обводки» с обводкой внутрь строки
+        .buttonStyle(.outlineClickSegment)
         .accessibilityAddTraits(item.isSelected ? .isSelected : [])
     }
 
@@ -226,19 +227,6 @@ struct BrutalMenuList: View {
         if item.isSelected { return DS.Color.onAccent }
         return item.role == .destructive ? DS.Color.danger : DS.Color.ink
     }
-}
-
-/// Нажатая строка подсвечивается полупрозрачным accent — обводки у строки нет
-private struct MenuRowStyle: ButtonStyle {
-
-    func makeBody(configuration: Configuration) -> some View {
-        configuration.label
-            .background(DS.Color.accent.opacity(configuration.isPressed ? Constants.pressedOpacity : .zero))
-    }
-}
-
-private enum Constants {
-    static let pressedOpacity: Double = 0.5
 }
 
 // MARK: - Previews

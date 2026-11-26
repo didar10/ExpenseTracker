@@ -8,7 +8,8 @@
 import SwiftUI
 
 /// Кнопка с жесткой тенью: при нажатии лицевая сторона «вдавливается» в тень —
-/// сдвигается на размер тени и закрывает ее. Только для главных действий.
+/// за ~50 мс сдвигается на 3 pt в сторону тени и закрывает ее. Только для главных действий.
+/// При «Уменьшить движение» сдвига нет: тень просто исчезает на время нажатия.
 ///
 /// Неактивное состояние берется из `.disabled(_:)`: фон bg, пунктирная обводка, без тени
 struct PressIntoShadowStyle: ButtonStyle {
@@ -22,6 +23,8 @@ struct PressIntoShadowStyle: ButtonStyle {
         case danger
         /// Подтверждение удаления в алерте: красная заливка, белый текст, красная тень
         case dangerFilled
+        /// Кнопка-иконка с тенью на фоне surface: «+» в шапке бюджетов — `Budgets.html` (.rbtn)
+        case secondary
     }
 
     // MARK: - Properties
@@ -69,7 +72,7 @@ struct PressIntoShadowBody<Label: View>: View {
 
         switch variant {
         case .primary: return DS.Color.accent
-        case .danger: return DS.Color.surface
+        case .danger, .secondary: return DS.Color.surface
         case .dangerFilled: return DS.Color.dangerFill
         }
     }
@@ -79,6 +82,7 @@ struct PressIntoShadowBody<Label: View>: View {
 
         switch variant {
         case .primary: return DS.Color.onAccent
+        case .secondary: return DS.Color.ink
         case .danger: return DS.Color.danger
         case .dangerFilled: return DS.Color.onDanger
         }
@@ -86,21 +90,30 @@ struct PressIntoShadowBody<Label: View>: View {
 
     private var borderColor: Color {
         switch variant {
-        case .primary, .dangerFilled: return DS.Color.ink
+        case .primary, .secondary, .dangerFilled: return DS.Color.ink
         case .danger: return DS.Color.danger
         }
     }
 
     private var shadowColor: Color {
         switch variant {
-        case .primary: return DS.Color.ink
+        case .primary, .secondary: return DS.Color.ink
         case .danger, .dangerFilled: return DS.Color.danger
         }
     }
 
+    private var isPressedDown: Bool {
+        isPressed && isEnabled
+    }
+
     /// Лицевая сторона сдвигается ровно на размер тени и закрывает ее
     private var faceOffset: CGSize {
-        isPressed && isEnabled ? CGSize(width: shadow.x, height: shadow.y) : .zero
+        isPressedDown && !reduceMotion ? CGSize(width: shadow.x, height: shadow.y) : .zero
+    }
+
+    /// Без сдвига тень некому закрыть — при «Уменьшить движение» она прячется сама
+    private var isShadowVisible: Bool {
+        isEnabled && !(isPressedDown && reduceMotion)
     }
 
     // MARK: - Body
@@ -138,7 +151,7 @@ private extension PressIntoShadowBody {
     /// Тень стоит на месте, двигается только лицевая сторона
     @ViewBuilder
     var shadowShape: some View {
-        if isEnabled {
+        if isShadowVisible {
             RoundedRectangle(cornerRadius: radius)
                 .fill(shadowColor)
                 .offset(x: shadow.x, y: shadow.y)

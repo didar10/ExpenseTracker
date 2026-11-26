@@ -72,7 +72,6 @@ private extension FloatingTabBar {
         } label: {
             tab.icon
                 .font(.system(size: DS.Size.iconTab, weight: .medium))
-                .foregroundStyle(isSelected ? DS.Color.bg : DS.Color.ink2)
                 .frame(width: DS.Size.tabItem, height: DS.Size.tabItem)
                 .background {
                     if isSelected {
@@ -83,7 +82,12 @@ private extension FloatingTabBar {
                 }
                 .contentShape(Rectangle())
         }
-        .buttonStyle(.plain)
+        // Щелчок: плашка вкладки на 90 мс становится accent с обводкой 2.5 pt
+        .buttonStyle(OutlineClickStyle(
+            shape: .segment(radius: DS.Radius.control),
+            fill: .clear,
+            foreground: isSelected ? DS.Color.bg : DS.Color.ink2
+        ))
         .accessibilityLabel(tab.title)
         .accessibilityAddTraits(isSelected ? [.isSelected] : [])
     }

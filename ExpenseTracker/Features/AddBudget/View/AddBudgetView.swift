@@ -57,7 +57,6 @@ struct AddBudgetView: View {
         .background(DS.Color.bg)
         .onGeometryChange(for: Bool.self) { $0.size.height < Metrics.compactHeight } action: { isCompact = $0 }
         .sensoryFeedback(.selection, trigger: viewModel.selectedCategoryID)
-        .sensoryFeedback(.selection, trigger: viewModel.input)
         .brutalSheet(item: $categorySheet, title: { _ in AppString.categories }, detents: [.large]) { mode in
             CategoryListSheetContent(
                 categories: viewModel.carouselItems,

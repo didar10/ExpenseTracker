@@ -98,6 +98,8 @@ final class AddTransactionViewModel: ObservableObject {
     // MARK: - Input Data
 
     @Published private(set) var calculator = CalculatorEngine()
+    /// Что изменило последнее нажатие клавиши — для анимации суммы
+    @Published private(set) var keystrokes = AmountKeystrokes()
     @Published var selectedCategory: Category?
     /// Счет расхода или дохода; в переводе — счет списания «Откуда»
     @Published var selectedAccount: Account?
@@ -345,7 +347,11 @@ final class AddTransactionViewModel: ObservableObject {
     }
 
     func input(_ key: CalculatorKey) {
+        let previous = calculator
         calculator.input(key)
+
+        guard calculator != previous else { return }
+        keystrokes.record(key, hasOperator: calculator.hasOperator)
     }
 
     /// Счет расхода/дохода или «Откуда» перевода. Совпавший счет «Куда» сбрасывается:

@@ -8,7 +8,8 @@
 import SwiftUI
 
 /// Клавиатура калькулятора 4×4: цифры, «,», «⌫» и операторы.
-/// Операторы — черные, «,» и «⌫» — на фоне bg; нажатие — `OutlineClickStyle`.
+/// Операторы — черные, «,» и «⌫» — на фоне bg; нажатие — `OutlineClickStyle`
+/// и легкий хаптик на каждую клавишу, даже если сумма не изменилась.
 /// Клавиши 50 pt, при нехватке места — до 40 pt.
 ///
 /// Раскладка `.amount` — 3×4 без операторов и запятой: целая сумма с «000» (лимит на месяц)
@@ -54,6 +55,8 @@ struct CalculatorKeypad: View {
     var layout: Layout = .calculator
     let onKey: (CalculatorKey) -> Void
 
+    @State private var keyPressCount = 0
+
     // MARK: - Body
 
     var body: some View {
@@ -68,6 +71,7 @@ struct CalculatorKeypad: View {
                 }
             }
         }
+        .sensoryFeedback(.impact(weight: .light), trigger: keyPressCount)
     }
 }
 
@@ -79,6 +83,7 @@ private extension CalculatorKeypad {
         let style = KeyAppearance(key)
 
         return Button {
+            keyPressCount += 1
             onKey(key)
         } label: {
             label(for: key)

@@ -85,24 +85,31 @@ private struct DashboardTransactionRow: View {
     let onDelete: () -> Void
 
     @State private var isMenuShown = false
+    /// Палец на строке: «щелчок обводки» без кнопки — у кнопки удержание открыло бы операцию
+    @State private var isPressed = false
 
     // MARK: - Body
 
     var body: some View {
         let model = TransactionRowModel(transaction, account: account)
 
-        TransactionRow(
-            title: model.title,
-            subtitle: model.subtitle,
-            amount: model.amount,
-            tone: model.tone,
-            icon: model.icon,
-            color: model.color
-        )
-        .background(DS.Color.surface)
+        OutlineClickBody(shape: .segment(), fill: DS.Color.surface, isPressed: isPressed) {
+            TransactionRow(
+                title: model.title,
+                subtitle: model.subtitle,
+                amount: model.amount,
+                tone: model.tone,
+                icon: model.icon,
+                color: model.color
+            )
+        }
         // Тап и удержание — жестами, а не кнопкой: удержание не должно открывать операцию
         .onTapGesture(perform: onTap)
-        .onLongPressGesture { isMenuShown = true }
+        .onLongPressGesture {
+            isMenuShown = true
+        } onPressingChanged: { isPressing in
+            isPressed = isPressing
+        }
         .sensoryFeedback(.impact(weight: .medium), trigger: isMenuShown) { _, isShown in isShown }
         .brutalMenu(isPresented: $isMenuShown, items: menuItems, liftsSource: true)
         .accessibilityElement(children: .ignore)

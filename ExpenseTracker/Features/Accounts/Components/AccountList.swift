@@ -95,9 +95,11 @@ struct AccountList: View {
                 }
                 .padding(.vertical, DS.Spacing.sm)
                 .frame(maxWidth: .infinity, minHeight: DS.AccountList.rowHeight, alignment: .leading)
+                .foregroundStyle(selected ? DS.Color.onAccent : DS.Color.ink)
                 .contentShape(Rectangle())
             }
-            .buttonStyle(.plain)
+            // Вне правки строка — одна кнопка: щелчок подсвечивает ее вместе с отступами
+            .buttonStyle(.outlineClickRow(bleed: isEditing ? EdgeInsets() : rowBleed))
             .allowsHitTesting(!isEditing || item.id != nil)
             .accessibilityElement(children: .combine)
             .accessibilityAddTraits(selected ? .isSelected : [])
@@ -126,6 +128,10 @@ struct AccountList: View {
         }
     }
 
+    private var rowBleed: EdgeInsets {
+        EdgeInsets(top: .zero, leading: DS.Spacing.md, bottom: .zero, trailing: DS.AccountList.trailingPadding)
+    }
+
     private func title(_ item: AccountListItem) -> some View {
         Text(item.title)
             .font(DS.Font.bodyBold)
@@ -136,14 +142,10 @@ struct AccountList: View {
         Button { onDelete(id) } label: {
             DS.Icon.minus
                 .font(.system(size: DS.Size.iconXS, weight: .bold))
-                .foregroundStyle(DS.Color.dangerFill)
                 .frame(width: DS.AccountList.deleteSize, height: DS.AccountList.deleteSize)
-                .background(DS.Color.overStripeSoft, in: Circle())
-                .overlay { Circle().strokeBorder(DS.Color.dangerFill, lineWidth: DS.Stroke.regular) }
                 .frame(minHeight: DS.Size.control)
-                .contentShape(Rectangle())
         }
-        .buttonStyle(.plain)
+        .buttonStyle(.outlineClickDelete(diameter: DS.AccountList.deleteSize, fill: DS.Color.overStripeSoft))
         .accessibilityLabel(AppString.deleteNamedAccount(title))
     }
 

@@ -149,7 +149,7 @@ private extension CategoryListSheetContent {
             .contentShape(Rectangle())
         }
         .buttonStyle(OutlineClickStyle(
-            shape: .segment,
+            shape: .segment(),
             fill: .clear,
             foreground: isSelected ? DS.Color.onAccent : DS.Color.ink
         ))

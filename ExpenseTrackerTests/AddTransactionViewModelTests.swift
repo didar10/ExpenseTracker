@@ -184,6 +184,25 @@ struct AddTransactionViewModelTests {
 
     // MARK: - Сумма и выражение
 
+    @Test func keystrokesTrackWhatChangedTheAmount() {
+        let viewModel = AddTransactionViewModel(accountSelection: AccountSelectionStore())
+
+        // ⌫ на пустой сумме ничего не меняет — анимации нет
+        viewModel.input(.backspace)
+        #expect(viewModel.keystrokes == AmountKeystrokes())
+
+        type("12", into: viewModel)
+        #expect(viewModel.keystrokes.amountPrint == 2)
+
+        type("+", into: viewModel)
+        type("5", into: viewModel)
+        #expect(viewModel.keystrokes.expressionPrint == 2)
+        #expect(viewModel.keystrokes.amountPrint == 2)
+
+        viewModel.input(.backspace)
+        #expect(viewModel.keystrokes.erase == 1)
+    }
+
     @Test func zeroIsPlaceholder() {
         let viewModel = AddTransactionViewModel(accountSelection: AccountSelectionStore())
 

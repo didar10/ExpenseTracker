@@ -113,7 +113,7 @@ private extension BudgetsView {
 
             Spacer(minLength: DS.Spacing.sm)
 
-            IconButton(icon: DS.Icon.plus, accessibilityLabel: AppString.newBudget, action: viewModel.addBudget)
+            IconButton(icon: DS.Icon.plus, accessibilityLabel: AppString.newBudget, elevation: .raised, action: viewModel.addBudget)
         }
         .frame(minHeight: Metrics.titleHeight)
         .padding(.top, DS.Spacing.xs)

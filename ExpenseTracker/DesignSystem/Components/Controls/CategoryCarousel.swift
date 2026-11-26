@@ -225,7 +225,8 @@ private extension CategoryCarousel {
                     }
                 }
         }
-        .buttonStyle(.plain)
+        // Плитка окрашена цветом категории: щелчок только утолщает обводку до 2.5 pt
+        .buttonStyle(OutlineClickStyle(shape: .segment(radius: metrics.tileRadius), fill: .clear, highlight: .borderOnly))
     }
 
     /// Рамка-фокус: обводка ink и внутреннее кольцо accent, стоит на месте

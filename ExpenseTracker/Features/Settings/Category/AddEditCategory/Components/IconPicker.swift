@@ -26,16 +26,16 @@ struct IconPicker: View {
                 Button { selection = icon } label: {
                     Image(systemName: icon)
                         .font(.system(size: DS.Size.iconL, weight: .semibold))
-                        .foregroundStyle(selected ? DS.Color.onAccent : DS.Color.ink)
                         .frame(maxWidth: .infinity)
                         .frame(height: DS.CategoryForm.iconCellHeight)
-                        .background(selected ? DS.Color.accent : DS.Color.surface,
-                                    in: RoundedRectangle(cornerRadius: DS.CategoryForm.iconCellRadius))
-                        .brutalBorder(radius: DS.CategoryForm.iconCellRadius)
-                        .hardShadow(.hardSmall, color: selected ? DS.Color.ink : .clear)
-                        .contentShape(Rectangle())
                 }
-                .buttonStyle(.plain)
+                .buttonStyle(OutlineClickStyle(
+                    shape: .bordered(radius: DS.CategoryForm.iconCellRadius),
+                    fill: selected ? DS.Color.accent : DS.Color.surface,
+                    foreground: selected ? DS.Color.onAccent : DS.Color.ink
+                ))
+                // Тень — признак выбранной иконки (`AddCategory.html`, .icg span.on), а не кнопки
+                .hardShadow(.hardSmall, color: selected ? DS.Color.ink : .clear)
                 .accessibilityAddTraits(selected ? .isSelected : [])
             }
         }

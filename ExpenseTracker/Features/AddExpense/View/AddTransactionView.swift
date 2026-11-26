@@ -100,7 +100,8 @@ struct AddTransactionView: View {
                 amount: viewModel.amountText,
                 isPlaceholder: viewModel.isAmountPlaceholder,
                 errorMessage: viewModel.errorMessage,
-                isCompact: isCompact
+                isCompact: isCompact,
+                keystrokes: viewModel.keystrokes
             )
 
             metaPills
@@ -143,7 +144,6 @@ struct AddTransactionView: View {
         .presentationDragIndicator(.hidden)
         // Введенные данные не теряются молча: закрытие проходит через подтверждение
         .interactiveDismissDisabled(viewModel.hasUnsavedChanges)
-        .sensoryFeedback(.impact(weight: .light), trigger: viewModel.calculator)
         .sensoryFeedback(.error, trigger: viewModel.errorMessage) { _, message in message != nil }
         .sensoryFeedback(.success, trigger: viewModel.isSaved) { _, isSaved in isSaved }
         .onChange(of: viewModel.kind) {

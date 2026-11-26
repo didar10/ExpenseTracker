@@ -7,8 +7,9 @@
 
 import SwiftUI
 
-/// Нажатие для всего, что без тени: обводка утолщается до 2.5 pt, заливка становится accent.
-/// Подсветка держится не меньше `DS.Motion.minimumHighlight`, чтобы быстрый тап был заметен.
+/// «Щелчок обводки» — нажатие для всего, что без тени: заливка становится accent, обводка — 2.5 pt.
+/// Подсветка держится не меньше `DS.Motion.minimumHighlight` (90 мс), чтобы быстрый тап был заметен.
+/// Сдвигов и масштаба нет, поэтому «Уменьшить движение» на стиль не влияет.
 ///
 /// Основной цвет содержимого задает стиль (ink, на подсветке — onAccent): метке не нужно
 /// красить главный текст и иконки, второстепенный текст красится явно
@@ -19,9 +20,20 @@ struct OutlineClickStyle: ButtonStyle {
     enum Shape {
         /// Самостоятельный контрол: своя заливка и обводка
         case bordered(radius: CGFloat)
-        /// Часть составного контрола (сегмент, стрелка периода): обводку рисует контейнер,
-        /// при нажатии меняется только заливка
-        case segment
+        /// Часть составного контрола или строка списка (сегмент, стрелка периода, строка листа,
+        /// вкладка): в покое обводки нет — ее рисует контейнер. При нажатии обводка 2.5 pt
+        /// рисуется внутрь (`strokeBorder`), чтобы не вылезать за край строки
+        case segment(radius: CGFloat = .zero)
+        /// Круглая кнопка внутри более крупной зоны нажатия: «−» удаления в режиме правки
+        case circle(diameter: CGFloat)
+    }
+
+    /// Что подсвечивается при нажатии
+    enum Highlight {
+        /// Заливка accent и обводка 2.5 pt
+        case fillAndBorder
+        /// Только обводка 2.5 pt: у образцов цвета (палитра, лента категорий) заливка и есть смысл кнопки
+        case borderOnly
     }
 
     // MARK: - Properties
@@ -32,11 +44,23 @@ struct OutlineClickStyle: ButtonStyle {
     var foreground: Color = DS.Color.ink
     /// Цвет обводки: ink, у опасного действия — danger
     var borderColor: Color = DS.Color.ink
+    var highlight: Highlight = .fillAndBorder
+    /// Насколько подсветка выходит за метку: строка списка, у которой отступы
+    /// заданы снаружи кнопки, подсвечивается во всю ширину
+    var bleed = EdgeInsets()
 
     // MARK: - Body
 
     func makeBody(configuration: Configuration) -> some View {
-        OutlineClickBody(shape: shape, fill: fill, foreground: foreground, borderColor: borderColor, isPressed: configuration.isPressed) {
+        OutlineClickBody(
+            shape: shape,
+            fill: fill,
+            foreground: foreground,
+            borderColor: borderColor,
+            highlight: highlight,
+            bleed: bleed,
+            isPressed: configuration.isPressed
+        ) {
             configuration.label
         }
     }
@@ -58,7 +82,22 @@ extension ButtonStyle where Self == OutlineClickStyle {
     }
 
     static var outlineClickSegment: OutlineClickStyle {
-        OutlineClickStyle(shape: .segment, fill: .clear)
+        OutlineClickStyle(shape: .segment(), fill: .clear)
+    }
+
+    /// Круглый «−» удаления в режиме правки: красные значок и обводка на своей заливке
+    static func outlineClickDelete(diameter: CGFloat, fill: Color) -> OutlineClickStyle {
+        OutlineClickStyle(
+            shape: .circle(diameter: diameter),
+            fill: fill,
+            foreground: DS.Color.dangerFill,
+            borderColor: DS.Color.dangerFill
+        )
+    }
+
+    /// Строка списка, чьи отступы стоят снаружи кнопки: подсветка вылезает на них
+    static func outlineClickRow(bleed: EdgeInsets) -> OutlineClickStyle {
+        OutlineClickStyle(shape: .segment(), fill: .clear, bleed: bleed)
     }
 }
 
@@ -73,6 +112,8 @@ struct OutlineClickBody<Label: View>: View {
     let fill: Color
     var foreground: Color = DS.Color.ink
     var borderColor: Color = DS.Color.ink
+    var highlight: OutlineClickStyle.Highlight = .fillAndBorder
+    var bleed = EdgeInsets()
     let isPressed: Bool
     @ViewBuilder let label: Label
 
@@ -89,14 +130,24 @@ struct OutlineClickBody<Label: View>: View {
         (isPressed || isHighlighted) && isEnabled
     }
 
+    private var isFilled: Bool {
+        isActive && highlight == .fillAndBorder
+    }
+
     // MARK: - Body
 
     var body: some View {
         label
-            .foregroundStyle(isActive ? DS.Color.onAccent : foreground)
-            .background(isActive ? DS.Color.accent : fill, in: backgroundShape)
-            .overlay { border }
-            .contentShape(backgroundShape)
+            .foregroundStyle(isFilled ? DS.Color.onAccent : foreground)
+            .background {
+                surface
+                    .padding(bleedPadding)
+            }
+            .overlay {
+                border
+                    .padding(bleedPadding)
+            }
+            .contentShape(Rectangle())
             .opacity(isEnabled ? 1 : Constants.disabledOpacity)
             .onAppear { isHighlighted = isPressed }
             .onChange(of: isPressed) { _, isPressedNow in
@@ -110,24 +161,41 @@ struct OutlineClickBody<Label: View>: View {
 
 private extension OutlineClickBody {
 
-    var backgroundShape: RoundedRectangle {
-        RoundedRectangle(cornerRadius: radius)
+    var surfaceColor: Color {
+        isFilled ? DS.Color.accent : fill
     }
 
-    var radius: CGFloat {
+    var borderWidth: CGFloat {
+        isActive ? DS.Stroke.pressed : DS.Stroke.regular
+    }
+
+    /// Круг рисуется по центру метки, а не во всю зону нажатия
+    @ViewBuilder
+    var surface: some View {
         switch shape {
-        case .bordered(let radius): return radius
-        case .segment: return .zero
+        case .bordered(let radius), .segment(let radius):
+            RoundedRectangle(cornerRadius: radius).fill(surfaceColor)
+        case .circle(let diameter):
+            Circle().fill(surfaceColor).frame(width: diameter, height: diameter)
         }
+    }
+
+    /// Отрицательный отступ выносит подсветку за метку
+    var bleedPadding: EdgeInsets {
+        EdgeInsets(top: -bleed.top, leading: -bleed.leading, bottom: -bleed.bottom, trailing: -bleed.trailing)
     }
 
     @ViewBuilder
     var border: some View {
-        if case .bordered = shape {
-            backgroundShape.strokeBorder(
-                borderColor,
-                lineWidth: isActive ? DS.Stroke.pressed : DS.Stroke.regular
-            )
+        switch shape {
+        case .bordered(let radius):
+            RoundedRectangle(cornerRadius: radius).strokeBorder(borderColor, lineWidth: borderWidth)
+        case .circle(let diameter):
+            Circle().strokeBorder(borderColor, lineWidth: borderWidth).frame(width: diameter, height: diameter)
+        case .segment(let radius):
+            if isActive {
+                RoundedRectangle(cornerRadius: radius).strokeBorder(DS.Color.ink, lineWidth: DS.Stroke.pressed)
+            }
         }
     }
 }

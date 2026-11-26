@@ -75,7 +75,6 @@ struct MonthlyLimitView: View {
                 .padding(.top, DS.Spacing.md)
         }
         .padding(.bottom, DS.Spacing.sm)
-        .sensoryFeedback(.selection, trigger: viewModel.digits)
     }
 }
 

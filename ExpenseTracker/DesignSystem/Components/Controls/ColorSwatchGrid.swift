@@ -21,7 +21,12 @@ struct ColorSwatchGrid: View {
                         }
                         .contentShape(Rectangle())
                 }
-                .buttonStyle(.plain)
+                // Заливка образца — сам цвет: щелчок только утолщает обводку
+                .buttonStyle(OutlineClickStyle(
+                    shape: .segment(radius: DS.AccountForm.swatchRadius),
+                    fill: .clear,
+                    highlight: .borderOnly
+                ))
                 .accessibilityLabel(color.accessibilityName)
                 .accessibilityAddTraits(selected ? .isSelected : [])
             }

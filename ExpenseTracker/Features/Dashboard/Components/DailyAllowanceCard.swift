@@ -156,8 +156,8 @@ private struct LimitPrompt: View {
                 }
             }
         }
-        // Подсветка нажатия заливкой, обводку рисует сама пунктирная карточка
-        .buttonStyle(OutlineClickStyle(shape: .segment, fill: .clear))
+        // В покое обводку рисует сама пунктирная карточка, при нажатии поверх нее — сплошная 2.5 pt
+        .buttonStyle(OutlineClickStyle(shape: .segment(radius: DS.Radius.card), fill: .clear))
         .clipShape(RoundedRectangle(cornerRadius: DS.Radius.card))
         .accessibilityElement(children: .combine)
     }

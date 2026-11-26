@@ -67,8 +67,13 @@ struct BrutalAlertCard: View {
                 }
                 .buttonStyle(PressIntoShadowStyle(variant: .dangerFilled))
 
-                Button(AppString.cancel, action: onCancel)
-                    .buttonStyle(CancelButtonStyle())
+                // «Отмена» без тени — «щелчок обводки»
+                Button(action: onCancel) {
+                    Text(AppString.cancel)
+                        .font(DS.Font.buttonSmall)
+                        .frame(maxWidth: .infinity, minHeight: DS.Size.menuRow)
+                }
+                .buttonStyle(.outlineClick)
             }
             .padding(.top, DS.Spacing.lg)
         }
@@ -80,25 +85,6 @@ struct BrutalAlertCard: View {
         .background(DS.Color.surface, in: RoundedRectangle(cornerRadius: DS.Radius.dialog))
         .brutalBorder(radius: DS.Radius.dialog)
         .padding(.horizontal, DS.Spacing.xxl)
-    }
-}
-
-// MARK: - Button Style
-
-/// «Отмена» 50 pt на surface без тени. Нажатие — утолщение обводки, как у остальных кнопок без тени
-private struct CancelButtonStyle: ButtonStyle {
-
-    func makeBody(configuration: Configuration) -> some View {
-        configuration.label
-            .font(DS.Font.buttonSmall)
-            .foregroundStyle(DS.Color.ink)
-            .frame(maxWidth: .infinity, minHeight: DS.Size.menuRow)
-            .background(DS.Color.surface, in: RoundedRectangle(cornerRadius: DS.Radius.control))
-            .brutalBorder(
-                radius: DS.Radius.control,
-                lineWidth: configuration.isPressed ? DS.Stroke.pressed : DS.Stroke.regular
-            )
-            .contentShape(Rectangle())
     }
 }
 

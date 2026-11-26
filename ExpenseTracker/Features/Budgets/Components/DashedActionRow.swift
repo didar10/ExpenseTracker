@@ -61,7 +61,8 @@ struct DashedActionRow: View {
                     .strokeBorder(DS.Color.ink, style: dashedStroke)
             }
         }
-        .buttonStyle(.plain)
+        // Пунктир рисует строка, щелчок кладет поверх заливку и сплошную обводку 2.5 pt
+        .buttonStyle(OutlineClickStyle(shape: .segment(radius: DS.Radius.card), fill: .clear))
         .accessibilityElement(children: .combine)
         .accessibilityAddTraits(.isButton)
     }

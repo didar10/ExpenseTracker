@@ -135,14 +135,10 @@ struct CategoriesListView: View {
                 Button { viewModel.prepareDelete(category) } label: {
                     DS.Icon.minus
                         .font(.system(size: DS.Size.iconXS, weight: .bold))
-                        .foregroundStyle(DS.Color.dangerFill)
                         .frame(width: DS.CategoryManagement.deleteSize, height: DS.CategoryManagement.deleteSize)
-                        .background(DS.Color.accountRed, in: Circle())
-                        .overlay { Circle().strokeBorder(DS.Color.dangerFill, lineWidth: DS.Stroke.regular) }
                         .frame(minHeight: DS.Size.control)
-                        .contentShape(Rectangle())
                 }
-                .buttonStyle(.plain)
+                .buttonStyle(.outlineClickDelete(diameter: DS.CategoryManagement.deleteSize, fill: DS.Color.accountRed))
                 .accessibilityLabel("\(AppString.delete) \(category.name)")
             }
 
@@ -169,7 +165,13 @@ struct CategoriesListView: View {
                 .frame(minHeight: DS.CategoryManagement.rowHeight)
                 .contentShape(Rectangle())
             }
-            .buttonStyle(.outlineClickSegment)
+            // Вне правки строка — одна кнопка: щелчок подсвечивает ее вместе с отступами
+            .buttonStyle(.outlineClickRow(bleed: isEditing ? EdgeInsets() : EdgeInsets(
+                top: .zero,
+                leading: DS.Spacing.md,
+                bottom: .zero,
+                trailing: DS.CategoryManagement.sectionSpacing
+            )))
 
             if isEditing {
                 DS.Icon.equal
